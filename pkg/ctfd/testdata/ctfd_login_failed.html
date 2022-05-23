@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CTFd</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/themes/core-beta/static/assets/main.b16debf0.css">
+    <script type="2b58c579b239f476e3fb6fd5-text/javascript">
+      window.init = {
+          'urlRoot': "",
+          'csrfNonce': "4a38d931755087a5512c817955dbb646c04adf71d36049c2d820854ffe17f7af",
+          'userMode': "teams",
+          'userId': 0,
+          'userName': "None",
+          'userEmail': "None",
+          'teamId': null, 
+          'teamName': "None",
+          'start': null,
+          'end': null,
+          'themeSettings': null
+      }
+  </script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a href="/" class="navbar-brand">
+                CTFd
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#base-navbars"
+                aria-controls="base-navbars" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="base-navbars">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/users">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/teams">Teams</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/scoreboard">Scoreboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/challenges">Challenges</a>
+                    </li>
+                </ul>
+                <hr class="d-sm-flex d-md-flex d-lg-none">
+                <ul class="navbar-nav ms-md-auto d-block d-sm-flex d-md-flex">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">
+                            <span class="d-block" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Register">
+                                <i class="fas fa-user-plus d-none d-md-block d-lg-none"></i>
+                            </span>
+                            <span class="d-sm-block d-md-none d-lg-block">
+                                <i class="fas fa-user-plus pe-1"></i>Register
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">
+                            <span class="d-block" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Login">
+                                <i class="fas fa-sign-in-alt d-none d-md-block d-lg-none"></i>
+                            </span>
+                            <span class="d-sm-block d-md-none d-lg-block">
+                                <i class="fas fa-sign-in-alt pe-1"></i>Login
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main role="main">
+        <div class="jumbotron">
+            <div class="container">
+                <h1>Login</h1>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col offset-md-2 col-lg-6 offset-lg-3">
+                    <div>
+                        <div class="alert alert-danger alert-dismissible text-center" role="alert">
+                            <span>Your username or password is incorrect</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <form method="post" accept-charset="utf-8" autocomplete="off">
+                        <div class="mb-3">
+                            <b><label class="form-label" for="name">User Name or Email</label></b>
+                            <input class="form-control" id="name" name="name" required type="text" value="">
+                        </div>
+                        <div class="mb-3">
+                            <b><label class="form-label" for="password">Password</label></b>
+                            <input class="form-control" id="password" name="password" required type="password" value="">
+                        </div>
+                        <div class="row pt-3">
+                            <div class="col-6 col-md-8">
+                                <a class="align-middle" href="/reset_password">
+                                    Forgot your password?
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <input class="btn btn-block btn-primary w-100" id="_submit" name="_submit" type="submit"
+                                    value="Submit">
+                            </div>
+                        </div>
+                        <input id="nonce" name="nonce" type="hidden"
+                            value="4a38d931755087a5512c817955dbb646c04adf71d36049c2d820854ffe17f7af">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer">
+        <div class="container text-center">
+            <a href="https://ctfd.io" class="text-secondary">
+                <small class="text-muted">Powered by CTFd</small>
+            </a>
+        </div>
+    </footer>
+    <div x-data>
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div x-ref="toast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto" x-text="$store.toast.title"></strong>
+                    <small>just now</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" x-html="$store.toast.html">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div x-data>
+        <div class="modal" x-ref="modal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" x-text="$store.modal.title"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p x-html="$store.modal.html"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script defer type="2b58c579b239f476e3fb6fd5-module"
+        src="/themes/core-beta/static/assets/index.6f926540.js"></script>
+    <script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js"
+        data-cf-settings="2b58c579b239f476e3fb6fd5-|49" defer=""></script>
+</body>
+
+</html>
