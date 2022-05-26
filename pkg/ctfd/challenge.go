@@ -204,7 +204,7 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 
 	// tags (if available)
 	if len(challenge.Tags) > 0 {
-		file.WriteString("## Tags\n")
+		file.WriteString("## Tags\n\n")
 		for _, tag := range challenge.Tags {
 			file.WriteString(fmt.Sprintf("- %s\n", tag))
 		}
