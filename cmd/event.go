@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
 
+	"github.com/gosimple/slug"
 	"github.com/ritchies/ctftool/pkg/ctftime"
 	"github.com/spf13/cobra"
 )
@@ -168,35 +167,8 @@ var eventCmd = &cobra.Command{
 
 				discordChannel = event.Title
 
-				// remove any special characters from the channel name and only keep ascii characters
-				asciiRegex := regexp.MustCompile("[^a-zA-Z0-9 ]+")
-				discordChannel = asciiRegex.ReplaceAllString(discordChannel, "_")
-
-				// replace spaces with dashes
-				discordChannel = strings.Replace(discordChannel, " ", "-", -1)
-
-				// remove numbers and make sure the string are only ascii characters in lowercase
-				// numberRegex := regexp.MustCompile("[0-9]+")
-				// discordChannel = numberRegex.ReplaceAllString(discordChannel, "")
-				discordChannel = strings.ToLower(discordChannel)
-
-				// remove current year from the channel name, either the full year or the last two digits of the year
-				currentYear := time.Now().Year()
-				currentYearLastTwoDigits := strconv.Itoa(currentYear)[2:]
-				yearRegex := regexp.MustCompile(fmt.Sprintf("(%d|%s)", currentYear, currentYearLastTwoDigits))
-				discordChannel = yearRegex.ReplaceAllString(discordChannel, "")
-
-				// remove ignored words from the channel name
-				for _, word := range Ignored {
-					discordChannel = strings.Replace(discordChannel, word, "", -1)
-				}
-
-				// replace multiple dashes
-				dashRegex := regexp.MustCompile("[_-]+")
-				discordChannel = dashRegex.ReplaceAllString(discordChannel, "-")
-
-				// more hacks; remove leading and trailing dashes
-				discordChannel = strings.Trim(discordChannel, "-")
+				// use slug to clean up the discord channel name
+				discordChannel = slug.Make(discordChannel)
 
 				// make sure the channel name is not too long (100 chars max), split on dashes
 				if len(discordChannel) > 100 {

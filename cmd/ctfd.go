@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"regexp"
 	"strings"
 
+	"github.com/gosimple/slug"
 	"github.com/ritchies/ctftool/pkg/ctfd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,7 +54,7 @@ var ctfdCmd = &cobra.Command{
 		// CTFDUser and password are required
 		if CTFDUser == "" || CTFDPass == "" {
 			cmd.Help()
-			log.Fatal("CTFD URL, CTFD User and Password are required")
+			log.Fatal("CTFD User and Password are required")
 		}
 
 		credentials := ctfd.Credentials{
@@ -83,24 +83,19 @@ var ctfdCmd = &cobra.Command{
 		outputFolder := cwd
 
 		// if using config file
-		if viper.ConfigFileUsed() == "" {
-			// if output folder is set
-			if CTFDOutputFolder != "" {
-				outputFolder = path.Join(cwd, CTFDOutputFolder)
-			}
+		if viper.ConfigFileUsed() == "" && CTFDOutputFolder != "" {
+			outputFolder = path.Join(cwd, CTFDOutputFolder)
 		}
 
 		for _, challenge := range challenges {
-			name := strings.Replace(challenge.Name, " ", "-", -1)
-			name = cleanStr(name)
+			name := cleanStr(challenge.Name, false)
 
 			category := strings.Split(challenge.Category, " ")[0]
-			category = strings.ToLower(category)
-			category = cleanStr(category)
+			category = cleanStr(category, true)
 
 			// make sure name and category are more than 1 character and less than 50
 			if len(category) < 1 || len(name) < 1 {
-				log.Warnf("Skipping %q : invalid name or category", challenge.Name)
+				log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Category, challenge.Name)
 				continue
 			}
 
@@ -150,13 +145,9 @@ var ctfdCmd = &cobra.Command{
 	},
 }
 
-func cleanStr(s string) string {
-	s = regexp.MustCompile("'s").ReplaceAllString(s, "s")
-	s = regexp.MustCompile("[^a-zA-Z0-9-.]+").ReplaceAllString(s, "_")
-	s = regexp.MustCompile("-_|_-|-_-|_-_").ReplaceAllString(s, "-")
-	s = regexp.MustCompile("_+").ReplaceAllString(s, "_")
-	s = regexp.MustCompile("-+").ReplaceAllString(s, "-")
-	s = strings.Trim(s, "-_")
+func cleanStr(s string, setLowercase bool) string {
+	slug.Lowercase = setLowercase
+	s = slug.Make(s)
 
 	if len(s) > 50 {
 		tempCategory := strings.Split(s, "-")
@@ -165,6 +156,9 @@ func cleanStr(s string) string {
 			if len(combined) > 50 {
 				s = strings.Join(tempCategory[:i], "-")
 			}
+		}
+		if len(s) > 50 {
+			s = s[:50]
 		}
 	}
 
@@ -180,7 +174,7 @@ func init() {
 	ctfdCmd.PersistentFlags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
 
 	ctfdCmd.PersistentFlags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
-	ctfdCmd.PersistentFlags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $HOME/.ctftool.yaml)")
+	ctfdCmd.PersistentFlags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
 	// viper
 	viper.BindPFlag("url", ctfdCmd.PersistentFlags().Lookup("url"))
