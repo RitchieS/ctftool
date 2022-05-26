@@ -24,5 +24,7 @@ go.work
 tests*
 output*
 
+.ctftool.yaml
+
 coverage.html
 coverage.out
