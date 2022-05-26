@@ -15,6 +15,16 @@ import (
 	"golang.org/x/net/html"
 )
 
+const (
+	// Constants for max file sizes (1mb, 5mb, 25mb, 100mb, 0)
+	NoFileSizeLimit    = 0
+	OneMB              = 1000000
+	FiveMB             = 5000000
+	TwentyFiveMB       = 25000000
+	OneHundredMB       = 100000000
+	TwoHhundredFiftyMB = 250000000
+)
+
 type Hint struct {
 	ID      int64  `json:"id"`
 	Cost    int64  `json:"cost"`
@@ -91,7 +101,7 @@ func (c *Client) Challenge(id int64) (*Challenge, error) {
 	return &challenge.Data, nil
 }
 
-func (c *Client) DownloadFiles(id int64, filePath string) error {
+func (c *Client) DownloadFiles(id int64, outputPath string) error {
 	log := c.Log
 	challenge, err := c.Challenge(id)
 	if err != nil {
@@ -113,8 +123,9 @@ func (c *Client) DownloadFiles(id int64, filePath string) error {
 		log.WithFields(logrus.Fields{
 			"challenge": challenge.Name,
 			"file":      fileName,
-			"url":       challengeFileURL,
 		}).Info("Downloading challenge files")
+
+		log.WithField("url", challengeFileURL.String()).Debug("Downloading challenge file")
 
 		resp, err := c.Client.Get(challengeFileURL.String())
 		if err != nil {
@@ -122,13 +133,13 @@ func (c *Client) DownloadFiles(id int64, filePath string) error {
 		}
 		defer resp.Body.Close()
 
-		file, err := os.Create(path.Join(filePath, fileName))
+		file, err := os.Create(path.Join(outputPath, fileName))
 		if err != nil {
 			return fmt.Errorf("error creating file: %v", err)
 		}
 		defer file.Close()
 
-		if resp.ContentLength > 250000000 || resp.ContentLength < 0 {
+		if resp.ContentLength > TwentyFiveMB || resp.ContentLength < 0 {
 			return fmt.Errorf("file size is too large or 0")
 		}
 

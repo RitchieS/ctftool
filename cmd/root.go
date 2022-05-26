@@ -69,7 +69,11 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".ctftool" (without extension).
+		cwd, err := os.Getwd()
+		cobra.CheckErr(err)
+
+		// Search config in home/cwd directory with name ".ctftool" (without extension).
+		viper.AddConfigPath(cwd)
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".ctftool")

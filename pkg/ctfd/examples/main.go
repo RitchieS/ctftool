@@ -47,7 +47,14 @@ func main() {
 		log.Fatal("url, username and password are required")
 	}
 
-	if err := client.Authenticate(*username, *password); err != nil {
+	credentials := ctfd.Credentials{
+		Username: *username,
+		Password: *password,
+	}
+
+	client.Creds = &credentials
+
+	if err := client.Authenticate(); err != nil {
 		log.Fatal(err)
 	}
 	log.Infof("Authenticated as %q", *username)

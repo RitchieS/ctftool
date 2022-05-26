@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"net/url"
 	"os"
@@ -16,12 +15,11 @@ import (
 
 var (
 	CTFDUrl          string
-	CTFDCookie       string
-	CTFDOutputFolder string
-	OutputOverwrite  bool
 	CTFDUser         string
 	CTFDPass         string
-	CTFDEmail        string
+	CTFDOutputFolder string
+	OutputOverwrite  bool
+	SaveConfig       bool
 )
 
 // ctfdCmd represents the ctfd command
@@ -37,23 +35,21 @@ var ctfdCmd = &cobra.Command{
 		log.Info("ctfd called")
 
 		// check if username or password are set using viper
+		CTFDUrl = viper.GetString("url")
 		CTFDUser = viper.GetString("username")
 		CTFDPass = viper.GetString("password")
-		CTFDUrl = viper.GetString("url")
+		CTFDOutputFolder = viper.GetString("output")
 
 		baseURL, err := url.Parse(CTFDUrl)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		client.BaseURL = baseURL
-
-		reader := bufio.NewReader(os.Stdin)
-		if CTFDPass == "" && CTFDUser != "" {
-			fmt.Print("password: ")
-			CTFDPass, _ = reader.ReadString('\n')
-			CTFDPass = strings.TrimSpace(CTFDPass)
+		if baseURL.Host == "" {
+			log.Fatal("Invalid URL")
 		}
+
+		client.BaseURL = baseURL
 
 		// CTFDUser and password are required
 		if CTFDUser == "" || CTFDPass == "" {
@@ -61,7 +57,14 @@ var ctfdCmd = &cobra.Command{
 			log.Fatal("CTFD URL, CTFD User and Password are required")
 		}
 
-		if err := client.Authenticate(CTFDUser, CTFDPass); err != nil {
+		credentials := ctfd.Credentials{
+			Username: CTFDUser,
+			Password: CTFDPass,
+		}
+
+		client.Creds = &credentials
+
+		if err := client.Authenticate(); err != nil {
 			log.Fatal(err)
 		}
 		log.Infof("Authenticated as %q", CTFDUser)
@@ -77,45 +80,42 @@ var ctfdCmd = &cobra.Command{
 			log.Fatalf("error getting current working directory: %v", err)
 		}
 
+		outputFolder := cwd
+
+		// if using config file
+		if viper.ConfigFileUsed() == "" {
+			// if output folder is set
+			if CTFDOutputFolder != "" {
+				outputFolder = path.Join(cwd, CTFDOutputFolder)
+			}
+		}
+
 		for _, challenge := range challenges {
-			outputFolder := path.Join(cwd, CTFDOutputFolder)
+			name := strings.Replace(challenge.Name, " ", "-", -1)
+			name = cleanStr(name)
 
 			category := strings.Split(challenge.Category, " ")[0]
 			category = strings.ToLower(category)
-
-			name := strings.Replace(challenge.Name, " ", "-", -1)
-			name = regexp.MustCompile("[^a-zA-Z0-9-.]+").ReplaceAllString(name, "_")
-			name = regexp.MustCompile("-_|_-|-_-|_-_").ReplaceAllString(name, "-")
-			name = regexp.MustCompile("_+").ReplaceAllString(name, "_")
-			name = strings.Trim(name, "-_")
-
-			if len(category) > 50 {
-				category = category[:50]
-			}
-			if len(name) > 50 {
-				name = name[:50]
-			}
+			category = cleanStr(category)
 
 			// make sure name and category are more than 1 character and less than 50
 			if len(category) < 1 || len(name) < 1 {
-				log.Warnf("skipping challenge %q because it has an invalid name or category", challenge.Name)
+				log.Warnf("Skipping %q : invalid name or category", challenge.Name)
 				continue
 			}
 
-			filePath := path.Join(outputFolder, category, name)
+			challengePath := path.Join(outputFolder, category, name)
 
-			if _, statErr := os.Stat(filePath); statErr == nil {
-				log.Warnf("Challenge %q already exists", challenge.Name)
-				// continue if overwrite is false
-				if !OutputOverwrite {
-					log.Debugf("skipping challenge %q because overwrite is false", challenge.Name)
-					continue
+			if _, statErr := os.Stat(challengePath); statErr == nil {
+				if OutputOverwrite {
+					log.Warnf("Overwriting %q : already exists", challenge.Name)
 				} else {
-					log.Debugf("overwriting challenge %q", challenge.Name)
+					log.Warnf("Skipping %q : overwrite is false", challenge.Name)
+					continue
 				}
 			}
 
-			if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
+			if err := os.MkdirAll(challengePath, os.ModePerm); err != nil {
 				log.Fatal(fmt.Errorf("error creating directory: %v", err))
 			}
 
@@ -125,59 +125,67 @@ var ctfdCmd = &cobra.Command{
 			}
 
 			// download challenge files
-			if err := client.DownloadFiles(chall.ID, filePath); err != nil {
+			if err := client.DownloadFiles(chall.ID, challengePath); err != nil {
 				log.Fatal(fmt.Errorf("error downloading files: %v", err))
 			}
 
 			// get description
-			if err := client.GetDescription(chall, filePath); err != nil {
+			if err := client.GetDescription(chall, challengePath); err != nil {
 				log.Fatal(fmt.Errorf("error getting description: %v", err))
 			}
 		}
 
-		// values to config file
-		viper.WriteConfigAs(path.Join(os.Getenv("HOME"), ".ctftool.yaml"))
+		// values to config file if --save-config is set
+		if SaveConfig {
+			viper.Set("url", CTFDUrl)
+			viper.Set("username", CTFDUser)
+			viper.Set("password", CTFDPass)
+			viper.Set("output", outputFolder)
+			viper.Set("overwrite", true)
+			viper.WriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
+
+			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
+			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username, --password and --output flags")
+		}
 	},
+}
+
+func cleanStr(s string) string {
+	s = regexp.MustCompile("'s").ReplaceAllString(s, "s")
+	s = regexp.MustCompile("[^a-zA-Z0-9-.]+").ReplaceAllString(s, "_")
+	s = regexp.MustCompile("-_|_-|-_-|_-_").ReplaceAllString(s, "-")
+	s = regexp.MustCompile("_+").ReplaceAllString(s, "_")
+	s = regexp.MustCompile("-+").ReplaceAllString(s, "-")
+	s = strings.Trim(s, "-_")
+
+	if len(s) > 50 {
+		tempCategory := strings.Split(s, "-")
+		for i := range tempCategory {
+			combined := strings.Join(tempCategory[:i+1], "-")
+			if len(combined) > 50 {
+				s = strings.Join(tempCategory[:i], "-")
+			}
+		}
+	}
+
+	return s
 }
 
 func init() {
 	rootCmd.AddCommand(ctfdCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// ctfdCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// ctfdCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	// ctfdCmd.Flags().StringVarP(&CTFDUrl, "url", "u", "", "CTFd URL")
-	// ctfdCmd.Flags().StringVarP(&CTFDCookie, "cookie", "c", "", "CTFd Cookie")
-	// ctfdCmd.Flags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder")
-
-	// ctfdCmd.Flags().StringVarP(&CTFDUser, "user", "", "", "CTFd User")
-	// ctfdCmd.Flags().StringVarP(&CTFDPass, "pass", "", "", "CTFd Password")
-
-	// ctfdCmd.MarkFlagRequired("url")
-	// ctfdCmd.MarkFlagRequired("output")
-
 	ctfdCmd.PersistentFlags().StringVarP(&CTFDUrl, "url", "", "", "CTFd URL")
-	ctfdCmd.PersistentFlags().StringVarP(&CTFDCookie, "cookie", "c", "", "CTFd Cookie")
-	ctfdCmd.PersistentFlags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder")
-
-	// overwrite
-	ctfdCmd.PersistentFlags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
-
 	ctfdCmd.PersistentFlags().StringVarP(&CTFDUser, "username", "u", "", "CTFd Username")
 	ctfdCmd.PersistentFlags().StringVarP(&CTFDPass, "password", "p", "", "CTFd Password")
+	ctfdCmd.PersistentFlags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
+
+	ctfdCmd.PersistentFlags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
+	ctfdCmd.PersistentFlags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $HOME/.ctftool.yaml)")
 
 	// viper
+	viper.BindPFlag("url", ctfdCmd.PersistentFlags().Lookup("url"))
 	viper.BindPFlag("username", ctfdCmd.PersistentFlags().Lookup("username"))
 	viper.BindPFlag("password", ctfdCmd.PersistentFlags().Lookup("password"))
-	viper.BindPFlag("url", ctfdCmd.PersistentFlags().Lookup("url"))
-
-	ctfdCmd.MarkPersistentFlagRequired("url")
-	ctfdCmd.MarkPersistentFlagRequired("output")
-
+	viper.BindPFlag("output", ctfdCmd.PersistentFlags().Lookup("output"))
+	viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
 }

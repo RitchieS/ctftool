@@ -280,7 +280,11 @@ func TestAuthenticate(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			err := client.Authenticate("admin", "admin")
+			client.Creds = &Credentials{
+				Username: "admin",
+				Password: "password",
+			}
+			err := client.Authenticate()
 			if err != nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}
@@ -315,7 +319,11 @@ func TestAuthenticateFails(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			err := client.Authenticate("admin", "admin")
+			client.Creds = &Credentials{
+				Username: "admin",
+				Password: "password",
+			}
+			err := client.Authenticate()
 			if err == nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}
@@ -331,7 +339,12 @@ func TestAuthenticateEmptyBaseurl(t *testing.T) {
 	fakeBaseurl, _ := url.Parse("")
 	client.BaseURL = fakeBaseurl
 
-	err := client.Authenticate("admin", "admin")
+	client.Creds = &Credentials{
+		Username: "admin",
+		Password: "password",
+	}
+
+	err := client.Authenticate()
 	if err == nil {
 		t.Errorf("Authenticate() returned error: %v", err)
 		return
@@ -365,7 +378,11 @@ func TestAuthenticateBrokenLoginPage(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			err := client.Authenticate("admin", "admin")
+			client.Creds = &Credentials{
+				Username: "admin",
+				Password: "password",
+			}
+			err := client.Authenticate()
 			if err == nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}
@@ -401,7 +418,11 @@ func TestCheckErrorRegex(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			err := client.Authenticate("admin", "admin")
+			client.Creds = &Credentials{
+				Username: "admin",
+				Password: "password",
+			}
+			err := client.Authenticate()
 			if err == nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}

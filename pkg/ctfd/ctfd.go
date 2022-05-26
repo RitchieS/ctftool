@@ -9,6 +9,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sirupsen/logrus"
@@ -19,6 +20,12 @@ type Client struct {
 	Client  *http.Client
 	BaseURL *url.URL
 	Log     *logrus.Logger
+	Creds   *Credentials
+}
+
+type Credentials struct {
+	Username string
+	Password string
 }
 
 // NewClient constructs a new Client. If transport is nil, a default transport is used.
@@ -42,12 +49,22 @@ func NewClient(transport http.RoundTripper) *Client {
 		PublicSuffixList: publicsuffix.List,
 	})
 
+	// Set long timeout to avoid timeouts because CTFd is slow
+	if transport == nil {
+		transport = &http.Transport{
+			MaxIdleConns:          10,
+			IdleConnTimeout:       30 * time.Second,
+			ResponseHeaderTimeout: time.Duration(30) * time.Second,
+		}
+	}
+
 	return &Client{
 		Client: &http.Client{
 			Transport: transport,
 			Jar:       cookieJar,
 		},
-		Log: log,
+		Log:   log,
+		Creds: &Credentials{},
 	}
 }
 
@@ -109,12 +126,15 @@ func (c *Client) Check() error {
 }
 
 // Authenticate client to the CTFd instance with the given username, password.
-func (c *Client) Authenticate(username, password string) error {
+func (c *Client) Authenticate() error {
 	log := c.Log
 
 	if err := c.Check(); err != nil {
 		return err
 	}
+
+	username := c.Creds.Username
+	password := c.Creds.Password
 
 	setPassword := func(values url.Values) {
 		values.Set("name", username)
