@@ -11,18 +11,13 @@ import (
 
 var TeamID int
 
-// teamCmd represents the team command
-var teamCmd = &cobra.Command{
+// ctftimeTeamCmd represents the team command
+var ctftimeTeamCmd = &cobra.Command{
 	Use:   "team",
 	Short: "Get information about a team",
 	Long:  `Get information about a team on CTFTime.`,
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
-		logrus.Info("team called")
-
-		// print args
-		logrus.Debugf("args: %v", args)
-
 		// if args is not an integer, exit
 		if len(args) > 0 {
 			if _, err := fmt.Sscanf(args[0], "%d", &TeamID); err != nil {
@@ -47,17 +42,7 @@ var teamCmd = &cobra.Command{
 }
 
 func init() {
-	ctftimeCmd.AddCommand(teamCmd)
+	ctftimeCmd.AddCommand(ctftimeTeamCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// teamCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// teamCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	teamCmd.Flags().IntVar(&TeamID, "id", 0, "The ID of the team")
-
+	ctftimeTeamCmd.Flags().IntVar(&TeamID, "id", 0, "The ID of the team")
 }

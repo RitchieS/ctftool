@@ -69,22 +69,8 @@ var (
 	HyperLink        Emoji = "\U0001f517"       // link
 )
 
-// add "conference" and "ctf" to the IgnoreList words
-type IgnoreList []string
-
-var (
-	Ignored = IgnoreList{
-		"conference",
-		"ctf",
-		"qualifiers",
-		"qualifier",
-		"quals",
-		"qual",
-	}
-)
-
-// eventCmd represents the event command
-var eventCmd = &cobra.Command{
+// ctftimeEventCmd represents the event command
+var ctftimeEventCmd = &cobra.Command{
 	Use:   "event",
 	Short: "Get information about CTF events",
 	Long:  `Display the current and upcoming CTF events from CTFTime.`,
@@ -93,8 +79,6 @@ var eventCmd = &cobra.Command{
 	},
 	Args: cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Info("event called")
-
 		// if args is not an integer, exit
 		if len(args) > 0 {
 			if _, err := fmt.Sscanf(args[0], "%d", &EventID); err != nil {
@@ -104,7 +88,6 @@ var eventCmd = &cobra.Command{
 		}
 
 		if EventID != 0 {
-
 			event, err := ctftime.GetCTFEvent(EventID)
 			if err != nil {
 				log.Fatalf("Error getting event: %s", err)
@@ -117,36 +100,21 @@ var eventCmd = &cobra.Command{
 			fmt.Println(string(json))
 
 		} else {
-
 			events, err := ctftime.GetCTFEvents()
 			if err != nil {
 				log.Fatalf("Error getting events: %s", err)
 			}
 
-			// Get the events for the next 7 days
 			now := time.Now()
-
-			nextWeek := now.AddDate(0, 0, 7)
+			nextWeek := now.AddDate(0, 0, 7-int(now.Weekday()))
 
 			thisWeekEvents := make([]ctftime.Event, 0)
-			// nextWeekEvents := make([]ctftime.Event, 0)
 
 			for _, event := range events {
 				if event.Start.After(now) && event.Start.Before(nextWeek) {
 					thisWeekEvents = append(thisWeekEvents, event)
-				} /*else {
-					nextWeekEvents = append(nextWeekEvents, event)
-				} */
+				}
 			}
-
-			// print events in markdown
-			// # This week's CTF lineup
-			// 1️⃣ XXCTF (CTF Name)
-			// 💬 #XXCTF (discord channel)
-			// 🕛 Fri, 15 April 2022, 16:00 UTC — Sun, 17 April 2022, 16:00 UTC (time in UTC)
-			// 🕖 Fri, 15 April 2022, 12:00 EDT — Sun, 17 April 2022, 12:00 EDT (time in EDT)
-			// 🚩 <ctftime url>
-			// >>> <description>
 
 			numberEmojis := []string{string(Keycap1), string(Keycap2), string(Keycap3), string(Keycap4), string(Keycap5), string(Keycap6), string(Keycap7), string(Keycap8), string(Keycap9), string(Keycap10)}
 
@@ -162,42 +130,26 @@ var eventCmd = &cobra.Command{
 					ctfName = fmt.Sprintf("%s (%.2f)", ctfName, event.Weight)
 				}
 
-				// discord channel
-				var discordChannel string
+				discordChannel := slug.Make(event.Title)
 
-				discordChannel = event.Title
-
-				// use slug to clean up the discord channel name
-				discordChannel = slug.Make(discordChannel)
-
-				// make sure the channel name is not too long (100 chars max), split on dashes
-				if len(discordChannel) > 100 {
+				// make sure the channel name is not too long (100 chars max)
+				if len(discordChannel) > 99 {
 					for words := strings.Split(discordChannel, "-"); len(words) > 2; words = strings.Split(discordChannel, "-") {
 						discordChannel = strings.Join(words[:len(words)-1], "-")
 					}
 				}
 
-				// get the current time zone of the operating system
-				currentTimeZone, err := time.LoadLocation(time.Now().Location().String())
-				if err != nil {
-					log.Fatalf("Error loading time zone: %s", err)
-				}
-
-				localLoc, _ := time.LoadLocation(currentTimeZone.String())
-
 				loc, _ := time.LoadLocation("America/New_York")
 				ctfTimes := make(map[string]string)
-				ctfTimes["LOCAL"] = fmt.Sprintf("%s — %s", event.Start.In(localLoc).Format("Mon, 02 Jan 2006 15:04"), event.Finish.In(localLoc).Format("Mon, 02 Jan 2006 15:04"))
 				ctfTimes["UTC"] = fmt.Sprintf("%s — %s", event.Start.UTC().Format("Mon, 02 Jan 2006 15:04"), event.Finish.UTC().Format("Mon, 02 Jan 2006 15:04"))
 				ctfTimes["EDT"] = fmt.Sprintf("%s — %s", event.Start.In(loc).Format("Mon, 02 Jan 2006 15:04"), event.Finish.In(loc).Format("Mon, 02 Jan 2006 15:04"))
 
-				fmt.Fprintf(w, "%s  %s\n", numberEmojis[i], ctfName)
+				fmt.Fprintf(w, "%s %s\n", numberEmojis[i], ctfName)
 				fmt.Fprintf(w, "%s #%s\n", SpeechBalloon, discordChannel)
-				fmt.Fprintf(w, "%s %s\n", TwelveOClock, ctfTimes["LOCAL"])
 				fmt.Fprintf(w, "%s %s UTC\n", TwelveOClock, ctfTimes["UTC"])
 				fmt.Fprintf(w, "%s %s EDT\n", SevenOClock, ctfTimes["EDT"])
 				fmt.Fprintf(w, "%s %s\n", TriangularFlag, ctftimeURL)
-				fmt.Fprintf(w, "%s %s\n", HyperLink, event.URL)
+				fmt.Fprintf(w, "%s %s\n\n", HyperLink, event.URL)
 				fmt.Fprintf(w, "%s\n\n", ctfDescription)
 
 				// separator
@@ -206,23 +158,12 @@ var eventCmd = &cobra.Command{
 
 			// flush
 			w.Flush()
-
 		}
-
 	},
 }
 
 func init() {
-	ctftimeCmd.AddCommand(eventCmd)
+	ctftimeCmd.AddCommand(ctftimeEventCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// eventCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// eventCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	eventCmd.Flags().IntVar(&EventID, "id", 0, "Event ID")
+	ctftimeEventCmd.Flags().IntVar(&EventID, "id", 0, "Event ID")
 }

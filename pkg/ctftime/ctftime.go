@@ -280,3 +280,60 @@ func GetCTFTeam(id int) (Team, error) {
 
 	return team, nil
 }
+
+/*
+
+{"2022": [{"team_name": "organizers", "points": 520.440387451942, "team_id": 42934}, {"team_name": "idek", "points": 493.5987960235641, "team_id": 157039}, {"team_name": "thehackerscrew", "points": 483.2714483609073, "team_id": 85618}, {"team_name": "Bushwhackers", "points": 411.71180489147287, "team_id": 586}, {"team_name": "Water Paddler", "points": 408.6296337147105, "team_id": 155019}, {"team_name": "Project Sekai", "points": 407.5299411927775, "team_id": 169557}, {"team_name": "r3kapig", "points": 379.11797043922485, "team_id": 58979}, {"team_name": "Maple Bacon", "points": 373.01474024111485, "team_id": 73723}, {"team_name": "Never Stop Exploiting", "points": 364.55872309553257, "team_id": 13575}, {"team_name": "kalmarunionen", "points": 354.78486897913115, "team_id": 114856}]}
+
+*/
+
+type TopTeam struct {
+	TeamName string  `json:"team_name"`
+	Points   float64 `json:"points"`
+	TeamID   int     `json:"team_id"`
+}
+
+type TopTeams struct {
+	Teams []TopTeam `json:"2022"`
+}
+
+func GetTopTeams() ([]TopTeam, error) {
+	var teams TopTeams
+	var result []TopTeam
+
+	currentYear := time.Now().Year()
+	// https://ctftime.org/api/v1/top/2022/
+	url := fmt.Sprintf("https://ctftime.org/api/v1/top/%d/", currentYear)
+
+	// build a new request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return result, err
+	}
+
+	// set the header
+	req.Header.Set("User-Agent", "Go CTFTime API Client/1.0")
+
+	// do the request
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return result, err
+	}
+
+	// close the response body
+	defer resp.Body.Close()
+
+	// if the response is not 200, return an error
+	if resp.StatusCode != 200 {
+		return result, fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+
+	// unmarshal the response
+	err = json.NewDecoder(resp.Body).Decode(&teams)
+	if err != nil {
+		return result, err
+	}
+
+	result = teams.Teams
+	return result, nil
+}

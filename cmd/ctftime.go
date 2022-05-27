@@ -86,8 +86,6 @@ var ctftimeCmd = &cobra.Command{
 	Short:   "Query CTFTime",
 	Long:    `Retrieve information about upcoming CTF events and teams from CTFTime.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Debug("ctftime called")
-
 		events, err := ctftime.GetCTFEvents()
 		if err != nil {
 			log.Fatalf("Error getting events: %s", err)
@@ -179,14 +177,4 @@ var ctftimeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(ctftimeCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// ctftimeCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// ctftimeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

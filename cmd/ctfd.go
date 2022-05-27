@@ -29,24 +29,20 @@ var ctfdCmd = &cobra.Command{
 	Short:   "Query CTFd instance",
 	Long:    `Retrieve challenges and files from a CTFd instance.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		client := ctfd.NewClient(nil)
 		log := client.Log
-		log.Info("ctfd called")
 
-		// check if username or password are set using viper
+		// check if flags are set using viper
 		CTFDUrl = viper.GetString("url")
 		CTFDUser = viper.GetString("username")
 		CTFDPass = viper.GetString("password")
 		CTFDOutputFolder = viper.GetString("output")
+		OutputOverwrite = viper.GetBool("overwrite")
 
 		baseURL, err := url.Parse(CTFDUrl)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if baseURL.Host == "" {
-			log.Fatal("Invalid URL")
+		if err != nil || baseURL.Host == "" {
+			cmd.Help()
+			log.Fatal("Invalid or empty URL")
 		}
 
 		client.BaseURL = baseURL
@@ -140,7 +136,7 @@ var ctfdCmd = &cobra.Command{
 			viper.WriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
 
 			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
-			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username, --password and --output flags")
+			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
 		}
 	},
 }

@@ -30,7 +30,15 @@ It can interact with the CTFTime.org API to retrieve the latest upcoming CTFs,
 and can interact with CTFd API to retrieve the challenges and files.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+
+		// if viper config file is in current directory;
+		if viper.ConfigFileUsed() != "" {
+			ctfdCmd.Run(cmd, args)
+		} else {
+			ctftimeCmd.Run(cmd, args)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -49,11 +57,11 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "config file (default is $HOME/.ctftool.yaml)")
-
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "config file (default is $HOME/.ctftool.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&options.Verbose, "verbose", "v", false, "Verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Debug output")
 	rootCmd.PersistentFlags().StringVar(&options.DebugFormat, "debug-format", "text", "Debug output format (text|json)")
@@ -111,5 +119,4 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		log.WithField("config", viper.ConfigFileUsed()).Debug("Using config file")
 	}
-
 }

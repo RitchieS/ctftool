@@ -42,9 +42,6 @@ func NewClient(transport http.RoundTripper) *Client {
 		QuoteEmptyFields:       true,
 	})
 
-	// set log level to debug
-	log.SetLevel(logrus.DebugLevel)
-
 	cookieJar, _ := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})

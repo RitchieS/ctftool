@@ -10,6 +10,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
@@ -148,6 +149,8 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 			return fmt.Errorf("error copying file: %v", err)
 		}
 	}
+
+	time.Sleep(time.Millisecond * 333)
 
 	return nil
 }
