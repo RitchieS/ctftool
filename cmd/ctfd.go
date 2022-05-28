@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"path"
@@ -14,6 +13,8 @@ import (
 )
 
 var (
+	CTFDThreads int
+
 	CTFDUrl          string
 	CTFDUser         string
 	CTFDPass         string
@@ -42,7 +43,7 @@ var ctfdCmd = &cobra.Command{
 		baseURL, err := url.Parse(CTFDUrl)
 		if err != nil || baseURL.Host == "" {
 			cmd.Help()
-			log.Fatal("Invalid or empty URL")
+			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
 		}
 
 		client.BaseURL = baseURL
@@ -107,22 +108,22 @@ var ctfdCmd = &cobra.Command{
 			}
 
 			if err := os.MkdirAll(challengePath, os.ModePerm); err != nil {
-				log.Fatal(fmt.Errorf("error creating directory: %v", err))
+				log.Fatalf("error creating directory %q: %v", challengePath, err)
 			}
 
 			chall, err := client.Challenge(challenge.ID)
 			if err != nil {
-				log.Fatal(fmt.Errorf("error getting challenge: %v", err))
+				log.Fatalf("error getting challenge %q: %v", challenge.Name, err)
 			}
 
 			// download challenge files
 			if err := client.DownloadFiles(chall.ID, challengePath); err != nil {
-				log.Fatal(fmt.Errorf("error downloading files: %v", err))
+				log.Errorf("error downloading files for %q: %v", challenge.Name, err)
 			}
 
 			// get description
 			if err := client.GetDescription(chall, challengePath); err != nil {
-				log.Fatal(fmt.Errorf("error getting description: %v", err))
+				log.Fatalf("error getting description for %q: %v", challenge.Name, err)
 			}
 		}
 
@@ -171,6 +172,9 @@ func init() {
 
 	ctfdCmd.PersistentFlags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
 	ctfdCmd.PersistentFlags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
+
+	// threads
+	ctfdCmd.PersistentFlags().IntVarP(&CTFDThreads, "threads", "", 2, "Number of threads to use")
 
 	// viper
 	viper.BindPFlag("url", ctfdCmd.PersistentFlags().Lookup("url"))

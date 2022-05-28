@@ -200,10 +200,10 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 		solved = "❌"
 	}
 
-	file.WriteString(fmt.Sprintf("# %s %s\n\n", solved, challenge.Name))
+	file.WriteString(fmt.Sprintf("# %s %s - %s\n\n", solved, strings.ToUpper(challenge.Category), challenge.Name))
 
 	// category
-	file.WriteString(fmt.Sprintf("Category: %s\n\n", challenge.Category))
+	// file.WriteString(fmt.Sprintf("Category: %s\n\n", challenge.Category))
 
 	// tags (if available)
 	if len(challenge.Tags) > 0 {
@@ -224,7 +224,11 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 	if len(challenge.Files) > 0 {
 		file.WriteString("Files:\n\n")
 		for _, challengeFile := range challenge.Files {
-			file.WriteString(fmt.Sprintf("- %s\n", getFileName(challengeFile)))
+			fileURL, _ := c.BaseURL.Parse(challengeFile)
+			// file.WriteString(fmt.Sprintf("- %s\n", getFileName(challengeFile)))
+			// file.WriteString(fmt.Sprintf("  - %s\n", fileURL.String()))
+
+			file.WriteString(fmt.Sprintf("- [%s](%s)\n", getFileName(challengeFile), fileURL.String()))
 		}
 
 		file.WriteString("\n")

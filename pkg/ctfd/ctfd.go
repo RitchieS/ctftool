@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"path"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -104,20 +103,20 @@ func (c *Client) Check() error {
 	}
 
 	// check /login
-	doc, err = c.get(c.BaseURL.String() + "/login")
-	if err != nil {
-		return err
-	}
+	/* 	doc, err = c.get(c.BaseURL.String() + "/login")
+	   	if err != nil {
+	   		return err
+	   	} */
 
 	// Check if there are captcha's on the login page
-	captchaURLs := []string{"https://www.google.com/recaptcha/api.js", "https://hcaptcha.com/1/api.js"}
-	for _, captchaURL := range captchaURLs {
-		if doc.Find("script[src]").FilterFunction(func(i int, s *goquery.Selection) bool {
-			return strings.Contains(s.AttrOr("src", ""), captchaURL)
-		}).Length() > 0 {
-			return fmt.Errorf("captcha detected on login page")
-		}
-	}
+	/* 	captchaURLs := []string{"https://www.google.com/recaptcha/api.js", "https://hcaptcha.com/1/api.js"}
+	   	for _, captchaURL := range captchaURLs {
+	   		if doc.Find("script[src]").FilterFunction(func(i int, s *goquery.Selection) bool {
+	   			return strings.Contains(s.AttrOr("src", ""), captchaURL)
+	   		}).Length() > 0 {
+	   			return fmt.Errorf("captcha detected on login page")
+	   		}
+	   	} */
 
 	return nil
 }

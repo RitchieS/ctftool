@@ -22,26 +22,26 @@ var ctfdTopCmd = &cobra.Command{
 
 		baseURL, err := url.Parse(uri)
 		if err != nil {
-			log.Error(fmt.Errorf("error parsing base URL: %v", err))
+			log.Errorf("Invalid or empty URL provided %q: %s", uri, err)
 			return
 		}
 
 		client.BaseURL = baseURL
 
 		if client.BaseURL.Host == "" {
-			log.Error(fmt.Errorf("error parsing base URL: %v", err))
+			log.Errorf("Invalid or empty URL provided %q: %s", uri, err)
 			return
 		}
 
 		teamsData, err := client.ScoreboardTop(10)
 		if err != nil {
-			log.Fatal(fmt.Errorf("error getting scoreboard: %v", err))
+			log.Fatalf("Failed to retrieve scoreboard: %s", err)
 		}
 
 		for i := 1; i <= 10; i++ {
 			team, err := teamsData.GetTeam(i)
 			if err != nil {
-				log.Fatal(fmt.Errorf("error getting team %d: %v", i, err))
+				log.Fatalf("Failed to retrieve team %d: %s", i, err)
 			}
 
 			if team.ID == 0 {

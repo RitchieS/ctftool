@@ -122,13 +122,13 @@ var ctftimeCmd = &cobra.Command{
 					}).Render(fmt.Sprintf("%s - active", prettyETA))
 				} else if event.Finish.Sub(event.Start).Hours() > 120 {
 					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ff0000",
-						Dark:  "#ff0000",
+						Light: "#ffa500",
+						Dark:  "#ffa500",
 					}).Render(fmt.Sprintf("%s - active", prettyETA))
 
 					prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ff0000",
-						Dark:  "#ff0000",
+						Light: "#ffa500",
+						Dark:  "#ffa500",
 					}).Render("UNR")
 				}
 
@@ -140,30 +140,25 @@ var ctftimeCmd = &cobra.Command{
 					"eta":    prettyETA,
 				}).Debug(event.Title)
 
-				prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-					Light: "#888888",
-					Dark:  "#888888",
-				}).Render(prettyETA)
-
 				prettyEND := lib.FtoaWithDigits(event.Finish.Sub(event.Start).Hours(), 2)
 				if event.Finish.Sub(event.Start).Hours() > 120 {
 					prettyEND = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ff0000",
-						Dark:  "#ff0000",
+						Light: "#ffa500",
+						Dark:  "#ffa500",
 					}).Render(prettyEND)
 
 					prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ff0000",
-						Dark:  "#ff0000",
+						Light: "#ffa500",
+						Dark:  "#ffa500",
 					}).Render("UNR")
-				} else if event.Finish.Sub(event.Start).Hours() < 120 && event.Finish.Sub(event.Start).Hours() > 1 {
-					prettyEND = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#00bb00",
-						Dark:  "#00bb00",
-					}).Render(prettyEND)
 				}
 
-				eventStringsArray[i] = fmt.Sprintf("%d \t%s \t%s (%s for %s hours)", event.ID, prettyWeight, event.Title, prettyETA, prettyEND)
+				prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+					Light: "#888888",
+					Dark:  "#888888",
+				}).Render(fmt.Sprintf("%s for %s hours", prettyETA, prettyEND))
+
+				eventStringsArray[i] = fmt.Sprintf("%d \t%s \t%s (%s)", event.ID, prettyWeight, event.Title, prettyETA)
 			}
 		}
 

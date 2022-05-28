@@ -150,7 +150,12 @@ var ctftimeEventCmd = &cobra.Command{
 				fmt.Fprintf(w, "%s %s EDT\n", SevenOClock, ctfTimes["EDT"])
 				fmt.Fprintf(w, "%s %s\n", TriangularFlag, ctftimeURL)
 				fmt.Fprintf(w, "%s %s\n\n", HyperLink, event.URL)
-				fmt.Fprintf(w, "%s\n\n", ctfDescription)
+				//fmt.Fprintf(w, "%s\n\n", ctfDescription)
+
+				// for every line in CTF description, add >>> to the start of the line
+				for _, line := range strings.Split(ctfDescription, "\n") {
+					fmt.Fprintf(w, ">>> %s\n", line)
+				}
 
 				// separator
 				fmt.Fprintf(w, "---\n\n")
