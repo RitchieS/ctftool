@@ -5,7 +5,7 @@ TARGET := $(echo $${PWD\#\#*/})
 .DEFAULT_GOAL: $(TARGET)
 
 # These will be provided to the target
-VERSION := 0.0.1
+VERSION := `git describe --tags`
 BUILD := `git rev-parse --short HEAD`
 
 # Use linker flags to provide version/build settings to the target
