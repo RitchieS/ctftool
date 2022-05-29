@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/pkg/ctftime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -14,9 +15,10 @@ var ctftimeTopCmd = &cobra.Command{
 	Short: "Displays top 10 teams",
 	Long:  `Display the top 10 teams from CTFTime`,
 	Run: func(cmd *cobra.Command, args []string) {
+
 		teams, err := ctftime.GetTopTeams()
 		if err != nil {
-			logrus.Fatalf("Error getting teams: %s", err)
+			log.Fatalf("Error getting teams: %s", err)
 		}
 
 		for i, team := range teams {
@@ -24,7 +26,11 @@ var ctftimeTopCmd = &cobra.Command{
 			teamName := team.TeamName
 			teamPoints := team.Points
 
-			fmt.Printf("%d. %.2f \t%s (%d)\n", i+1, teamPoints, teamName, teamID)
+			log.WithFields(logrus.Fields{
+				"id":     teamID,
+				"name":   teamName,
+				"points": lib.FtoaWithDigits(teamPoints, 2),
+			}).Info(fmt.Sprintf("%d. %s", i+1, teamName))
 		}
 	},
 }

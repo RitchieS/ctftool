@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/ritchies/ctftool/pkg/ctftime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -21,20 +20,20 @@ var ctftimeTeamCmd = &cobra.Command{
 		// if args is not an integer, exit
 		if len(args) > 0 {
 			if _, err := fmt.Sscanf(args[0], "%d", &TeamID); err != nil {
-				logrus.Errorf("%v", err)
+				log.Errorf("%v", err)
 				return
 			}
 		}
 
 		team, err := ctftime.GetCTFTeam(TeamID)
 		if err != nil {
-			logrus.Fatalf("Error getting team: %s", err)
+			log.Fatalf("Error getting team: %s", err)
 		}
 
 		// pretty print the json result
 		json, err := json.MarshalIndent(team, "", "  ")
 		if err != nil {
-			logrus.Fatalf("Error marshalling team: %s", err)
+			log.Fatalf("Error marshalling team: %s", err)
 		}
 		fmt.Println(string(json))
 
