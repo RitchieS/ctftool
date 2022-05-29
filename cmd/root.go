@@ -32,11 +32,16 @@ and can interact with CTFd API to retrieve the challenges and files.`,
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// if viper config file is in current directory;
-		if viper.ConfigFileUsed() != "" {
-			ctfdCmd.Run(cmd, args)
+		// if --version flag is set, run versionCmd
+		if cmd.Flags().Lookup("version").Value.String() == "true" {
+			versionCmd.Run(cmd, args)
 		} else {
-			ctftimeCmd.Run(cmd, args)
+			// if viper config file is in current directory;
+			if viper.ConfigFileUsed() != "" {
+				ctfdCmd.Run(cmd, args)
+			} else {
+				ctftimeCmd.Run(cmd, args)
+			}
 		}
 	},
 }
@@ -67,6 +72,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&options.DebugFormat, "debug-format", "text", "Debug output format (text|json)")
 
 	// rootCmd.PersistentFlags().StringVar(&db.Path, "db-path", "ctftool.sqlite", "Path to the database file")
+
+	// --version flag will run versionCmd
+	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print version information")
 }
 
 // initConfig reads in config file and ENV variables if set.
