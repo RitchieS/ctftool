@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	// The Build and Version are set to "dev" by default, or set by the Makefile
 	Build   = "dev" // Build is the current build of the program
 	Version = "dev" // Version is the current version of the program
 )
@@ -28,15 +29,10 @@ var rootCmd = &cobra.Command{
 
 It can interact with the CTFTime.org API to retrieve the latest upcoming CTFs,
 and can interact with CTFd API to retrieve the challenges and files.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// if --version flag is set, run versionCmd
 		if cmd.Flags().Lookup("version").Value.String() == "true" {
 			versionCmd.Run(cmd, args)
 		} else {
-			// if viper config file is in current directory;
 			if viper.ConfigFileUsed() != "" {
 				ctfdCmd.Run(cmd, args)
 			} else {
@@ -58,22 +54,12 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "config file (default is $HOME/.ctftool.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&options.Verbose, "verbose", "v", false, "Verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Debug output")
 	rootCmd.PersistentFlags().StringVar(&options.DebugFormat, "debug-format", "text", "Debug output format (text|json)")
 
 	// rootCmd.PersistentFlags().StringVar(&db.Path, "db-path", "ctftool.sqlite", "Path to the database file")
 
-	// --version flag will run versionCmd
 	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print version information")
 }
 
@@ -100,7 +86,6 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// Logrus options
-
 	log.SetFormatter(&logrus.TextFormatter{
 		DisableSorting:         false,
 		DisableTimestamp:       true,
@@ -112,7 +97,7 @@ func initConfig() {
 	})
 
 	// set log level to debug
-	if options.Debug || options.Verbose {
+	if options.Debug {
 		log.SetLevel(logrus.DebugLevel)
 	}
 
