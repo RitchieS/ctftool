@@ -21,17 +21,12 @@ var ctfdTopCmd = &cobra.Command{
 		uri := viper.GetString("url")
 
 		baseURL, err := url.Parse(uri)
-		if err != nil {
-			log.Errorf("Invalid or empty URL provided %q: %s", uri, err)
-			return
+		if err != nil || baseURL.Host == "" {
+			cmd.Help()
+			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
 		}
 
 		client.BaseURL = baseURL
-
-		if client.BaseURL.Host == "" {
-			log.Errorf("Invalid or empty URL provided %q: %s", uri, err)
-			return
-		}
 
 		teamsData, err := client.ScoreboardTop(10)
 		if err != nil {
@@ -61,6 +56,17 @@ var ctfdTopCmd = &cobra.Command{
 	},
 }
 
+var (
+	CTFDTopURL string
+)
+
 func init() {
 	ctfdCmd.AddCommand(ctfdTopCmd)
+
+	ctfdTopCmd.Flags().StringVarP(&CTFDTopURL, "url", "u", "", "CTFD instance URL")
+
+	viper.BindPFlag("url", ctfdTopCmd.Flags().Lookup("url"))
+
+	// required flags
+	ctfdTopCmd.MarkFlagRequired("url")
 }

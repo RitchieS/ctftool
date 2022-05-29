@@ -165,21 +165,21 @@ func cleanStr(s string, setLowercase bool) string {
 func init() {
 	rootCmd.AddCommand(ctfdCmd)
 
-	ctfdCmd.PersistentFlags().StringVarP(&CTFDUrl, "url", "", "", "CTFd URL")
-	ctfdCmd.PersistentFlags().StringVarP(&CTFDUser, "username", "u", "", "CTFd Username")
-	ctfdCmd.PersistentFlags().StringVarP(&CTFDPass, "password", "p", "", "CTFd Password")
-	ctfdCmd.PersistentFlags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
+	ctfdCmd.Flags().StringVarP(&CTFDUrl, "url", "", "", "CTFd URL")
+	ctfdCmd.Flags().StringVarP(&CTFDUser, "username", "u", "", "CTFd Username")
+	ctfdCmd.Flags().StringVarP(&CTFDPass, "password", "p", "", "CTFd Password")
+	ctfdCmd.Flags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
 
-	ctfdCmd.PersistentFlags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
-	ctfdCmd.PersistentFlags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
+	ctfdCmd.Flags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
+	ctfdCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
-	// threads
-	ctfdCmd.PersistentFlags().IntVarP(&CTFDThreads, "threads", "", 2, "Number of threads to use")
+	// TODO: threads
+	//ctfdCmd.Flags().IntVarP(&CTFDThreads, "threads", "", 2, "Number of threads to use")
 
 	// viper
-	viper.BindPFlag("url", ctfdCmd.PersistentFlags().Lookup("url"))
-	viper.BindPFlag("username", ctfdCmd.PersistentFlags().Lookup("username"))
-	viper.BindPFlag("password", ctfdCmd.PersistentFlags().Lookup("password"))
-	viper.BindPFlag("output", ctfdCmd.PersistentFlags().Lookup("output"))
-	viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
+	viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))
+	viper.BindPFlag("username", ctfdCmd.Flags().Lookup("username"))
+	viper.BindPFlag("password", ctfdCmd.Flags().Lookup("password"))
+	viper.BindPFlag("output", ctfdCmd.Flags().Lookup("output"))
+	viper.BindPFlag("overwrite", ctfdCmd.Flags().Lookup("overwrite"))
 }
