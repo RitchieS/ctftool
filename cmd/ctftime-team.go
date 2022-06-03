@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/ritchies/ctftool/pkg/ctftime"
 	"github.com/spf13/cobra"
@@ -17,6 +18,9 @@ var ctftimeTeamCmd = &cobra.Command{
 	Long:  `Get information about a team on CTFTime.`,
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
+		client := ctftime.NewClient(nil)
+		client.BaseURL, _ = url.Parse("https://ctftime.org/")
+
 		// if args is not an integer, exit
 		if len(args) > 0 {
 			if _, err := fmt.Sscanf(args[0], "%d", &TeamID); err != nil {
@@ -25,7 +29,7 @@ var ctftimeTeamCmd = &cobra.Command{
 			}
 		}
 
-		team, err := ctftime.GetCTFTeam(TeamID)
+		team, err := client.GetCTFTeam(TeamID)
 		if err != nil {
 			log.Fatalf("Error getting team: %s", err)
 		}

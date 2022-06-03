@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -79,6 +80,9 @@ var ctftimeEventCmd = &cobra.Command{
 	},
 	Args: cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
+		client := ctftime.NewClient(nil)
+		client.BaseURL, _ = url.Parse("https://ctftime.org/")
+
 		// if args is not an integer, exit
 		if len(args) > 0 {
 			if _, err := fmt.Sscanf(args[0], "%d", &EventID); err != nil {
@@ -88,7 +92,7 @@ var ctftimeEventCmd = &cobra.Command{
 		}
 
 		if EventID != 0 {
-			event, err := ctftime.GetCTFEvent(EventID)
+			event, err := client.GetCTFEvent(EventID)
 			if err != nil {
 				log.Fatalf("Error getting event: %s", err)
 			}
@@ -100,7 +104,7 @@ var ctftimeEventCmd = &cobra.Command{
 			fmt.Println(string(json))
 
 		} else {
-			events, err := ctftime.GetCTFEvents()
+			events, err := client.GetCTFEvents()
 			if err != nil {
 				log.Fatalf("Error getting events: %s", err)
 			}
@@ -139,18 +143,14 @@ var ctftimeEventCmd = &cobra.Command{
 					}
 				}
 
-				loc, _ := time.LoadLocation("America/New_York")
 				ctfTimes := make(map[string]string)
 				ctfTimes["UTC"] = fmt.Sprintf("%s — %s", event.Start.UTC().Format("Mon, 02 Jan 2006 15:04"), event.Finish.UTC().Format("Mon, 02 Jan 2006 15:04"))
-				ctfTimes["EDT"] = fmt.Sprintf("%s — %s", event.Start.In(loc).Format("Mon, 02 Jan 2006 15:04"), event.Finish.In(loc).Format("Mon, 02 Jan 2006 15:04"))
 
 				fmt.Fprintf(w, "%s %s\n", numberEmojis[i], ctfName)
 				fmt.Fprintf(w, "%s #%s\n", SpeechBalloon, discordChannel)
 				fmt.Fprintf(w, "%s %s UTC\n", TwelveOClock, ctfTimes["UTC"])
-				fmt.Fprintf(w, "%s %s EDT\n", SevenOClock, ctfTimes["EDT"])
 				fmt.Fprintf(w, "%s %s\n", TriangularFlag, ctftimeURL)
 				fmt.Fprintf(w, "%s %s\n\n", HyperLink, event.URL)
-				//fmt.Fprintf(w, "%s\n\n", ctfDescription)
 
 				// for every line in CTF description, add >>> to the start of the line
 				for _, line := range strings.Split(ctfDescription, "\n") {

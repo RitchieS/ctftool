@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -96,7 +97,10 @@ var ctftimeCmd = &cobra.Command{
 	Short:   "Query CTFTime",
 	Long:    `Retrieve information about upcoming CTF events and teams from CTFTime.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		events, err := ctftime.GetCTFEvents()
+		client := ctftime.NewClient(nil)
+		client.BaseURL, _ = url.Parse("https://ctftime.org/")
+
+		events, err := client.GetCTFEvents()
 		if err != nil {
 			log.Fatalf("Error getting events: %s", err)
 		}
@@ -263,5 +267,5 @@ var ctftimeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(ctftimeCmd)
 
-	ctftimeCmd.Flags().BoolVarP(&PrintPretty, "pretty", "p", false, "pretty print")
+	ctftimeCmd.Flags().BoolVar(&PrintPretty, "interactive", false, "Interactive mode")
 }

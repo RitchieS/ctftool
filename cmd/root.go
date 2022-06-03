@@ -55,7 +55,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "config file (default is $HOME/.ctftool.yaml)")
+	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "Config file (default is $HOME/.ctftool.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Debug output")
 	rootCmd.PersistentFlags().StringVar(&options.DebugFormat, "debug-format", "text", "Debug output format (text|json)")
 
