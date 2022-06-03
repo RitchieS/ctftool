@@ -2,18 +2,28 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/charmbracelet/bubbles/paginator"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ritchies/ctftool/internal/lib"
+	"github.com/ritchies/ctftool/internal/storage"
 	"github.com/ritchies/ctftool/pkg/ctftime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"gorm.io/gorm/clause"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+var (
+	PrintPretty bool
+)
+
+const padding = 3
 
 func newModel(items []string) model {
 	for i, item := range items {
@@ -91,22 +101,94 @@ var ctftimeCmd = &cobra.Command{
 			log.Fatalf("Error getting events: %s", err)
 		}
 
+		db, err := dB.Get()
+		if err != nil {
+			log.Fatalf("Error getting db: %s", err)
+		}
+
+		err = db.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "id"}},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"title",
+				"description",
+				"url",
+				"logo",
+				"weight",
+				"onsite",
+				"location",
+				"restrictions",
+				"format",
+				"format_id",
+				"participants",
+				"start",
+				"finish",
+			}),
+		}).Create(&events).Error
+		if err != nil {
+			log.Fatalf("Error creating events in DB: %s", err)
+		}
+
 		eventStringsArray := make([]string, len(events))
 
+		result := db.Order("start asc, finish asc, weight desc").Find(&events)
+		if result.Error != nil {
+			log.Fatal(result.Error)
+		}
+
 		for i, event := range events {
-			prettyETA := lib.HumanizeTime(event.Start)
+
+			if event.Hidden {
+				continue
+			}
+
+			eventTitle := event.Title
+			eventStart := event.Start
+			eventFinish := event.Finish
+			eventURL := event.URL
+
+			prettyETA := lib.HumanizeTime(eventStart)
 			prettyWeight := lib.FtoaWithDigits(event.Weight, 2)
 
-			if event.Weight == 0 {
+			var customTitle storage.EventCustomTitle
+			err := db.Where("id = ?", event.ID).Find(&customTitle).Error
+			if err == nil && customTitle.Title != "" {
+				eventTitle = customTitle.Title
+				event.Title = customTitle.Title
+			}
+
+			var customDate storage.EventCustomDate
+			err = db.Where("id = ?", event.ID).Find(&customDate).Error
+			if err == nil && customDate != (storage.EventCustomDate{}) {
+				eventStart = customDate.Start
+				eventFinish = customDate.Finish
+
+				event.Start = customDate.Start
+				event.Finish = customDate.Finish
+			}
+
+			var customURL storage.EventCustomURL
+			err = db.Where("id = ?", event.ID).Find(&customURL).Error
+			if err == nil && customURL.URL != "" {
+				eventURL = customURL.URL
+				event.URL = customURL.URL
+			}
+
+			if event.CreatedAt.Second() == event.UpdatedAt.Second() {
+				// add (NEW)
+				eventTitle = fmt.Sprintf("%s (NEW)", eventTitle)
+			}
+
+			if event.Weight == 0 && eventFinish.Sub(eventStart).Hours() < 120 {
 				prettyWeight = "TBD"
 				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "222", Dark: "222"}).Render(prettyWeight)
 			} else {
 				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render(prettyWeight)
 			}
 
+			db.Save(&event)
+
 			if ctftime.IsCTFEventActive(event) {
-				prettyETA = lib.RelativeTime(event.Finish, time.Now(), "ago", "left")
-				eventURL := event.URL
+				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
 
 				log.WithFields(logrus.Fields{
 					"id":     event.ID,
@@ -115,24 +197,19 @@ var ctftimeCmd = &cobra.Command{
 					"url":    eventURL,
 				}).Debug(event.Title)
 
-				if event.Finish.Sub(event.Start).Hours() > 1 && event.Finish.Sub(event.Start).Hours() < 120 {
+				if eventFinish.Sub(eventStart).Hours() > 1 && eventFinish.Sub(eventStart).Hours() < 120 {
 					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
 						Light: "#00ff00",
 						Dark:  "#00ff00",
 					}).Render(fmt.Sprintf("%s - active", prettyETA))
-				} else if event.Finish.Sub(event.Start).Hours() > 120 {
+				} else if eventFinish.Sub(eventStart).Hours() > 120 {
 					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
 						Light: "#ffa500",
 						Dark:  "#ffa500",
 					}).Render(fmt.Sprintf("%s - active", prettyETA))
-
-					prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ffa500",
-						Dark:  "#ffa500",
-					}).Render("UNR")
 				}
 
-				eventStringsArray[i] = fmt.Sprintf("%d \t%s \t%s (%s)", event.ID, prettyWeight, event.Title, prettyETA)
+				eventStringsArray[i] = fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA)
 			} else {
 				log.WithFields(logrus.Fields{
 					"id":     event.ID,
@@ -140,17 +217,12 @@ var ctftimeCmd = &cobra.Command{
 					"eta":    prettyETA,
 				}).Debug(event.Title)
 
-				prettyEND := lib.FtoaWithDigits(event.Finish.Sub(event.Start).Hours(), 2)
-				if event.Finish.Sub(event.Start).Hours() > 120 {
+				prettyEND := lib.FtoaWithDigits(eventFinish.Sub(eventStart).Hours(), 2)
+				if eventFinish.Sub(eventStart).Hours() > 120 {
 					prettyEND = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
 						Light: "#ffa500",
 						Dark:  "#ffa500",
 					}).Render(prettyEND)
-
-					prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ffa500",
-						Dark:  "#ffa500",
-					}).Render("UNR")
 				}
 
 				prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
@@ -158,13 +230,31 @@ var ctftimeCmd = &cobra.Command{
 					Dark:  "#888888",
 				}).Render(fmt.Sprintf("%s for %s hours", prettyETA, prettyEND))
 
-				eventStringsArray[i] = fmt.Sprintf("%d \t%s \t%s (%s)", event.ID, prettyWeight, event.Title, prettyETA)
+				eventStringsArray[i] = fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA)
 			}
 		}
 
-		p := tea.NewProgram(newModel(eventStringsArray))
-		if err := p.Start(); err != nil {
-			log.Fatal(err)
+		// remomve empty strings
+		for i := len(eventStringsArray) - 1; i >= 0; i-- {
+			if eventStringsArray[i] == "" {
+				eventStringsArray = append(eventStringsArray[:i], eventStringsArray[i+1:]...)
+			}
+		}
+
+		if PrintPretty {
+			p := tea.NewProgram(newModel(eventStringsArray))
+			if err := p.Start(); err != nil {
+				log.Fatalf("Error creating tea program: %s", err)
+			}
+		} else {
+
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
+
+			for _, eventString := range eventStringsArray {
+				// fmt.Println(eventString)
+				fmt.Fprintln(w, eventString)
+			}
+			w.Flush()
 		}
 
 	},
@@ -172,4 +262,6 @@ var ctftimeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(ctftimeCmd)
+
+	ctftimeCmd.Flags().BoolVarP(&PrintPretty, "pretty", "p", false, "pretty print")
 }

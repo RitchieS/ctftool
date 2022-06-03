@@ -6,14 +6,19 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 )
 
 // Struct for API Endpoint ctftime.org/api/v1/events/
 type Event struct {
-	ID            int       `json:"id"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+
+	Hidden bool
+
+	ID            uint64    `json:"id"`
 	CTFID         int       `json:"ctf_id"`
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`
@@ -32,14 +37,14 @@ type Event struct {
 	PublicVotable bool      `json:"public_votable"`
 	Start         time.Time `json:"start"`
 	Finish        time.Time `json:"finish"`
-	Organizers    []struct {
+	/* Organizers    []struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"organizers"`
 	Duration struct {
 		Hours int `json:"hours"`
 		Days  int `json:"days"`
-	} `json:"duration"`
+	} `json:"duration"` */
 }
 
 // Struct for API Endpoint ctftime.org/api/v1/teams/
@@ -62,6 +67,7 @@ type Team struct {
 // Return if a CTF is currently active
 func IsCTFEventActive(event Event) bool {
 	now := time.Now()
+
 	return event.Start.Before(now) && event.Finish.After(now)
 }
 
@@ -92,21 +98,29 @@ func CleanCTFEvents(events []Event) ([]Event, error) {
 		events[i].Description = CleanDescription(events[i].Description)
 	}
 
+	// Remove events that are not "Open"
+	/* 	for i := 0; i < len(events); i++ {
+		if events[i].Restrictions != "Open" {
+			events = append(events[:i], events[i+1:]...)
+			i--
+		}
+	} */
+
 	// Remove events that are onsite
-	for i := 0; i < len(events); i++ {
+	/* 	for i := 0; i < len(events); i++ {
 		if events[i].Onsite {
 			events = append(events[:i], events[i+1:]...)
 			i--
 		}
-	}
+	} */
 
 	// Remove events with format_id != 1 (Jeopardy Style)
-	for i := 0; i < len(events); i++ {
+	/* 	for i := 0; i < len(events); i++ {
 		if events[i].FormatID != 1 {
 			events = append(events[:i], events[i+1:]...)
 			i--
 		}
-	}
+	} */
 
 	// Remove events that have finished
 	for i := 0; i < len(events); i++ {
@@ -116,54 +130,11 @@ func CleanCTFEvents(events []Event) ([]Event, error) {
 		}
 	}
 
-	// Remove events that are not "Open"
-	for i := 0; i < len(events); i++ {
-		if events[i].Restrictions != "Open" {
-			events = append(events[:i], events[i+1:]...)
-			i--
-		}
-	}
-
-	now := time.Now()
-	maxTime := now.AddDate(0, 0, 90)
-
-	// Remove events that are not active
-	for i := 0; i < len(events); i++ {
-		if events[i].Start.After(maxTime) {
-			events = append(events[:i], events[i+1:]...)
-			i--
-		}
-	}
-
 	if len(events) == 0 {
 		return nil, fmt.Errorf("no events found")
 	}
 
-	// create a slice of active and upcoming events
-	var ctfEvents, activeEvents, upcomingEvents []Event
-	for i := 0; i < len(events); i++ {
-		if IsCTFEventActive(events[i]) {
-			activeEvents = append(activeEvents, events[i])
-		} else {
-			upcomingEvents = append(upcomingEvents, events[i])
-		}
-	}
-
-	// Sort the active events by finish time
-	sort.Slice(activeEvents, func(i, j int) bool {
-		return activeEvents[i].Finish.Before(activeEvents[j].Finish)
-	})
-
-	// Sort upcoming events by start time
-	sort.Slice(upcomingEvents, func(i, j int) bool {
-		return upcomingEvents[i].Start.Before(upcomingEvents[j].Start)
-	})
-
-	// Combine the active and upcoming events
-	ctfEvents = append(ctfEvents, activeEvents...)
-	ctfEvents = append(ctfEvents, upcomingEvents...)
-
-	return ctfEvents, nil
+	return events, nil
 }
 
 // Retrieve all active and upcoming CTF events from ctftime.org/api/v1/events/
@@ -171,8 +142,8 @@ func GetCTFEvents() ([]Event, error) {
 	var events []Event
 
 	now := time.Now()
-	start := now.Add(-time.Hour * 24 * 14).Unix()
-	end := now.Add(time.Hour * 24 * 60).Unix()
+	start := now.Add(-time.Hour * 24 * 60).Unix()
+	end := now.Add(time.Hour * 24 * 180).Unix()
 
 	params := url.Values{}
 	params.Add("start", fmt.Sprintf("%d", start))

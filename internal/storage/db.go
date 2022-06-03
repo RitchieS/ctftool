@@ -29,7 +29,7 @@ func (db *Db) Get() (*gorm.DB, error) {
 	}
 
 	if !db.SkipMigration {
-		conn.AutoMigrate(&CTFEvent{})
+		conn.AutoMigrate(&Event{}, &EventCustomTitle{}, &EventCustomDescription{}, &EventCustomDate{}, &EventCustomURL{})
 	}
 
 	return conn, nil

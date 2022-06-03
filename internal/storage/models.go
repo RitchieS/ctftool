@@ -3,48 +3,137 @@ package storage
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"gorm.io/gorm"
 )
 
-type CTFEvent struct {
+/* `ctf_id`,`title`,`description`,`url`,`logo`,`weight`,`onsite`,`location`,
+`restrictions`,`format`,`format_id`,`participants`,`ctf_time_url`,`live_feed`,
+`is_votable_now`,`public_votable`,`start`,`finish`,`id` */
+
+type Event struct {
 	gorm.Model
 
-	ID          int
-	Title       string
+	Hidden bool
+
+	ID            uint64
+	CTFID         int
+	Title         string
+	Description   string
+	URL           string
+	Logo          string
+	Weight        float64
+	Onsite        bool
+	Location      string
+	Restrictions  string
+	Format        string
+	FormatID      int
+	Participants  int
+	CTFTimeURL    string
+	LiveFeed      string
+	IsVotableNow  bool
+	PublicVotable bool
+	Start         time.Time
+	Finish        time.Time
+}
+
+type EventCustomTitle struct {
+	gorm.Model
+
+	ID    uint64
+	Title string
+}
+
+type EventCustomDescription struct {
+	gorm.Model
+
+	ID          uint64
 	Description string
-	Start       string
-	Finish      string
-	Weight      float64
+}
+
+type EventCustomDate struct {
+	gorm.Model
+
+	ID     uint64
+	Start  time.Time
+	Finish time.Time
+}
+
+type EventCustomURL struct {
+	gorm.Model
+
+	ID  uint64
+	URL string
 }
 
 // MarshallCSV returns values as a slice
-func (ctf *CTFEvent) MarshallCSV() (res []string) {
-	return []string{strconv.Itoa(ctf.ID),
+func (ctf *Event) MarshallCSV() (res []string) {
+	return []string{strconv.FormatUint(ctf.ID, 10),
+		strconv.Itoa(ctf.CTFID),
 		ctf.Title,
 		ctf.Description,
-		ctf.Start,
-		ctf.Finish,
-		strconv.FormatFloat(ctf.Weight, 'f', 2, 64)}
+		ctf.URL,
+		ctf.Logo,
+		strconv.FormatFloat(ctf.Weight, 'f', -1, 64),
+		strconv.FormatBool(ctf.Onsite),
+		ctf.Location,
+		ctf.Restrictions,
+		ctf.Format,
+		strconv.Itoa(ctf.FormatID),
+		strconv.Itoa(ctf.Participants),
+		ctf.CTFTimeURL,
+		ctf.LiveFeed,
+		strconv.FormatBool(ctf.IsVotableNow),
+		strconv.FormatBool(ctf.PublicVotable),
+		ctf.Start.Format(time.RFC3339),
+		ctf.Finish.Format(time.RFC3339),
+	}
 }
 
 // MarshallJSON returns values as a slice
-func (ctf *CTFEvent) MarshallJSON() ([]byte, error) {
+func (ctf *Event) MarshallJSON() ([]byte, error) {
 	var tmp struct {
-		ID          int     `json:"id"`
-		Title       string  `json:"title"`
-		Description string  `json:"description"`
-		Start       string  `json:"start"`
-		Finish      string  `json:"finish"`
-		Weight      float64 `json:"weight"`
+		ID            uint64    `json:"id"`
+		CTFID         int       `json:"ctf_id"`
+		Title         string    `json:"title"`
+		Description   string    `json:"description"`
+		URL           string    `json:"url"`
+		Logo          string    `json:"logo"`
+		Weight        float64   `json:"weight"`
+		Onsite        bool      `json:"onsite"`
+		Location      string    `json:"location"`
+		Restrictions  string    `json:"restrictions"`
+		Format        string    `json:"format"`
+		FormatID      int       `json:"format_id"`
+		Participants  int       `json:"participants"`
+		CTFTimeURL    string    `json:"ctftime_url"`
+		LiveFeed      string    `json:"live_feed"`
+		IsVotableNow  bool      `json:"is_votable_now"`
+		PublicVotable bool      `json:"public_votable"`
+		Start         time.Time `json:"start"`
+		Finish        time.Time `json:"finish"`
 	}
 
 	tmp.ID = ctf.ID
+	tmp.CTFID = ctf.CTFID
 	tmp.Title = ctf.Title
 	tmp.Description = ctf.Description
+	tmp.URL = ctf.URL
+	tmp.Logo = ctf.Logo
+	tmp.Weight = ctf.Weight
+	tmp.Onsite = ctf.Onsite
+	tmp.Location = ctf.Location
+	tmp.Restrictions = ctf.Restrictions
+	tmp.Format = ctf.Format
+	tmp.FormatID = ctf.FormatID
+	tmp.Participants = ctf.Participants
+	tmp.CTFTimeURL = ctf.CTFTimeURL
+	tmp.LiveFeed = ctf.LiveFeed
+	tmp.IsVotableNow = ctf.IsVotableNow
+	tmp.PublicVotable = ctf.PublicVotable
 	tmp.Start = ctf.Start
 	tmp.Finish = ctf.Finish
-	tmp.Weight = ctf.Weight
 
 	return json.Marshal(&tmp)
 }
