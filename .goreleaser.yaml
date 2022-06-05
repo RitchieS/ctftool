@@ -1,20 +1,56 @@
----
 before:
   hooks:
     - go mod tidy -compat=1.18
+
 release:
   prerelease: auto
 
 builds:
-  - env: [CGO_ENABLED=0]
-    goos:
-    - linux
-    - windows
-    - darwin
-    goarch:
-    - amd64
-    - arm64
-    # Custom ldflags templates.
-    # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
+  - env: 
+    - GO111MODULE=on
+    - CGO_ENABLED=0
+    id: ctftool
+    binary: ctftool
+    goos: ['linux', 'darwin', 'windows']
+    goarch: ['386', 'amd64', 'arm', 'arm64']
+    ignore:
+      - goos: windows
+        goarch: '386'
+      - goos: darwin
+        goarch: '386'
+      - goos: windows
+        goarch: arm
+      - goos: darwin
+        goarch: arm
+      - goos: freebsd
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+      - goos: darwin
+        goarch: arm64
+      - goos: freebsd
+        goarch: arm64
     ldflags:
       - -s -w -X github.com/ritchies/ctftool/cmd.Version={{.Version}} -X github.com/ritchies/ctftool/cmd.Commit={{.Commit}} -X github.com/ritchies/ctftool/cmd.BuildTime={{.Date}} -X github.com/ritchies/ctftool/cmd.BuiltBy=goreleaser
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    id: tgz
+    format: tar.gz
+    replacements:
+      linux: Linux
+      darwin: macOS
+      windows: Windows
+      386: i386
+    format_overrides:
+    - goos: 'windows'
+      format: 'zip'
+    files: ['LICENSE', 'README.md']
+
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+
+changelog:
+  sort: 'asc'
+  filters:
+    exclude: ['^docs:', 'Merge pull request', 'Merge branch']
