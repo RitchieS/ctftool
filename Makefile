@@ -7,10 +7,11 @@ TARGET := $(echo $${PWD\#\#*/})
 # These will be provided to the target
 VERSION := `git describe --tags`
 BUILD := `git rev-parse --short HEAD`
+CURDATE := `date +%Y-%m-%d`
 
 # Use linker flags to provide version/build settings to the target
 # LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD) -s -w"
-LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Build=$(BUILD) -s -w"
+LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Commit=$(BUILD) -X=github.com/ritchies/ctftool/cmd.BuildTime=$(CURDATE) -s -w"
 
 
 # go source files, ignore vendor directory

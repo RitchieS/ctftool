@@ -6,8 +6,15 @@ release:
   prerelease: auto
 
 builds:
-  -
+  - env: [CGO_ENABLED=0]
+    goos:
+    - linux
+    - windows
+    - darwin
+    goarch:
+    - amd64
+    - arm64
     # Custom ldflags templates.
     # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
     ldflags:
-      - -s -w -X github.com/ritchies/ctftool/cmd.Version={{.Version}} -X github.com/ritchies/ctftool/cmd.Build={{.Commit}} -X github.com/ritchies/ctftool/cmd.Commit={{.Commit}} -X github.com/ritchies/ctftool/cmd.BuiltBy=goreleaser
+      - -s -w -X github.com/ritchies/ctftool/cmd.Version={{.Version}} -X github.com/ritchies/ctftool/cmd.Commit={{.Commit}} -X github.com/ritchies/ctftool/cmd.BuildTime={{.Date}} -X github.com/ritchies/ctftool/cmd.BuiltBy=goreleaser
