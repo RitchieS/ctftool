@@ -20,6 +20,9 @@
 # Go workspace file
 go.work
 
+# VSCode
+.vscode
+
 # CUSTOM
 tests*
 output*

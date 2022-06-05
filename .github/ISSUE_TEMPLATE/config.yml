@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+    - name: SUPPORT, ISSUES and TROUBLESHOOTING
+      url: https://github.com/RitchieS/ctftool/discussions
+      about: Please DO NOT use Issues for support requests. Please visit https://github.com/RitchieS/ctftool/discussions for support! If you ignore this request your issue might be closed.
