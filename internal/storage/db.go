@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -52,8 +51,6 @@ func (db *Db) Get() (*gorm.DB, error) {
 		}
 		db.Path = path.Join(dbHomePath, db.Path)
 	}
-
-	fmt.Fprintln(os.Stderr, "Connecting to database:", db.Path)
 
 	conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
