@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -25,13 +24,9 @@ var versionCmd = &cobra.Command{
 	Long:  `All software has versions. This is mine.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if Commit == "dev" {
-			fmt.Println("You are running a development build of ctftool")
+			fmt.Printf("You are running a development build of ctftool\n")
 		} else {
 			fmt.Printf("ctftool %s (%s) built by %q on %q\n", Version, Commit, BuiltBy, BuildTime)
 		}
-
-		// Display license information
-		fmt.Printf("Copyright © %d RitchieS\n", time.Now().Year())
-		fmt.Println("All rights reserved.")
 	},
 }
