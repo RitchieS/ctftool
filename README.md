@@ -17,12 +17,10 @@ It provides:
 - List upcoming CTFs
 - List the top 10 teams
 - Adjust information for each CTF locally stored in a sqlite db
-- Get scores of your team (TBA)
 - Interact with [CTFd](https://ctfd.io)
 - Download challenges from CTFd
 - Creates a writeup template for each challenge
 - Get the top 10 teams in a CTF
-- Get the scores of your team (TBA)
 
 ### Upcoming features
 
@@ -32,8 +30,8 @@ It provides:
 - [ ] Search teams by country
 - [ ] Scoreboard by country
 - [ ] Ability to announce CTFs on Discord
-- [ ] Various Discord related features, like creating channels, threads and allowing users to solve challenges using the bot
-- [ ] Complete interactive TUI
+- [ ] Various Discord related features, like creating channels, threads and allowing users to solve challenges
+- [ ] Complete interactive TUI using bubbletea
 
 ## Concepts
 
