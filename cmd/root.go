@@ -12,12 +12,6 @@ import (
 )
 
 var (
-	// The Build and Version are set to "dev" by default, or set by the Makefile
-	Build   = "dev" // Build is the current build of the program
-	Version = "dev" // Version is the current version of the program
-)
-
-var (
 	options = lib.NewOptions()
 	log     = logrus.New()
 	dB      = storage.NewDb()

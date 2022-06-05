@@ -1,0 +1,13 @@
+---
+before:
+  hooks:
+    - go mod tidy -compat=1.18
+release:
+  prerelease: auto
+
+builds:
+  -
+    # Custom ldflags templates.
+    # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
+    ldflags:
+      - -s -w -X github.com/ritchies/ctftool/cmd.Version={{.Version}} -X github.com/ritchies/ctftool/cmd.Build={{.Build}} -X github.com/ritchies/ctftool/cmd.Commit={{.Commit}} -X github.com/ritchies/ctftool/cmd.BuiltBy=goreleaser

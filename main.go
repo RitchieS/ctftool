@@ -26,14 +26,7 @@ import (
 	"github.com/ritchies/ctftool/cmd"
 )
 
-var (
-	Build   = "dev" // Build is the current build of the program
-	Version = "dev" // Version is the current version of the program
-)
-
 func main() {
-	cmd.Build = Build
-	cmd.Version = Version
 
 	cmd.Execute()
 }

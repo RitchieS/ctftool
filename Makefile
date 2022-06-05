@@ -9,7 +9,9 @@ VERSION := `git describe --tags`
 BUILD := `git rev-parse --short HEAD`
 
 # Use linker flags to provide version/build settings to the target
-LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD) -s -w"
+# LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD) -s -w"
+LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Build=$(BUILD) -s -w"
+
 
 # go source files, ignore vendor directory
 SRC = $(find . -type f -name '*.go' -not -path "./vendor/*")
