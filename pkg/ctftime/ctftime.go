@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -68,23 +67,10 @@ type Team struct {
 type Client struct {
 	Client  *http.Client
 	BaseURL *url.URL
-	Log     *logrus.Logger
 }
 
 // NewClient constructs a new Client. If transport is nil, a default transport is used.
 func NewClient(transport http.RoundTripper) *Client {
-	log := logrus.New()
-
-	log.SetFormatter(&logrus.TextFormatter{
-		DisableSorting:         false,
-		DisableTimestamp:       true,
-		DisableLevelTruncation: true,
-		ForceColors:            true,
-		ForceQuote:             true,
-		PadLevelText:           true,
-		QuoteEmptyFields:       true,
-	})
-
 	cookieJar, _ := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
@@ -103,7 +89,6 @@ func NewClient(transport http.RoundTripper) *Client {
 			Transport: transport,
 			Jar:       cookieJar,
 		},
-		Log: log,
 	}
 }
 
