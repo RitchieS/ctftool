@@ -177,26 +177,13 @@ var ctftimeCustomCmd = &cobra.Command{
 func init() {
 	ctftimeCmd.AddCommand(ctftimeCustomCmd)
 
-	// Here you will define your flags and configuration settings.
-	// id
 	ctftimeCustomCmd.Flags().Uint64("id", 0, "The ID of the event to modify")
 	cobra.MarkFlagRequired(ctftimeCustomCmd.Flags(), "id")
 
-	// title
 	ctftimeCustomCmd.Flags().String("title", "", "The title of the event")
-
-	// description
 	ctftimeCustomCmd.Flags().String("description", "", "The description of the event")
-
-	// url
 	ctftimeCustomCmd.Flags().String("url", "", "The URL of the event")
-
-	// start
 	ctftimeCustomCmd.Flags().String("start", "", "The start date of the event")
-
-	// finish
 	ctftimeCustomCmd.Flags().String("finish", "", "The finish date of the event")
-
-	// hidden
 	ctftimeCustomCmd.Flags().Bool("hidden", false, "Whether the event is hidden")
 }

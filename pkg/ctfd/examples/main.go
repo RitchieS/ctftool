@@ -11,6 +11,11 @@ import (
 	"strings"
 
 	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/sirupsen/logrus"
+)
+
+var (
+	log = logrus.New()
 )
 
 var (
@@ -22,10 +27,20 @@ var (
 )
 
 func main() {
+	// Logrus options
+	log.SetFormatter(&logrus.TextFormatter{
+		DisableSorting:         false,
+		DisableTimestamp:       true,
+		DisableLevelTruncation: true,
+		ForceColors:            true,
+		ForceQuote:             true,
+		PadLevelText:           true,
+		QuoteEmptyFields:       true,
+	})
+
 	flag.Parse()
 
 	client := ctfd.NewClient(nil)
-	log := client.Log
 
 	baseURL, err := url.Parse(*ctfdURL)
 	if err != nil {

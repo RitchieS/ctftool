@@ -21,9 +21,6 @@ func setup() (client *Client, mux *http.ServeMux, cleanup func()) {
 	client = NewClient(nil)
 	client.BaseURL, _ = url.Parse(server.URL + "/")
 
-	// Disable log output
-	client.Log.SetOutput(ioutil.Discard)
-
 	return client, mux, server.Close
 }
 

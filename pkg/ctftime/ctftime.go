@@ -146,6 +146,10 @@ func (c *Client) get(urlStr string, a ...interface{}) (*goquery.Document, error)
 func IsCTFEventActive(event Event) bool {
 	now := time.Now()
 
+	if event.Finish.Before(now) {
+		return false
+	}
+
 	return event.Start.Before(now) && event.Finish.After(now)
 }
 

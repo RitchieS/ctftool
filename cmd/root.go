@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path"
 
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/internal/storage"
@@ -55,13 +56,18 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "Config file (default is $HOME/.ctftool.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Debug output")
-	rootCmd.PersistentFlags().StringVar(&options.DebugFormat, "debug-format", "text", "Debug output format (text|json)")
+	rootCmd.PersistentFlags().BoolVar(&PrintPretty, "interactive", false, "Interactive mode")
+
+	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "Config file (default is .ctftool.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Verbose logging")
+	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "verbose", "v", false, "Verbose logging")
+	rootCmd.PersistentFlags().StringVar(&options.DebugFormat, "log-format", "text", "Logger output format (text|json)")
 
 	rootCmd.PersistentFlags().StringVar(&dB.Path, "db-path", "ctftool.sqlite", "Path to the database file")
 
 	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print version information")
+
+	rootCmd.PersistentFlags().MarkHidden("debug")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -70,15 +76,19 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(options.ConfigFile)
 	} else {
+		cwd, err := os.Getwd()
+		cobra.CheckErr(err)
+
 		// Find home directory.
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		cwd, err := os.Getwd()
-		cobra.CheckErr(err)
+		// Search .config in home directory with name "ctftool"
+		homeConfig := path.Join(home, ".config", "ctftool")
 
 		// Search config in home/cwd directory with name ".ctftool" (without extension).
 		viper.AddConfigPath(cwd)
+		viper.AddConfigPath(homeConfig)
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".ctftool")

@@ -31,7 +31,6 @@ var ctfdCmd = &cobra.Command{
 	Long:    `Retrieve challenges and files from a CTFd instance.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctfd.NewClient(nil)
-		log := client.Log
 
 		// check if flags are set using viper
 		CTFDUrl = viper.GetString("url")

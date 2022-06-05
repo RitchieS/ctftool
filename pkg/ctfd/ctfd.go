@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/net/publicsuffix"
 )
 
 type Client struct {
 	Client  *http.Client
 	BaseURL *url.URL
-	Log     *logrus.Logger
 	Creds   *Credentials
 }
 
@@ -29,17 +27,6 @@ type Credentials struct {
 
 // NewClient constructs a new Client. If transport is nil, a default transport is used.
 func NewClient(transport http.RoundTripper) *Client {
-	log := logrus.New()
-
-	log.SetFormatter(&logrus.TextFormatter{
-		DisableSorting:         false,
-		DisableTimestamp:       true,
-		DisableLevelTruncation: true,
-		ForceColors:            true,
-		ForceQuote:             true,
-		PadLevelText:           true,
-		QuoteEmptyFields:       true,
-	})
 
 	cookieJar, _ := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -59,7 +46,6 @@ func NewClient(transport http.RoundTripper) *Client {
 			Transport: transport,
 			Jar:       cookieJar,
 		},
-		Log:   log,
 		Creds: &Credentials{},
 	}
 }
@@ -123,8 +109,6 @@ func (c *Client) Check() error {
 
 // Authenticate client to the CTFd instance with the given username, password.
 func (c *Client) Authenticate() error {
-	log := c.Log
-
 	if err := c.Check(); err != nil {
 		return err
 	}
@@ -141,13 +125,6 @@ func (c *Client) Authenticate() error {
 	if err != nil {
 		return fmt.Errorf("error joining path: %v", err)
 	}
-
-	log.WithField("url", loginURL).Debug("fetching login page")
-
-	log.WithFields(logrus.Fields{
-		"username": username,
-		"password": password,
-	}).Debug("Authenticating")
 
 	resp, err := fetchAndSubmitForm(c.Client, loginURL.String(), setPassword)
 	if err != nil {

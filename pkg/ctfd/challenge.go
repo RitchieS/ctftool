@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 )
 
@@ -103,7 +102,6 @@ func (c *Client) Challenge(id int64) (*Challenge, error) {
 }
 
 func (c *Client) DownloadFiles(id int64, outputPath string) error {
-	log := c.Log
 	challenge, err := c.Challenge(id)
 	if err != nil {
 		return fmt.Errorf("error getting challenge: %v", err)
@@ -120,13 +118,6 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 	for _, file := range files {
 		challengeFileURL, _ := c.BaseURL.Parse(file)
 		fileName := getFileName(challengeFileURL.String())
-
-		log.WithFields(logrus.Fields{
-			"challenge": challenge.Name,
-			"file":      fileName,
-		}).Info("Downloading challenge files")
-
-		log.WithField("url", challengeFileURL.String()).Debug("Downloading challenge file")
 
 		resp, err := c.Client.Get(challengeFileURL.String())
 		if err != nil {
@@ -157,33 +148,23 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 
 // GetDescription retrieves a challenge and returns a writeup template of the challenge
 func (c *Client) GetDescription(challenge *Challenge, challengePath string) error {
-	log := c.Log
-
 	challengePath = path.Join(challengePath, "README.md")
 
-	var oldChallengeLines []string
-	// check if the file exists
+	var oldWriteupText []string
+	// Check the file exists, if it does, then we need to extract everything after "## Writeup\n"
 	if _, err := os.Stat(challengePath); err == nil {
-
-		// Check the file exists, if it does, then we need to extract everything after "## Writeup\n"
-
 		oldChallenge, err := os.Open(challengePath)
 		if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("error opening challenge file: %v", err)
 		}
-
 		defer oldChallenge.Close()
 
-		// Read the file into a string
-
-		// use ioutil.ReadAll() to read the file into a string
 		oldChallengeString, err := ioutil.ReadAll(oldChallenge)
 		if err != nil && err != io.EOF {
 			return fmt.Errorf("error reading challenge file: %v", err)
 		}
 
-		// use strings.Split() to split the string into an array of strings to get the custom writeup after "## Writeup\n"
-		oldChallengeLines = strings.Split(string(oldChallengeString), "## Writeup\n")
+		oldWriteupText = strings.Split(string(oldChallengeString), "## Writeup\n")
 	}
 
 	file, err := os.Create(challengePath)
@@ -201,9 +182,6 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 	}
 
 	file.WriteString(fmt.Sprintf("# %s %s - %s\n\n", solved, strings.ToUpper(challenge.Category), challenge.Name))
-
-	// category
-	// file.WriteString(fmt.Sprintf("Category: %s\n\n", challenge.Category))
 
 	// tags (if available)
 	if len(challenge.Tags) > 0 {
@@ -225,9 +203,6 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 		file.WriteString("Files:\n\n")
 		for _, challengeFile := range challenge.Files {
 			fileURL, _ := c.BaseURL.Parse(challengeFile)
-			// file.WriteString(fmt.Sprintf("- %s\n", getFileName(challengeFile)))
-			// file.WriteString(fmt.Sprintf("  - %s\n", fileURL.String()))
-
 			file.WriteString(fmt.Sprintf("- [%s](%s)\n", getFileName(challengeFile), fileURL.String()))
 		}
 
@@ -235,8 +210,8 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 	}
 
 	// description
-	parsedHTMLDescription := func(htmlb string) string {
-		parser := strings.NewReader(htmlb)
+	cleanDescription := func(desc string) string {
+		parser := strings.NewReader(desc)
 		decoder := html.NewTokenizer(parser)
 		var text string
 		for {
@@ -283,9 +258,9 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 	file.WriteString("## Description\n\n")
 
 	// trip leading and trailing newlines
-	description := strings.TrimSpace(parsedHTMLDescription)
+	description := strings.TrimSpace(cleanDescription)
 
-	// replace multiple newlines and \r\n with a single newline or double newline
+	// replace multiple newlines and \r\n
 	newlineRegex := regexp.MustCompile(`\n{2,}|\r\n`)
 	description = newlineRegex.ReplaceAllString(description, "\n\n")
 
@@ -309,14 +284,9 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 	// writeup
 	file.WriteString("\n## Writeup\n")
 
-	if len(oldChallengeLines) > 1 {
-		file.WriteString(oldChallengeLines[1])
+	if len(oldWriteupText) > 1 {
+		file.WriteString(oldWriteupText[1])
 	}
-
-	log.WithFields(logrus.Fields{
-		"challenge": challenge.Name,
-		"file":      "README.md",
-	}).Info("Created challenge writeup")
 
 	return nil
 }
@@ -325,8 +295,8 @@ func (c *Client) GetDescription(challenge *Challenge, challengePath string) erro
 // /files/challenge.zip?token=12345
 func getFileName(challengeFileURL string) string {
 	directories := strings.Split(challengeFileURL, "/")
-	challengeFiles := strings.Split(directories[len(directories)-1], "?")
+	challengeFile := strings.Split(directories[len(directories)-1], "?")
 
-	fileName := challengeFiles[0]
+	fileName := challengeFile[0]
 	return fileName
 }

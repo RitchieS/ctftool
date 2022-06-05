@@ -16,8 +16,6 @@ var ctfdTopCmd = &cobra.Command{
 	Long:  `Display the top 10 teams from CTFd`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctfd.NewClient(nil)
-		log := client.Log
-
 		uri := viper.GetString("url")
 
 		baseURL, err := url.Parse(uri)
