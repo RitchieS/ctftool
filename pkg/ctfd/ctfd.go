@@ -62,6 +62,21 @@ func (c *Client) get(urlStr string, a ...interface{}) (*goquery.Document, error)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching url %q: %v", u, err)
 	}
+	defer resp.Body.Close()
+
+	// 5 retries to get the challenge if the status code is not http.StatusOK
+	for i := 0; i < 5; i++ {
+		if resp.StatusCode == http.StatusOK {
+			break
+		}
+		resp, err = c.Client.Get(u.String())
+		if err != nil {
+			return nil, fmt.Errorf("error fetching url %q: %v", u, err)
+		}
+		defer resp.Body.Close()
+
+		time.Sleep(time.Second * 1)
+	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, u)

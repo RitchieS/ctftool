@@ -84,6 +84,21 @@ func (c *Client) Challenge(id int64) (*Challenge, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error fetching challenge from %q: %v", challengeAPI.String(), err)
 	}
+	defer doc.Body.Close()
+
+	// 5 retries to get the challenge if the status code is not http.StatusOK
+	for i := 0; i < 5; i++ {
+		if doc.StatusCode == http.StatusOK {
+			break
+		}
+		doc, err = c.Client.Get(challengeAPI.String())
+		if err != nil {
+			return nil, fmt.Errorf("error fetching challenge from %q: %v", challengeAPI.String(), err)
+		}
+		defer doc.Body.Close()
+
+		time.Sleep(time.Second * 1)
+	}
 
 	if doc.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error fetching challenge: received %v status code", doc.StatusCode)
@@ -124,6 +139,20 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 			return fmt.Errorf("error getting challenge file: %v", err)
 		}
 		defer resp.Body.Close()
+
+		// 5 retries to get the challenge if the status code is not http.StatusOK
+		for i := 0; i < 5; i++ {
+			if resp.StatusCode == http.StatusOK {
+				break
+			}
+			resp, err = c.Client.Get(challengeFileURL.String())
+			if err != nil {
+				return fmt.Errorf("error getting challenge file: %v", err)
+			}
+			defer resp.Body.Close()
+
+			time.Sleep(time.Second * 1)
+		}
 
 		file, err := os.Create(path.Join(outputPath, fileName))
 		if err != nil {

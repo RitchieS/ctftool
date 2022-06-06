@@ -51,6 +51,20 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 		return scoreboard.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
 	}
 
+	// 5 retries to get the scoreboard if the status code is not http.StatusOK
+	for i := 0; i < 5; i++ {
+		if doc.StatusCode == http.StatusOK {
+			break
+		}
+		doc, err = c.Client.Get(scoreboardAPI.String())
+		if err != nil {
+			return scoreboard.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
+		}
+		defer doc.Body.Close()
+
+		time.Sleep(time.Second * 1)
+	}
+
 	if doc.StatusCode != http.StatusOK {
 		return scoreboard.Data, fmt.Errorf("error fetching scoreboard: received %v status code", doc.StatusCode)
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type ChallengeData struct {
@@ -35,6 +36,20 @@ func (c *Client) ListChallenges() ([]ChallengeData, error) {
 	doc, err := c.Client.Get(challengeAPI.String())
 	if err != nil {
 		return nil, fmt.Errorf("error fetching challenges from %s: %v", challengeAPI.String(), err)
+	}
+
+	// 5 retries to get the challenge if the status code is not http.StatusOK
+	for i := 0; i < 5; i++ {
+		if doc.StatusCode == http.StatusOK {
+			break
+		}
+		doc, err = c.Client.Get(challengeAPI.String())
+		if err != nil {
+			return nil, fmt.Errorf("error fetching challenges from %s: %v", challengeAPI.String(), err)
+		}
+		defer doc.Body.Close()
+
+		time.Sleep(time.Second * 1)
 	}
 
 	if doc.StatusCode != http.StatusOK {
