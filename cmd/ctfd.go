@@ -8,6 +8,7 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -91,7 +92,7 @@ var ctfdCmd = &cobra.Command{
 
 			// make sure name and category are more than 1 character and less than 50
 			if len(category) < 1 || len(name) < 1 {
-				log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Category, challenge.Name)
+				log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Name, challenge.Category)
 				continue
 			}
 
@@ -99,9 +100,9 @@ var ctfdCmd = &cobra.Command{
 
 			if _, statErr := os.Stat(challengePath); statErr == nil {
 				if OutputOverwrite {
-					log.Warnf("Overwriting %q : already exists", challenge.Name)
+					log.Warnf("Overwriting %q : already exists", name)
 				} else {
-					log.Warnf("Skipping %q : overwrite is false", challenge.Name)
+					log.Warnf("Skipping %q : overwrite is false", name)
 					continue
 				}
 			}
@@ -112,17 +113,30 @@ var ctfdCmd = &cobra.Command{
 
 			chall, err := client.Challenge(challenge.ID)
 			if err != nil {
-				log.Fatalf("error getting challenge %q: %v", challenge.Name, err)
+				log.Fatalf("error getting challenge %q: %v", name, err)
 			}
 
 			// download challenge files
 			if err := client.DownloadFiles(chall.ID, challengePath); err != nil {
-				log.Errorf("error downloading files for %q: %v", challenge.Name, err)
+				log.Errorf("error downloading files for %q: %v", name, err)
 			}
 
 			// get description
 			if err := client.GetDescription(chall, challengePath); err != nil {
-				log.Fatalf("error getting description for %q: %v", challenge.Name, err)
+				log.Fatalf("error getting description for %q: %v", name, err)
+			}
+
+			if len(chall.Files) > 0 {
+				log.WithFields(logrus.Fields{
+					"category": category,
+					"files":    len(chall.Files),
+					"solves":   chall.Solves,
+				}).Infof("Downloaded %q", name)
+			} else {
+				log.WithFields(logrus.Fields{
+					"category": category,
+					"solves":   chall.Solves,
+				}).Infof("Created %q", name)
 			}
 		}
 
