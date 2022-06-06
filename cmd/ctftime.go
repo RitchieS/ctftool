@@ -70,7 +70,8 @@ var ctftimeCmd = &cobra.Command{
 
 		eventStringsArray := make([]string, 0)
 
-		result := db.Order("start asc, finish asc, weight desc").Find(&events)
+		// Make sure active events are at the top
+		result := db.Order("finish asc, start asc, weight desc").Find(&events)
 		if result.Error != nil {
 			log.Fatal(result.Error)
 		}
@@ -141,7 +142,7 @@ var ctftimeCmd = &cobra.Command{
 						Light: "#00ff00",
 						Dark:  "#00ff00",
 					}).Render(fmt.Sprintf("%s - active", prettyETA))
-				} else if eventFinish.Sub(eventStart).Hours() > 120 {
+				} else if eventFinish.Sub(eventStart).Hours() >= 120 {
 					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
 						Light: "#ffa500",
 						Dark:  "#ffa500",
@@ -162,7 +163,7 @@ var ctftimeCmd = &cobra.Command{
 				}).Debug(event.Title)
 
 				prettyEND := lib.FtoaWithDigits(eventFinish.Sub(eventStart).Hours(), 2)
-				if eventFinish.Sub(eventStart).Hours() > 120 {
+				if eventFinish.Sub(eventStart).Hours() >= 120 {
 					prettyEND = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
 						Light: "#ffa500",
 						Dark:  "#ffa500",
