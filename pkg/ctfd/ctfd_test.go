@@ -122,7 +122,7 @@ func TestCheckFailure(t *testing.T) {
 	}{
 		{
 			"not ctfd instance",
-			`<html><body><small class="text-muted">Not Powered by CTFd</small></body></html>`,
+			`<html><body><small class="text-muted">Not A CTFd Instance</small></body></html>`,
 			false,
 		},
 	}
