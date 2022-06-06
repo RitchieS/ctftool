@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -84,7 +85,8 @@ func (c *Client) Check() error {
 	}
 
 	// Check for "<small class="text-muted">Powered by CTFd</small>"
-	if doc.Find("small.text-muted").Text() != "Powered by CTFd" {
+	footerText := doc.Find("small.text-muted").Text()
+	if !strings.Contains(footerText, "Powered by CTFd") {
 		return fmt.Errorf("instance is not a CTFd instance")
 	}
 
