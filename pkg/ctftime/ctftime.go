@@ -112,12 +112,11 @@ func (c *Client) get(urlStr string, a ...interface{}) (*goquery.Document, error)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching url %q: %v", u, err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, u)
 	}
-
-	defer resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {

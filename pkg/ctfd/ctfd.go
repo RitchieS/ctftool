@@ -28,7 +28,6 @@ type Credentials struct {
 
 // NewClient constructs a new Client. If transport is nil, a default transport is used.
 func NewClient(transport http.RoundTripper) *Client {
-
 	cookieJar, _ := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
@@ -81,8 +80,6 @@ func (c *Client) get(urlStr string, a ...interface{}) (*goquery.Document, error)
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, u)
 	}
-
-	defer resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
