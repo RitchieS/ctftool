@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/gosimple/slug"
 	"github.com/ritchies/ctftool/pkg/ctfd"
@@ -84,61 +85,71 @@ var ctfdCmd = &cobra.Command{
 			outputFolder = path.Join(cwd, CTFDOutputFolder)
 		}
 
+		var wg sync.WaitGroup
+
 		for _, challenge := range challenges {
-			name := cleanStr(challenge.Name, false)
+			wg.Add(1)
+			go func(challenge ctfd.ChallengeData) {
+				name := cleanStr(challenge.Name, false)
 
-			category := strings.Split(challenge.Category, " ")[0]
-			category = cleanStr(category, true)
+				category := strings.Split(challenge.Category, " ")[0]
+				category = cleanStr(category, true)
 
-			// make sure name and category are more than 1 character and less than 50
-			if len(category) < 1 || len(name) < 1 {
-				log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Name, challenge.Category)
-				continue
-			}
-
-			challengePath := path.Join(outputFolder, category, name)
-
-			if _, statErr := os.Stat(challengePath); statErr == nil {
-				if OutputOverwrite {
-					log.Warnf("Overwriting %q : already exists", name)
-				} else {
-					log.Warnf("Skipping %q : overwrite is false", name)
-					continue
+				// make sure name and category are more than 1 character and less than 50
+				if len(category) < 1 || len(name) < 1 {
+					log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Name, challenge.Category)
+					wg.Done()
+					return
 				}
-			}
 
-			if err := os.MkdirAll(challengePath, os.ModePerm); err != nil {
-				log.Fatalf("error creating directory %q: %v", challengePath, err)
-			}
+				challengePath := path.Join(outputFolder, category, name)
 
-			chall, err := client.Challenge(challenge.ID)
-			if err != nil {
-				log.Fatalf("error getting challenge %q: %v", name, err)
-			}
+				if _, statErr := os.Stat(challengePath); statErr == nil {
+					if OutputOverwrite {
+						log.Warnf("Overwriting %q : already exists", name)
+					} else {
+						log.Warnf("Skipping %q : overwrite is false", name)
+						wg.Done()
+						return
+					}
+				}
 
-			// download challenge files
-			if err := client.DownloadFiles(chall.ID, challengePath); err != nil {
-				log.Errorf("error downloading files for %q: %v", name, err)
-			}
+				if err := os.MkdirAll(challengePath, os.ModePerm); err != nil {
+					log.Fatalf("error creating directory %q: %v", challengePath, err)
+				}
 
-			// get description
-			if err := client.GetDescription(chall, challengePath); err != nil {
-				log.Fatalf("error getting description for %q: %v", name, err)
-			}
+				chall, err := client.Challenge(challenge.ID)
+				if err != nil {
+					log.Fatalf("error getting challenge %q: %v", name, err)
+				}
 
-			if len(chall.Files) > 0 {
-				log.WithFields(logrus.Fields{
-					"category": category,
-					"files":    len(chall.Files),
-					"solves":   chall.Solves,
-				}).Infof("Downloaded %q", name)
-			} else {
-				log.WithFields(logrus.Fields{
-					"category": category,
-					"solves":   chall.Solves,
-				}).Infof("Created %q", name)
-			}
+				// download challenge files
+				if err := client.DownloadFiles(chall.ID, challengePath); err != nil {
+					log.Errorf("error downloading files for %q: %v", name, err)
+				}
+
+				// get description
+				if err := client.GetDescription(chall, challengePath); err != nil {
+					log.Fatalf("error getting description for %q: %v", name, err)
+				}
+
+				if len(chall.Files) > 0 {
+					log.WithFields(logrus.Fields{
+						"category": category,
+						"files":    len(chall.Files),
+						"solves":   chall.Solves,
+					}).Infof("Downloaded %q", name)
+				} else {
+					log.WithFields(logrus.Fields{
+						"category": category,
+						"solves":   chall.Solves,
+					}).Infof("Created %q", name)
+				}
+
+				wg.Done()
+			}(challenge)
 		}
+		wg.Wait()
 
 		// values to config file if --save-config is set
 		if SaveConfig {

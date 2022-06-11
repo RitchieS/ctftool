@@ -1,17 +1,13 @@
-package ctftime
+package ctfd
 
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
-
-	"github.com/PuerkitoBio/goquery"
-	"golang.org/x/net/publicsuffix"
 )
 
 // Struct for API Endpoint ctftime.org/api/v1/events/
@@ -27,6 +23,7 @@ type Event struct {
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`
 	URL           string    `json:"url"`
+	URLIsCTFD     bool      `json:"url_is_ctfd"`
 	Logo          string    `json:"logo"`
 	Weight        float64   `json:"weight"`
 	Onsite        bool      `json:"onsite"`
@@ -48,7 +45,7 @@ type Event struct {
 }
 
 // Struct for API Endpoint ctftime.org/api/v1/teams/
-type Team struct {
+type CTFTeam struct {
 	ID           int      `json:"id"`
 	Academic     bool     `json:"academic"`
 	PrimaryAlias string   `json:"primary_alias"`
@@ -62,68 +59,6 @@ type Team struct {
 		RatingPoints    float64 `json:"rating_points"`
 		CountryPlace    int     `json:"country_place"`
 	} `json:"rating"`
-}
-
-type Client struct {
-	Client  *http.Client
-	BaseURL *url.URL
-}
-
-// NewClient constructs a new Client. If transport is nil, a default transport is used.
-func NewClient(transport http.RoundTripper) *Client {
-	cookieJar, _ := cookiejar.New(&cookiejar.Options{
-		PublicSuffixList: publicsuffix.List,
-	})
-
-	// Set long timeout to avoid timeouts because CTFd is slow
-	if transport == nil {
-		transport = &http.Transport{
-			MaxIdleConns:          10,
-			IdleConnTimeout:       30 * time.Second,
-			ResponseHeaderTimeout: time.Duration(30) * time.Second,
-		}
-	}
-
-	return &Client{
-		Client: &http.Client{
-			Transport: transport,
-			Jar:       cookieJar,
-		},
-	}
-}
-
-// get fetches a urlStr (URL relative to the client's BaseURL) and returns the parsed response document.
-func (c *Client) get(urlStr string, a ...interface{}) (*goquery.Document, error) {
-	u, err := c.BaseURL.Parse(fmt.Sprintf(urlStr, a...))
-	if err != nil {
-		return nil, fmt.Errorf("error parsing url %q: %v", urlStr, err)
-	}
-
-	req, err := http.NewRequest("GET", u.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request for %q: %v", urlStr, err)
-	}
-
-	// Set the User-Agent header
-	req.Header.Set("User-Agent", "CTF Tool/1.0")
-
-	resp, err := c.Client.Do(req)
-	// resp, err := c.Client.Get(u.String())
-	if err != nil {
-		return nil, fmt.Errorf("error fetching url %q: %v", u, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, u)
-	}
-
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing response body: %v", err)
-	}
-
-	return doc, nil
 }
 
 // Return if a CTF is currently active
@@ -220,7 +155,7 @@ func (c *Client) GetCTFEvents() ([]Event, error) {
 
 	goquerydoc, err := c.get(ctf_api)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get CTF events: %v", err)
 	}
 
 	// get the json
@@ -229,13 +164,33 @@ func (c *Client) GetCTFEvents() ([]Event, error) {
 	// unmarshal the json
 	err = json.Unmarshal([]byte(json_data), &events)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal CTF events: %v", err)
 	}
 
 	events, err = CleanCTFEvents(events)
 	if err != nil {
-		return events, err
+		return events, fmt.Errorf("failed to clean CTF events: %v", err)
 	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < len(events); i++ {
+		wg.Add(1)
+		go func(e Event) {
+			c.BaseURL, err = url.Parse(e.URL)
+			if err != nil {
+				return
+			}
+
+			err = c.Check()
+			if err == nil {
+				e.URLIsCTFD = true
+			}
+
+			wg.Done()
+		}(events[i])
+	}
+
+	wg.Wait()
 
 	return events, nil
 }
@@ -263,8 +218,8 @@ func (c *Client) GetCTFEvent(id int) (Event, error) {
 }
 
 // Get information about a specific team on CTFTime
-func (c *Client) GetCTFTeam(id int) (Team, error) {
-	var team Team
+func (c *Client) GetCTFTeam(id int) (CTFTeam, error) {
+	var team CTFTeam
 	uri := fmt.Sprintf("api/v1/teams/%d/", id)
 
 	goquerydoc, err := c.get(uri)

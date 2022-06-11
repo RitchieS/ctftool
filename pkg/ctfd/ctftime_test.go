@@ -1,4 +1,4 @@
-package ctftime
+package ctfd
 
 import (
 	"testing"

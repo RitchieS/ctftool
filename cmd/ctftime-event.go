@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gosimple/slug"
-	"github.com/ritchies/ctftool/pkg/ctftime"
+	"github.com/ritchies/ctftool/pkg/ctfd"
 	"github.com/spf13/cobra"
 )
 
@@ -80,7 +80,7 @@ var ctftimeEventCmd = &cobra.Command{
 	},
 	Args: cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctftime.NewClient(nil)
+		client := ctfd.NewClient(nil)
 		client.BaseURL, _ = url.Parse("https://ctftime.org/")
 
 		// if args is not an integer, exit
@@ -112,7 +112,7 @@ var ctftimeEventCmd = &cobra.Command{
 			now := time.Now()
 			nextWeek := now.AddDate(0, 0, 7-int(now.Weekday()))
 
-			thisWeekEvents := make([]ctftime.Event, 0)
+			thisWeekEvents := make([]ctfd.Event, 0)
 
 			for _, event := range events {
 				if event.Start.After(now) && event.Start.Before(nextWeek) {

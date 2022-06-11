@@ -33,7 +33,7 @@ var ctftimeCmd = &cobra.Command{
 	Short:   "Query CTFTime",
 	Long:    `Retrieve information about upcoming CTF events and teams from CTFTime.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctftime.NewClient(nil)
+		client := ctfd.NewClient(nil)
 		client.BaseURL, _ = url.Parse("https://ctftime.org/")
 
 		events, err := client.GetCTFEvents()
@@ -127,7 +127,7 @@ var ctftimeCmd = &cobra.Command{
 
 			db.Save(&event)
 
-			if ctftime.IsCTFEventActive(event) {
+			if ctfd.IsCTFEventActive(event) {
 				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
 
 				log.WithFields(logrus.Fields{
