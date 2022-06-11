@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/internal/storage"
-	"github.com/ritchies/ctftool/pkg/ctftime"
+	"github.com/ritchies/ctftool/pkg/ctfd"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm/clause"
@@ -52,6 +52,7 @@ var ctftimeCmd = &cobra.Command{
 				"title",
 				"description",
 				"url",
+				"url_is_ctfd",
 				"logo",
 				"weight",
 				"onsite",
@@ -117,6 +118,11 @@ var ctftimeCmd = &cobra.Command{
 			if event.CreatedAt.Second() == event.UpdatedAt.Second() {
 				eventTitle = fmt.Sprintf("%s (NEW)", eventTitle)
 			}
+
+			// !TODO: BUG
+			/* if event.URLIsCTFD {
+				eventTitle = fmt.Sprintf("%s (CTFD)", eventTitle)
+			} */
 
 			if event.Weight == 0 && eventFinish.Sub(eventStart).Hours() < 120 {
 				prettyWeight = "TBD"

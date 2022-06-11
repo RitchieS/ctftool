@@ -8,10 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-/* `ctf_id`,`title`,`description`,`url`,`logo`,`weight`,`onsite`,`location`,
-`restrictions`,`format`,`format_id`,`participants`,`ctf_time_url`,`live_feed`,
-`is_votable_now`,`public_votable`,`start`,`finish`,`id` */
-
 type Event struct {
 	gorm.Model
 
@@ -22,6 +18,7 @@ type Event struct {
 	Title         string
 	Description   string
 	URL           string
+	URLIsCTFD     bool
 	Logo          string
 	Weight        float64
 	Onsite        bool
@@ -99,6 +96,7 @@ func (ctf *Event) MarshallJSON() ([]byte, error) {
 		Title         string    `json:"title"`
 		Description   string    `json:"description"`
 		URL           string    `json:"url"`
+		URLIsCTFD     bool      `json:"url_is_ctfd"`
 		Logo          string    `json:"logo"`
 		Weight        float64   `json:"weight"`
 		Onsite        bool      `json:"onsite"`
@@ -120,6 +118,7 @@ func (ctf *Event) MarshallJSON() ([]byte, error) {
 	tmp.Title = ctf.Title
 	tmp.Description = ctf.Description
 	tmp.URL = ctf.URL
+	tmp.URLIsCTFD = ctf.URLIsCTFD
 	tmp.Logo = ctf.Logo
 	tmp.Weight = ctf.Weight
 	tmp.Onsite = ctf.Onsite
