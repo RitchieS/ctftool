@@ -60,7 +60,6 @@ func (c *Client) get(urlStr string, a ...interface{}) (*goquery.Document, error)
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
 
-	//resp, err := c.Client.Get(u.String())
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching url %q: %v", u, err)
