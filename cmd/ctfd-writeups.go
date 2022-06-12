@@ -94,6 +94,19 @@ var ctfdWriteupCmd = &cobra.Command{
 			rl = ratelimit.New(100)
 		}
 
+		// Warn the user that they are about to overwrite files
+		log.Warn("This action will overwrite existing files")
+		log.Info("Writeups will be updated if they exist")
+		log.Info("Press enter or ctrl+c to cancel")
+
+		// Ask the user if they want to continue
+		fmt.Print("Do you want to continue? [y/N]: ")
+		var answer string
+		fmt.Scanln(&answer)
+		if strings.ToLower(answer) != "y" {
+			log.Fatal("Aborting by user request")
+		}
+
 		for _, challenge := range challenges {
 			wg.Add(1)
 
