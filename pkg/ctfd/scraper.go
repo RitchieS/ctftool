@@ -12,9 +12,10 @@ import (
 )
 
 type Client struct {
-	Client  *http.Client
-	BaseURL *url.URL
-	Creds   *Credentials
+	Client      *http.Client
+	BaseURL     *url.URL
+	Creds       *Credentials
+	MaxFileSize int64
 }
 
 type Credentials struct {
@@ -42,7 +43,8 @@ func NewClient(transport http.RoundTripper) *Client {
 			Transport: transport,
 			Jar:       cookieJar,
 		},
-		Creds: &Credentials{},
+		Creds:       &Credentials{},
+		MaxFileSize: int64(1024 * 1024 * 25),
 	}
 }
 

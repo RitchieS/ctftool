@@ -23,6 +23,7 @@ var (
 	OutputOverwrite  bool
 	RateLimit        int
 	SaveConfig       bool
+	MaxFileSize      int64
 )
 
 // ctfdCmd represents the ctfd command
@@ -61,6 +62,7 @@ var ctfdCmd = &cobra.Command{
 		}
 
 		client.Creds = &credentials
+		client.MaxFileSize = MaxFileSize
 
 		if err := client.Authenticate(); err != nil {
 			log.Fatal(err)
@@ -200,7 +202,8 @@ func init() {
 	ctfdCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
 	// TODO: proper threads
-	ctfdCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 10, "Rate limit (per second)")
+
+	ctfdCmd.Flags().Int64VarP(&MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
 
 	// viper
 	viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))

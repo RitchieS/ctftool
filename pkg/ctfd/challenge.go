@@ -160,7 +160,7 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 		}
 		defer file.Close()
 
-		if resp.ContentLength > TwentyFiveMB || resp.ContentLength < 0 {
+		if resp.ContentLength > (c.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
 			sizeInMegaBytes := resp.ContentLength / OneMB
 			return fmt.Errorf("file size is too big : %vmb", sizeInMegaBytes)
 		}
