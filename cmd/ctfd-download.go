@@ -204,7 +204,7 @@ func init() {
 	ctfdDownloadCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
 	// TODO: proper threads
-	ctfdDownloadCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 1, "Rate limit (per second)")
+	ctfdDownloadCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 3, "Rate limit (per second)")
 
 	ctfdDownloadCmd.Flags().Int64VarP(&MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
 

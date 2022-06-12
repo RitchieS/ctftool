@@ -178,7 +178,7 @@ func init() {
 	ctfdWriteupCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
 	// TODO: proper threads
-	ctfdWriteupCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 1, "Rate limit (per second)")
+	ctfdWriteupCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 10, "Rate limit (per second)")
 
 	// viper
 	viper.BindPFlag("url", ctfdWriteupCmd.Flags().Lookup("url"))
