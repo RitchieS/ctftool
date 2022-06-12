@@ -12,16 +12,16 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/ratelimit"
 )
 
 var (
-	CTFDThreads int
-
 	CTFDUrl          string
 	CTFDUser         string
 	CTFDPass         string
 	CTFDOutputFolder string
 	OutputOverwrite  bool
+	RateLimit        int
 	SaveConfig       bool
 )
 
@@ -86,9 +86,11 @@ var ctfdCmd = &cobra.Command{
 		}
 
 		var wg sync.WaitGroup
+		rl := ratelimit.New(RateLimit)
 
 		for _, challenge := range challenges {
 			wg.Add(1)
+			rl.Take()
 			go func(challenge ctfd.ChallengeData) {
 				name := cleanStr(challenge.Name, false)
 
@@ -197,8 +199,8 @@ func init() {
 	ctfdCmd.Flags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
 	ctfdCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
-	// TODO: threads
-	//ctfdCmd.Flags().IntVarP(&CTFDThreads, "threads", "", 2, "Number of threads to use")
+	// TODO: proper threads
+	ctfdCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 10, "Rate limit (per second)")
 
 	// viper
 	viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))

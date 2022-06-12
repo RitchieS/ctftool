@@ -12,12 +12,14 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.12.0
+	go.uber.org/ratelimit v0.2.0
 	golang.org/x/net v0.0.0-20220531201128-c960675eff93
 	gorm.io/driver/sqlite v1.3.2
 	gorm.io/gorm v1.23.5
 )
 
 require (
+	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
