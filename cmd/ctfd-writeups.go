@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -115,10 +116,10 @@ var ctfdWriteupCmd = &cobra.Command{
 			}
 
 			go func(challenge ctf.ChallengeData) {
-				name := cleanStr(challenge.Name, false)
+				name := lib.CleanSlug(challenge.Name, false)
 
 				category := strings.Split(challenge.Category, " ")[0]
-				category = cleanStr(category, true)
+				category = lib.CleanSlug(category, true)
 
 				// make sure name and category are more than 1 character and less than 50
 				if len(category) < 1 || len(name) < 1 {

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gosimple/slug"
 )
 
 const (
@@ -125,4 +127,26 @@ func Ftoa(num float64) string {
 // to the given number of decimal places, and no trailing zeros.
 func FtoaWithDigits(num float64, digits int) string {
 	return stripTrailingZeros(stripTrailingDigits(strconv.FormatFloat(num, 'f', 6, 64), digits))
+}
+
+// CleanSlug removes non-alphanumeric characters from a string and will
+// lowercase the string if setLower is true.
+func CleanSlug(s string, setLower bool) string {
+	slug.Lowercase = setLower
+	s = slug.Make(s)
+
+	if len(s) > 50 {
+		tempCategory := strings.Split(s, "-")
+		for i := range tempCategory {
+			combined := strings.Join(tempCategory[:i+1], "-")
+			if len(combined) > 50 {
+				s = strings.Join(tempCategory[:i], "-")
+			}
+		}
+		if len(s) > 50 {
+			s = s[:50]
+		}
+	}
+
+	return s
 }

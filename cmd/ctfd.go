@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
-	"github.com/gosimple/slug"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -51,26 +48,4 @@ func init() {
 	viper.BindPFlag("password", ctfdCmd.Flags().Lookup("password"))
 	viper.BindPFlag("output", ctfdCmd.Flags().Lookup("output"))
 	viper.BindPFlag("overwrite", ctfdCmd.Flags().Lookup("overwrite"))
-}
-
-// cleanStr removes non-alphanumeric characters from a string and will
-// lowercase the string if setLower is true.
-func cleanStr(s string, setLower bool) string {
-	slug.Lowercase = setLower
-	s = slug.Make(s)
-
-	if len(s) > 50 {
-		tempCategory := strings.Split(s, "-")
-		for i := range tempCategory {
-			combined := strings.Join(tempCategory[:i+1], "-")
-			if len(combined) > 50 {
-				s = strings.Join(tempCategory[:i], "-")
-			}
-		}
-		if len(s) > 50 {
-			s = s[:50]
-		}
-	}
-
-	return s
 }
