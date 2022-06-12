@@ -26,7 +26,7 @@ var versionCmd = &cobra.Command{
 		if Commit == "dev" {
 			fmt.Printf("You are running a development build of ctftool\n")
 		} else {
-			fmt.Printf("ctftool %s (%s) built by %q on %q\n", Version, Commit, BuiltBy, BuildTime)
+			fmt.Printf("ctftool %s (%s) built by %s on %s\n", Version, Commit, BuiltBy, BuildTime)
 		}
 	},
 }
