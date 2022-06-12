@@ -165,7 +165,7 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 
 		if resp.ContentLength > (c.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
 			sizeInMegaBytes := resp.ContentLength / OneMB
-			return fmt.Errorf("file size is too big : %vmb", sizeInMegaBytes)
+			return fmt.Errorf("file size is too big : %v/%vmb", sizeInMegaBytes, c.MaxFileSize)
 		}
 
 		_, err = io.Copy(file, resp.Body)
