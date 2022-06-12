@@ -1,4 +1,4 @@
-package ctfd
+package ctf
 
 import (
 	"reflect"

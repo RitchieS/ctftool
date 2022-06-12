@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/internal/storage"
-	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm/clause"
@@ -33,7 +33,7 @@ var ctftimeCmd = &cobra.Command{
 	Short:   "Query CTFTime",
 	Long:    `Retrieve information about upcoming CTF events and teams from CTFTime.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctfd.NewClient(nil)
+		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse("https://ctftime.org/")
 
 		events, err := client.GetCTFEvents()
@@ -133,7 +133,7 @@ var ctftimeCmd = &cobra.Command{
 
 			db.Save(&event)
 
-			if ctfd.IsCTFEventActive(event) {
+			if ctf.IsCTFEventActive(event) {
 				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
 
 				log.WithFields(logrus.Fields{

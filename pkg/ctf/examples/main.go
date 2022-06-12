@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,7 +40,7 @@ func main() {
 
 	flag.Parse()
 
-	client := ctfd.NewClient(nil)
+	client := ctf.NewClient(nil)
 
 	baseURL, err := url.Parse(*ctfdURL)
 	if err != nil {
@@ -62,7 +62,7 @@ func main() {
 		log.Fatal("url, username and password are required")
 	}
 
-	credentials := ctfd.Credentials{
+	credentials := ctf.Credentials{
 		Username: *username,
 		Password: *password,
 	}

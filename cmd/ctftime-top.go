@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	"github.com/ritchies/ctftool/internal/lib"
-	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +16,7 @@ var ctftimeTopCmd = &cobra.Command{
 	Short: "Displays top 10 teams",
 	Long:  `Display the top 10 teams from CTFTime`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctfd.NewClient(nil)
+		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse("https://ctftime.org/")
 
 		teams, err := client.GetTopTeams()

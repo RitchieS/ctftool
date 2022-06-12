@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,7 +23,7 @@ var ctfdDownloadCmd = &cobra.Command{
 	Short:   "Download files and create writeups",
 	Long:    `Download files and create writeups for each challenge.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctfd.NewClient(nil)
+		client := ctf.NewClient(nil)
 
 		// check if flags are set using viper
 		CTFDUrl = viper.GetString("url")
@@ -56,7 +56,7 @@ var ctfdDownloadCmd = &cobra.Command{
 			log.Fatal("CTFD User and Password are required")
 		}
 
-		credentials := ctfd.Credentials{
+		credentials := ctf.Credentials{
 			Username: CTFDUser,
 			Password: CTFDPass,
 		}
@@ -103,7 +103,7 @@ var ctfdDownloadCmd = &cobra.Command{
 				rl.Take()
 			}
 
-			go func(challenge ctfd.ChallengeData) {
+			go func(challenge ctf.ChallengeData) {
 				name := cleanStr(challenge.Name, false)
 
 				category := strings.Split(challenge.Category, " ")[0]

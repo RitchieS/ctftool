@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var ctftimeTeamCmd = &cobra.Command{
 	Long:  `Get information about a team on CTFTime.`,
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctfd.NewClient(nil)
+		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse("https://ctftime.org/")
 
 		// if args is not an integer, exit

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/ritchies/ctftool/internal/storage"
-	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/spf13/cobra"
 )
 
@@ -71,7 +71,7 @@ var ctftimeCustomCmd = &cobra.Command{
 		}
 
 		// Check if the event exists
-		var event ctfd.Event
+		var event ctf.Event
 		if err := db.Where("id = ?", id).First(&event).Error; err != nil {
 			log.Fatalf("Error getting event: %s", err)
 		}
