@@ -88,11 +88,21 @@ var ctfdCmd = &cobra.Command{
 		}
 
 		var wg sync.WaitGroup
-		rl := ratelimit.New(RateLimit)
+		var rl ratelimit.Limiter
+
+		if RateLimit > 0 && RateLimit < 100 {
+			rl = ratelimit.New(RateLimit)
+		} else {
+			rl = ratelimit.New(100)
+		}
 
 		for _, challenge := range challenges {
 			wg.Add(1)
-			rl.Take()
+
+			if RateLimit > 0 {
+				rl.Take()
+			}
+
 			go func(challenge ctfd.ChallengeData) {
 				name := cleanStr(challenge.Name, false)
 
@@ -202,6 +212,7 @@ func init() {
 	ctfdCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
 	// TODO: proper threads
+	ctfdCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 1, "Rate limit (per second)")
 
 	ctfdCmd.Flags().Int64VarP(&MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
 

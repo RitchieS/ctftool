@@ -25,7 +25,6 @@ type Challenges struct {
 	Data    []ChallengeData `json:"data"`
 }
 
-// USE: func (c *Client) get(urlStr string, a ...interface{}) (*goquery.Document, error) {
 func (c *Client) ListChallenges() ([]ChallengeData, error) {
 	challenges := &Challenges{}
 	challengeAPI, err := joinPath(c.BaseURL.String(), "api/v1/challenges")
