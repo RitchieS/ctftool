@@ -64,7 +64,4 @@ func init() {
 	ctfdTopCmd.Flags().StringVarP(&CTFDTopURL, "url", "u", "", "CTFD instance URL")
 
 	viper.BindPFlag("url", ctfdTopCmd.Flags().Lookup("url"))
-
-	// required flags
-	ctfdTopCmd.MarkFlagRequired("url")
 }
