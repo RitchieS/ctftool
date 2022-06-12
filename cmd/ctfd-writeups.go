@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/ritchies/ctftool/pkg/ctf"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/ratelimit"
@@ -117,16 +116,6 @@ var ctfdWriteupCmd = &cobra.Command{
 
 				challengePath := path.Join(outputFolder, category, name)
 
-				if _, statErr := os.Stat(challengePath); statErr == nil {
-					if OutputOverwrite {
-						log.Warnf("Overwriting %q : already exists", name)
-					} else {
-						log.Warnf("Skipping %q : overwrite is false", name)
-						wg.Done()
-						return
-					}
-				}
-
 				if err := os.MkdirAll(challengePath, os.ModePerm); err != nil {
 					log.Fatalf("error creating directory %q: %v", challengePath, err)
 				}
@@ -141,18 +130,9 @@ var ctfdWriteupCmd = &cobra.Command{
 					log.Fatalf("error getting description for %q: %v", name, err)
 				}
 
-				if len(chall.Files) > 0 {
-					log.WithFields(logrus.Fields{
-						"category": category,
-						"files":    len(chall.Files),
-						"solves":   chall.Solves,
-					}).Infof("Downloaded %q", name)
-				} else {
-					log.WithFields(logrus.Fields{
-						"category": category,
-						"solves":   chall.Solves,
-					}).Infof("Created %q", name)
-				}
+				log.WithField(
+					"category", challenge.Category,
+				).Infof("Created writeup for %q", name)
 
 				wg.Done()
 			}(challenge)

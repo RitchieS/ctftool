@@ -119,9 +119,7 @@ var ctfdDownloadCmd = &cobra.Command{
 				challengePath := path.Join(outputFolder, category, name)
 
 				if _, statErr := os.Stat(challengePath); statErr == nil {
-					if OutputOverwrite {
-						log.Warnf("Overwriting %q : already exists", name)
-					} else {
+					if !OutputOverwrite {
 						log.Warnf("Skipping %q : overwrite is false", name)
 						wg.Done()
 						return
