@@ -1,10 +1,10 @@
 # CTFTOOL
 
-A cli tool to check upcoming CTF's from [ctftime.org](https://ctftime.org) and download challenges from [CTFd](https://ctfd.io).
-
 [![Go Reference](https://pkg.go.dev/badge/github.com/ritchies/ctftool.svg)](https://pkg.go.dev/github.com/ritchies/ctftool)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ritchies/ctftool)](https://goreportcard.com/report/github.com/ritchies/ctftool)
 [![](https://img.shields.io/github/workflow/status/ritchies/ctftool/Tests?longCache=tru&label=Tests&logo=github%20actions&logoColor=fff)](https://github.com/ritchies/ctftool/actions?query=workflow%3ATests)
+
+A cli tool to check upcoming CTF's from [ctftime.org](https://ctftime.org) and download challenges from [CTFd](https://ctfd.io).
 
 # Overview
 
