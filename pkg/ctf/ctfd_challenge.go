@@ -174,8 +174,6 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 		}
 	}
 
-	time.Sleep(time.Millisecond * 333)
-
 	return nil
 }
 
