@@ -47,10 +47,6 @@ $ ctftool ctfd # Aliases: download, d
 
 If no command is given, the default command is `ctftool ctftime` or if a config file is found it will be used and the default command will be `ctftool ctfd` to update the challenges from that CTF.
 
-#### Warning
-
-For `ctftool ctfd` to work without supplying `--username`, `--password`, `--url`, and `--output` you can save a config file to the output directory by specifying `--save-config`. **However, this will save the credentials in plaintext to the output directory, do not use this if you don't want to store your credentials in plaintext. - YOU HAVE BEEN WARNED**
-
 #### Current issues
 
 - [ ] Does not handle cloudflare correctly

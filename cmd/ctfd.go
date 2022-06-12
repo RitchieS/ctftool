@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"path"
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/ratelimit"
+	"golang.org/x/term"
 )
 
 var (
@@ -49,6 +51,16 @@ var ctfdCmd = &cobra.Command{
 		}
 
 		client.BaseURL = baseURL
+
+		if CTFDUser != "" && CTFDPass == "" {
+			fmt.Print("Password: ")
+			bytepwd, err := term.ReadPassword(int(os.Stdin.Fd()))
+			if err != nil {
+				log.Fatalf("Error reading password: %s", err)
+			}
+			fmt.Printf("\n")
+			CTFDPass = strings.TrimSpace(string(bytepwd))
+		}
 
 		// CTFDUser and password are required
 		if CTFDUser == "" || CTFDPass == "" {
@@ -169,7 +181,6 @@ var ctfdCmd = &cobra.Command{
 		if SaveConfig {
 			viper.Set("url", CTFDUrl)
 			viper.Set("username", CTFDUser)
-			viper.Set("password", CTFDPass)
 			viper.Set("output", outputFolder)
 			viper.Set("overwrite", true)
 			viper.WriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
