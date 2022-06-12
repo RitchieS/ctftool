@@ -183,6 +183,7 @@ var ctfdDownloadCmd = &cobra.Command{
 		if SaveConfig {
 			viper.Set("url", CTFDUrl)
 			viper.Set("username", CTFDUser)
+			viper.Set("password", "")
 			viper.Set("output", outputFolder)
 			viper.Set("overwrite", true)
 			viper.WriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
