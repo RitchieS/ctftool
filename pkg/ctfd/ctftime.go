@@ -152,16 +152,13 @@ func (c *Client) GetCTFEvents() ([]Event, error) {
 
 	ctf_api := fmt.Sprintf("api/v1/events/?%s", params.Encode())
 
-	goquerydoc, err := c.get(ctf_api)
+	doc, err := c.getDoc(ctf_api)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get CTF events: %v", err)
 	}
 
-	// get the json
-	json_data := goquerydoc.Find("body").Text()
-
 	// unmarshal the json
-	err = json.Unmarshal([]byte(json_data), &events)
+	err = json.Unmarshal([]byte(doc.Text()), &events)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal CTF events: %v", err)
 	}
@@ -199,16 +196,12 @@ func (c *Client) GetCTFEvent(id int) (Event, error) {
 	var event Event
 	uri := fmt.Sprintf("api/v1/events/%d/", id)
 
-	goquerydoc, err := c.get(uri)
+	doc, err := c.getDoc(uri)
 	if err != nil {
 		return event, err
 	}
 
-	// get the json
-	json_data := goquerydoc.Find("body").Text()
-
-	// unmarshal the json
-	err = json.NewDecoder(strings.NewReader(json_data)).Decode(&event)
+	err = json.Unmarshal([]byte(doc.Text()), &event)
 	if err != nil {
 		return event, err
 	}
@@ -221,16 +214,12 @@ func (c *Client) GetCTFTeam(id int) (CTFTeam, error) {
 	var team CTFTeam
 	uri := fmt.Sprintf("api/v1/teams/%d/", id)
 
-	goquerydoc, err := c.get(uri)
+	doc, err := c.getDoc(uri)
 	if err != nil {
 		return team, err
 	}
 
-	// get the json
-	json_data := goquerydoc.Find("body").Text()
-
-	// unmarshal the json
-	err = json.NewDecoder(strings.NewReader(json_data)).Decode(&team)
+	err = json.Unmarshal([]byte(doc.Text()), &team)
 	if err != nil {
 		return team, err
 	}
@@ -256,16 +245,12 @@ func (c *Client) GetTopTeams() ([]TopTeam, error) {
 	// https://ctftime.org/api/v1/top/2022/
 	uri := fmt.Sprintf("api/v1/top/%d/", currentYear)
 
-	goquerydoc, err := c.get(uri)
+	doc, err := c.getDoc(uri)
 	if err != nil {
 		return result, err
 	}
 
-	// get the json
-	json_data := goquerydoc.Find("body").Text()
-
-	// unmarshal the json
-	err = json.NewDecoder(strings.NewReader(json_data)).Decode(&teams)
+	err = json.Unmarshal([]byte(doc.Text()), &teams)
 	if err != nil {
 		return result, err
 	}
