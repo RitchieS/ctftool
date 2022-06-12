@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	options = lib.NewOptions()
-	log     = logrus.New()
-	dB      = storage.NewDb()
+	options = lib.NewOptions() // global options
+	log     = logrus.New()     // global logger
+	dB      = storage.NewDb()  // global database
 )
 
 // rootCmd represents the base command when called without any subcommands

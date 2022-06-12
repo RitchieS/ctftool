@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var TeamID int
+var TeamID int // TeamID is the ID of the team
 
 // ctftimeTeamCmd represents the team command
 var ctftimeTeamCmd = &cobra.Command{

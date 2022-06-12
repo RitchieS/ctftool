@@ -42,7 +42,8 @@ func (c *Client) Check() error {
 	return nil
 }
 
-// Authenticate client to the CTFd instance with the given username, password.
+// Authenticate will attempt to authenticate the client with the provided
+// username and password.
 func (c *Client) Authenticate() error {
 	if err := c.Check(); err != nil {
 		return err
@@ -85,7 +86,7 @@ func (c *Client) Authenticate() error {
 }
 
 // joinPath returns a URL string with the provided path elements joined to
-// the existing path of base and the resulting path cleaned of any ./ or ../ elements.
+// the base URL.
 func joinPath(base string, elements ...string) (*url.URL, error) {
 	u, err := url.Parse(base)
 	if err != nil {

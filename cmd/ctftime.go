@@ -21,10 +21,10 @@ import (
 )
 
 var (
-	PrintPretty bool
+	PrintPretty bool // PrintPretty is a flag to print pretty output
 )
 
-const padding = 3
+const padding = 3 // padding is the amount of padding to add to the left and right of bubbletea's list
 
 // ctftimeCmd represents the ctftime command
 var ctftimeCmd = &cobra.Command{

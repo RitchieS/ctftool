@@ -19,7 +19,10 @@ type htmlForm struct {
 	Values url.Values
 }
 
-// parseForm parses the form and returns all the form elements beneath the given node. Form values include all input and textarea elements within the form. The values of the radio and checkbox inputs are included only if they are checked.
+// parseForm parses the form and returns all the form elements beneath the
+// given node. Form values include all input and textarea elements within
+// the form. The values of the radio and checkbox inputs are included
+// only if they are checked.
 func parseForms(node *html.Node) (forms []htmlForm) {
 	if node == nil {
 		return []htmlForm{}
@@ -65,6 +68,9 @@ func parseForms(node *html.Node) (forms []htmlForm) {
 	return forms
 }
 
+// fetchAndSubmitForm fetches the given URL and submits the form with the given
+// values. The form is parsed and the values are set on the form. The form is
+// then submitted and the response is returned.
 func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(values url.Values)) (*http.Response, error) {
 	resp, err := client.Get(urlStr)
 	if err != nil {

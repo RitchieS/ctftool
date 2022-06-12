@@ -38,6 +38,7 @@ type TopTeamData struct {
 	Num10 Team `json:"10"`
 }
 
+// ScoreboardTop returns the top teams on the scoreboard
 func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 	scoreboard := new(Response)
 
@@ -82,6 +83,8 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 	return scoreboard.Data, nil
 }
 
+// GetTeam returns the team information for a given team ID
+// !TODO: This needs to be refactored to allow for a list of any number of teams
 func (d *TopTeamData) GetTeam(number int) (*Team, error) {
 	switch number {
 	case 1:

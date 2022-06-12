@@ -69,6 +69,7 @@ type Challenge struct {
 	// View
 }
 
+// Challenge returns a challenge by ID
 func (c *Client) Challenge(id int64) (*Challenge, error) {
 	challenge := new(struct {
 		Success bool      `json:"success"`
@@ -116,6 +117,8 @@ func (c *Client) Challenge(id int64) (*Challenge, error) {
 	return &challenge.Data, nil
 }
 
+// DownloadFiles will download all the files of a challenge by ID and save
+// them to the given directory
 func (c *Client) DownloadFiles(id int64, outputPath string) error {
 	challenge, err := c.Challenge(id)
 	if err != nil {

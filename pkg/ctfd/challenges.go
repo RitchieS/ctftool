@@ -25,6 +25,7 @@ type Challenges struct {
 	Data    []ChallengeData `json:"data"`
 }
 
+// ListChallenges returns a list of challenges
 func (c *Client) ListChallenges() ([]ChallengeData, error) {
 	challenges := &Challenges{}
 	challengeAPI, err := joinPath(c.BaseURL.String(), "api/v1/challenges")

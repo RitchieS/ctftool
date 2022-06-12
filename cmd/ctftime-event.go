@@ -14,9 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Emoji string
+// !TODO: Change this to use an emoji parser
+type Emoji string // Emoji is a custom type for emojis
 
-var EventID int
+var EventID int // EventID is the ID of the event to retrieve
 
 var (
 	SpeechBalloon  Emoji = "\U0001f4ac" // speech balloon

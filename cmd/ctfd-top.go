@@ -55,7 +55,7 @@ var ctfdTopCmd = &cobra.Command{
 }
 
 var (
-	CTFDTopURL string
+	CTFDTopURL string // CTFDTopURL is the URL of the CTFd instance
 )
 
 func init() {

@@ -60,7 +60,8 @@ type CTFTeam struct {
 	} `json:"rating"`
 }
 
-// Return if a CTF is currently active
+// IsCTFEventActive returns true if the CTF event is active based on the
+// start and finish times
 func IsCTFEventActive(event Event) bool {
 	now := time.Now()
 
@@ -71,7 +72,8 @@ func IsCTFEventActive(event Event) bool {
 	return event.Start.Before(now) && event.Finish.After(now)
 }
 
-// Clean the description of a CTF event, removing \r\n
+// Clean the description of a CTF event, removing \r\n and limiting the length
+// of the description
 func CleanDescription(description string) string {
 	re := regexp.MustCompile(`\r?\n`)
 	description = re.ReplaceAllString(description, "\n")
@@ -90,7 +92,8 @@ func CleanDescription(description string) string {
 	return description
 }
 
-// Clean CTF Events, return only 'Open' Jeopardy Style CTFs that are either active or upcoming
+// CleanCTFEvents will clean the CTF events, removing any events that are
+// not "Open", are on-site, are not of jeopardy style or that have finished
 func CleanCTFEvents(events []Event) ([]Event, error) {
 	for i := 0; i < len(events); i++ {
 		events[i].Title = strings.TrimSpace(events[i].Title)
@@ -137,7 +140,7 @@ func CleanCTFEvents(events []Event) ([]Event, error) {
 	return events, nil
 }
 
-// Retrieve all active and upcoming CTF events from ctftime.org/api/v1/events/
+// Retrieve information about all CTF events on CTFTime
 func (c *Client) GetCTFEvents() ([]Event, error) {
 	var events []Event
 
@@ -237,6 +240,7 @@ type TopTeams struct {
 	Teams []TopTeam `json:"2022"`
 }
 
+// Get the top teams on CTFTime
 func (c *Client) GetTopTeams() ([]TopTeam, error) {
 	var teams TopTeams
 	var result []TopTeam

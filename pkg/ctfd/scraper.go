@@ -94,7 +94,7 @@ func (c *Client) getDoc(urlStr string, a ...interface{}) (*goquery.Document, err
 	return doc, nil
 }
 
-// getJson fetches a urlStr (URL relative to the client's BaseURL) and returns the parsed response document.
+// getJson fetches a urlStr (URL relative to the client's BaseURL) and returns the parsed response body.
 func (c *Client) getJson(urlStr string, a ...interface{}) (*http.Response, error) {
 	u, err := c.BaseURL.Parse(fmt.Sprintf(urlStr, a...))
 	if err != nil {

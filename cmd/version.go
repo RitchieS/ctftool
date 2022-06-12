@@ -8,10 +8,10 @@ import (
 
 var (
 	// The Commit and Version are set to "dev" by default, or set by the Makefile
-	Commit    = "dev" // Build is the current build of the program
+	Commit    = "dev" // Commit is the commit hash of the current build
 	Version   = "dev" // Version is the current version of the program
-	BuildTime = "dev"
-	BuiltBy   = "dev"
+	BuildTime = "dev" // BuildTime is the time the program was built
+	BuiltBy   = "dev" // BuiltBy is how the program was built (dev, goreleaser, etc)
 )
 
 func init() {
