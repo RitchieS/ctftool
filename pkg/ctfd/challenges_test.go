@@ -8,10 +8,13 @@ import (
 )
 
 func TestListChallenges(t *testing.T) {
+	challengex := new(struct {
+		Data    []ChallengeData `json:"data"`
+		Success bool            `json:"success"`
+	})
 
-	testChallenges := Challenges{}
-	testChallenges.Success = true
-	testChallenges.Data = []ChallengeData{
+	challengex.Success = true
+	challengex.Data = []ChallengeData{
 		{
 			ID:         1,
 			Type:       "file",
@@ -30,7 +33,7 @@ func TestListChallenges(t *testing.T) {
 	// mock response
 	mux.HandleFunc("/api/v1/challenges", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(testChallenges)
+		json.NewEncoder(w).Encode(challengex)
 	})
 
 	// test
@@ -92,9 +95,12 @@ func TestListChallenges_Error(t *testing.T) {
 	// mock response
 	mux.HandleFunc("/api/v1/challenges", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(Challenges{
-			Success: false,
+		json.NewEncoder(w).Encode(struct {
+			Data    []ChallengeData `json:"data"`
+			Success bool            `json:"success"`
+		}{
 			Data:    []ChallengeData{},
+			Success: false,
 		})
 	})
 

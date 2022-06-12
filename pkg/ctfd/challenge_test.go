@@ -7,12 +7,11 @@ import (
 )
 
 func TestGetChallenge(t *testing.T) {
-
-	// return success
 	challengex := new(struct {
 		Success bool      `json:"success"`
 		Data    Challenge `json:"data"`
 	})
+
 	challengex.Success = true
 	challengex.Data = Challenge{
 		ID:             1,
@@ -120,8 +119,6 @@ func TestGetChallenge(t *testing.T) {
 
 // fail tests
 func TestGetChallengeFail(t *testing.T) {
-
-	// return success
 	challengex := new(struct {
 		Success bool      `json:"success"`
 		Data    Challenge `json:"data"`
@@ -134,13 +131,11 @@ func TestGetChallengeFail(t *testing.T) {
 	client, mux, cleanup := setup()
 	defer cleanup()
 
-	// mock request
 	mux.HandleFunc("/api/v1/challenges/1", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(challengex)
 	})
 
-	// test
 	_, err := client.Challenge(1)
 	if err == nil {
 		t.Errorf("expected error, got nil")
@@ -152,7 +147,6 @@ func TestGetChallengeFail(t *testing.T) {
 		return
 	}
 
-	//// json fail for challenge 2
 	challengex.Success = true
 	challengex.Data = Challenge{
 		ID:             2,
@@ -178,30 +172,24 @@ func TestGetChallengeFail(t *testing.T) {
 		Tags: []interface{}{"test tag"},
 	}
 
-	// mock request
 	mux.HandleFunc("/api/v1/challenges/2", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		//json.NewEncoder(w).Encode(challengex)
 		w.Write([]byte(`{"success":false,"data":{derp}}`))
 	})
 
-	// test
 	_, err = client.Challenge(2)
 	if err == nil {
 		t.Errorf("expected error, got nil")
 		return
 	}
 
-	//// give teapot status code
 	challengex.Success = true
 
-	// mock request
 	mux.HandleFunc("/api/v1/challenges/3", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 		w.Write([]byte(`{"success":false,"data":{}}`))
 	})
 
-	// test
 	_, err = client.Challenge(3)
 	if err == nil {
 		t.Errorf("expected error, got nil")
@@ -213,13 +201,9 @@ func TestGetChallengeFail(t *testing.T) {
 		return
 	}
 
-	//// challenge 4 does not exist :d
 	challengex.Success = true
 	challengex.Data = Challenge{}
 
-	// mock request
-
-	// test
 	_, err = client.Challenge(4)
 	if err == nil {
 		t.Errorf("expected error, got nil")

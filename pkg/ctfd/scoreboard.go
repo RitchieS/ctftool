@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-type Response struct {
-	Success bool        `json:"success"`
-	Data    TopTeamData `json:"data"`
-}
 type Solves struct {
 	ChallengeID interface{} `json:"challenge_id"`
 	AccountID   int         `json:"account_id"`
@@ -40,16 +36,19 @@ type TopTeamData struct {
 
 // ScoreboardTop returns the top teams on the scoreboard
 func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
-	scoreboard := new(Response)
+	response := new(struct {
+		Data    TopTeamData `json:"data"`
+		Success bool        `json:"success"`
+	})
 
 	scoreboardAPI, err := joinPath(c.BaseURL.String(), "api/v1/scoreboard/top", fmt.Sprintf("%d", count))
 	if err != nil {
-		return scoreboard.Data, fmt.Errorf("error joining path: %v", err)
+		return response.Data, fmt.Errorf("error joining path: %v", err)
 	}
 
 	resp, err := c.Client.Get(scoreboardAPI.String())
 	if err != nil {
-		return scoreboard.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
+		return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
 	}
 	defer resp.Body.Close()
 
@@ -60,7 +59,7 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 		}
 		resp, err = c.Client.Get(scoreboardAPI.String())
 		if err != nil {
-			return scoreboard.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
+			return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
 		}
 		defer resp.Body.Close()
 
@@ -68,19 +67,19 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return scoreboard.Data, fmt.Errorf("error fetching scoreboard: received %v status code", resp.StatusCode)
+		return response.Data, fmt.Errorf("error fetching scoreboard: received %v status code", resp.StatusCode)
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(scoreboard)
+	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
-		return scoreboard.Data, fmt.Errorf("error unmarshalling scoreboard from %q: %v", scoreboardAPI.String(), err)
+		return response.Data, fmt.Errorf("error unmarshalling scoreboard from %q: %v", scoreboardAPI.String(), err)
 	}
 
-	if !scoreboard.Success {
-		return scoreboard.Data, fmt.Errorf("failed to get scoreboard")
+	if !response.Success {
+		return response.Data, fmt.Errorf("failed to get scoreboard")
 	}
 
-	return scoreboard.Data, nil
+	return response.Data, nil
 }
 
 // GetTeam returns the team information for a given team ID

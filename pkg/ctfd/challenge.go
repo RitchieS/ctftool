@@ -71,7 +71,7 @@ type Challenge struct {
 
 // Challenge returns a challenge by ID
 func (c *Client) Challenge(id int64) (*Challenge, error) {
-	challenge := new(struct {
+	response := new(struct {
 		Success bool      `json:"success"`
 		Data    Challenge `json:"data"`
 	})
@@ -105,16 +105,16 @@ func (c *Client) Challenge(id int64) (*Challenge, error) {
 		return nil, fmt.Errorf("error fetching challenge: received %v status code", resp.StatusCode)
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(challenge)
+	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling challenge from %q: %v", challengeAPI.String(), err)
 	}
 
-	if !challenge.Success {
+	if !response.Success {
 		return nil, fmt.Errorf("failed to get challenge")
 	}
 
-	return &challenge.Data, nil
+	return &response.Data, nil
 }
 
 // DownloadFiles will download all the files of a challenge by ID and save

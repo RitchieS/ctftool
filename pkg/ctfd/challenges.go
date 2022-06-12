@@ -20,14 +20,13 @@ type ChallengeData struct {
 	// Script
 }
 
-type Challenges struct {
-	Success bool            `json:"success"`
-	Data    []ChallengeData `json:"data"`
-}
-
 // ListChallenges returns a list of challenges
 func (c *Client) ListChallenges() ([]ChallengeData, error) {
-	challenges := &Challenges{}
+	response := new(struct {
+		Data    []ChallengeData `json:"data"`
+		Success bool            `json:"success"`
+	})
+
 	challengeAPI, err := joinPath(c.BaseURL.String(), "api/v1/challenges")
 	if err != nil {
 		return nil, fmt.Errorf("error joining path: %v", err)
@@ -57,13 +56,13 @@ func (c *Client) ListChallenges() ([]ChallengeData, error) {
 		return nil, fmt.Errorf("error fetching challenges: received %v status code from %q", resp.StatusCode, challengeAPI.String())
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(challenges)
+	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling challenges from %q: %v", challengeAPI.String(), err)
 	}
 
-	if !challenges.Success {
+	if !response.Success {
 		return nil, fmt.Errorf("failed to get challenges")
 	}
-	return challenges.Data, nil
+	return response.Data, nil
 }
