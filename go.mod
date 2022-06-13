@@ -16,7 +16,7 @@ require (
 	golang.org/x/net v0.0.0-20220531201128-c960675eff93
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 	gorm.io/driver/sqlite v1.3.2
-	gorm.io/gorm v1.23.5
+	gorm.io/gorm v1.23.6
 )
 
 require (
