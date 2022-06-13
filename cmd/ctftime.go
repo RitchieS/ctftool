@@ -24,7 +24,8 @@ var (
 	PrintPretty bool // PrintPretty is a flag to print pretty output
 )
 
-const padding = 3 // padding is the amount of padding to add to the left and right of bubbletea's list
+const padding = 3                         // padding is the amount of padding to add to the left and right of bubbletea's list
+const ctftimeURL = "https://ctftime.org/" // ctftimeURL is the URL of the CTFTime website
 
 // ctftimeCmd represents the ctftime command
 var ctftimeCmd = &cobra.Command{
@@ -34,7 +35,7 @@ var ctftimeCmd = &cobra.Command{
 	Long:    `Retrieve information about upcoming CTF events and teams from CTFTime.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctf.NewClient(nil)
-		client.BaseURL, _ = url.Parse("https://ctftime.org/")
+		client.BaseURL, _ = url.Parse(ctftimeURL)
 
 		events, err := client.GetCTFEvents()
 		if err != nil {

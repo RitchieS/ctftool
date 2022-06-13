@@ -19,7 +19,7 @@ var ctftimeTeamCmd = &cobra.Command{
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctf.NewClient(nil)
-		client.BaseURL, _ = url.Parse("https://ctftime.org/")
+		client.BaseURL, _ = url.Parse(ctftimeURL)
 
 		// if args is not an integer, exit
 		if len(args) > 0 {

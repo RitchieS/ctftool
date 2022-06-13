@@ -17,7 +17,7 @@ var ctftimeTopCmd = &cobra.Command{
 	Long:  `Display the top 10 teams from CTFTime`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctf.NewClient(nil)
-		client.BaseURL, _ = url.Parse("https://ctftime.org/")
+		client.BaseURL, _ = url.Parse(ctftimeURL)
 
 		teams, err := client.GetTopTeams()
 		if err != nil {
