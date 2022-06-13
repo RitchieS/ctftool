@@ -74,12 +74,9 @@ var (
 // ctftimeEventCmd represents the event command
 var ctftimeEventCmd = &cobra.Command{
 	Use:   "event",
-	Short: "Get information about CTF events",
-	Long:  `Display the current and upcoming CTF events from CTFTime.`,
-	Aliases: []string{
-		"events",
-	},
-	Args: cobra.RangeArgs(0, 1),
+	Short: "Get information about a CTF event by ID",
+	Long:  `Display information about a CTF event by ID.`,
+	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse(ctftimeURL)
