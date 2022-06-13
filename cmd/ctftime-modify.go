@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ctftimeCustomCmd represents the modify command
-var ctftimeCustomCmd = &cobra.Command{
-	Use:     "custom",
-	Aliases: []string{"modify"},
+// ctftimeModifyCmd represents the modify command
+var ctftimeModifyCmd = &cobra.Command{
+	Use:     "modify",
+	Aliases: []string{"custom"},
 	Short:   "Add a custom field to the ctf events database",
 	Long:    `Modify the ctf events database with a custom field`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -175,15 +175,15 @@ var ctftimeCustomCmd = &cobra.Command{
 }
 
 func init() {
-	ctftimeCmd.AddCommand(ctftimeCustomCmd)
+	ctftimeCmd.AddCommand(ctftimeModifyCmd)
 
-	ctftimeCustomCmd.Flags().Uint64("id", 0, "The ID of the event to modify")
-	cobra.MarkFlagRequired(ctftimeCustomCmd.Flags(), "id")
+	ctftimeModifyCmd.Flags().Uint64("id", 0, "The ID of the event to modify")
+	cobra.MarkFlagRequired(ctftimeModifyCmd.Flags(), "id")
 
-	ctftimeCustomCmd.Flags().String("title", "", "The title of the event")
-	ctftimeCustomCmd.Flags().String("description", "", "The description of the event")
-	ctftimeCustomCmd.Flags().String("url", "", "The URL of the event")
-	ctftimeCustomCmd.Flags().String("start", "", "The start date of the event")
-	ctftimeCustomCmd.Flags().String("finish", "", "The finish date of the event")
-	ctftimeCustomCmd.Flags().Bool("hidden", false, "Whether the event is hidden")
+	ctftimeModifyCmd.Flags().String("title", "", "The title of the event")
+	ctftimeModifyCmd.Flags().String("description", "", "The description of the event")
+	ctftimeModifyCmd.Flags().String("url", "", "The URL of the event")
+	ctftimeModifyCmd.Flags().String("start", "", "The start date of the event")
+	ctftimeModifyCmd.Flags().String("finish", "", "The finish date of the event")
+	ctftimeModifyCmd.Flags().Bool("hidden", false, "Whether the event is hidden")
 }
