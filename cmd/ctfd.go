@@ -32,20 +32,20 @@ func init() {
 	ctfdCmd.Flags().StringVarP(&CTFDUrl, "url", "", "", "CTFd URL")
 	ctfdCmd.Flags().StringVarP(&CTFDUser, "username", "u", "", "CTFd Username")
 	ctfdCmd.Flags().StringVarP(&CTFDPass, "password", "p", "", "CTFd Password")
-	ctfdCmd.Flags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
+	ctfdCmd.PersistentFlags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
 
-	ctfdCmd.Flags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
-	ctfdCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
+	ctfdCmd.PersistentFlags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
+	ctfdCmd.PersistentFlags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
 	// TODO: proper threads
-	ctfdCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 3, "Rate limit (per second)")
-
-	ctfdCmd.Flags().Int64VarP(&MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
+	ctfdCmd.PersistentFlags().IntVarP(&RateLimit, "rate-limit", "", 3, "Rate limit (per second)")
+	ctfdCmd.PersistentFlags().Int64VarP(&MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
 
 	// viper
 	viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))
 	viper.BindPFlag("username", ctfdCmd.Flags().Lookup("username"))
 	viper.BindPFlag("password", ctfdCmd.Flags().Lookup("password"))
-	viper.BindPFlag("output", ctfdCmd.Flags().Lookup("output"))
-	viper.BindPFlag("overwrite", ctfdCmd.Flags().Lookup("overwrite"))
+	viper.BindPFlag("output", ctfdCmd.PersistentFlags().Lookup("output"))
+	viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
+
 }

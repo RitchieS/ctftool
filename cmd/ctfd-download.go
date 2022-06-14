@@ -200,21 +200,9 @@ func init() {
 	ctfdDownloadCmd.Flags().StringVarP(&CTFDUrl, "url", "", "", "CTFd URL")
 	ctfdDownloadCmd.Flags().StringVarP(&CTFDUser, "username", "u", "", "CTFd Username")
 	ctfdDownloadCmd.Flags().StringVarP(&CTFDPass, "password", "p", "", "CTFd Password")
-	ctfdDownloadCmd.Flags().StringVarP(&CTFDOutputFolder, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
-
-	ctfdDownloadCmd.Flags().BoolVarP(&OutputOverwrite, "overwrite", "", false, "Overwrite existing files")
-	ctfdDownloadCmd.Flags().BoolVarP(&SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
-
-	// TODO: proper threads
-	ctfdDownloadCmd.Flags().IntVarP(&RateLimit, "rate-limit", "", 3, "Rate limit (per second)")
-
-	ctfdDownloadCmd.Flags().Int64VarP(&MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
 
 	// viper
 	viper.BindPFlag("url", ctfdDownloadCmd.Flags().Lookup("url"))
 	viper.BindPFlag("username", ctfdDownloadCmd.Flags().Lookup("username"))
 	viper.BindPFlag("password", ctfdDownloadCmd.Flags().Lookup("password"))
-	viper.BindPFlag("output", ctfdDownloadCmd.Flags().Lookup("output"))
-	viper.BindPFlag("overwrite", ctfdDownloadCmd.Flags().Lookup("overwrite"))
-
 }
