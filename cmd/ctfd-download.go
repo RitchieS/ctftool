@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/ratelimit"
-	"golang.org/x/term"
 )
 
 // ctfdDownloadCmd represents the download command
@@ -42,13 +41,10 @@ var ctfdDownloadCmd = &cobra.Command{
 		client.BaseURL = baseURL
 
 		if CTFDUser != "" && CTFDPass == "" {
-			fmt.Print("Password: ")
-			bytepwd, err := term.ReadPassword(int(os.Stdin.Fd()))
-			if err != nil {
-				log.Fatalf("Error reading password: %s", err)
-			}
-			fmt.Printf("\n")
-			CTFDPass = strings.TrimSpace(string(bytepwd))
+			fmt.Print("Enter your password: ")
+			var password string
+			fmt.Scanln(&password)
+			CTFDPass = strings.TrimSpace(password)
 		}
 
 		// CTFDUser and password are required
@@ -103,11 +99,12 @@ var ctfdDownloadCmd = &cobra.Command{
 			log.Info("Writeups will be updated if they exist")
 			log.Info("Press enter or ctrl+c to cancel")
 
-			// Ask the user if they want to continue
-			fmt.Print("Do you want to continue? [y/N]: ")
+			// Ask the user if they want to continue (default is yes)
+			fmt.Print("Do you want to continue? [Y/n]: ")
 			var answer string
 			fmt.Scanln(&answer)
-			if strings.ToLower(answer) != "y" {
+			switch strings.ToLower(answer) {
+			case "n", "no":
 				log.Fatal("Aborting by user request")
 			}
 		}
