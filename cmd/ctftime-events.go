@@ -119,7 +119,7 @@ var ctftimeEventsCmd = &cobra.Command{
 
 			// !TODO: BUG
 			/* if event.URLIsCTFD {
-				eventTitle = fmt.Sprintf("%s (CTFD)", eventTitle)
+				eventTags = append(eventTags, "CTFD")
 			} */
 
 			if len(eventTags) > 0 {

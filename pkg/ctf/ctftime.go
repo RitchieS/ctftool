@@ -171,25 +171,26 @@ func (c *Client) GetCTFEvents() ([]Event, error) {
 		return events, fmt.Errorf("failed to clean CTF events: %v", err)
 	}
 
-	/* 	var wg sync.WaitGroup
-	   	for i := 0; i < len(events); i++ {
-	   		wg.Add(1)
-	   		go func(e Event) {
-	   			c.BaseURL, err = url.Parse(e.URL)
-	   			if err != nil {
-	   				return
-	   			}
+	/* var wg sync.WaitGroup
+	for i := 0; i < len(events); i++ {
+		wg.Add(1)
+		go func(e Event) {
+			c.BaseURL, err = url.Parse(e.URL)
+			if err != nil {
+				return
+			}
 
-	   			err = c.Check()
-	   			if err == nil {
-	   				e.URLIsCTFD = true
-	   			}
+			err = c.Check()
+			if err == nil {
+				e.URLIsCTFD = true
+				fmt.Printf("%s is a CTFD instance\n", e.URL)
+			}
 
-	   			wg.Done()
-	   		}(events[i])
-	   	}
+			wg.Done()
+		}(events[i])
+	}
 
-	   	wg.Wait() */
+	wg.Wait() */
 
 	return events, nil
 }
