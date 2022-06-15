@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -77,6 +78,7 @@ var ctftimeEventsCmd = &cobra.Command{
 			eventStart := event.Start
 			eventFinish := event.Finish
 			eventURL := event.URL
+			eventTags := []string{}
 
 			prettyETA := lib.HumanizeTime(eventStart)
 			prettyWeight := lib.FtoaWithDigits(event.Weight, 2)
@@ -105,14 +107,28 @@ var ctftimeEventsCmd = &cobra.Command{
 				event.URL = customURL.URL
 			}
 
-			if event.CreatedAt.Second() == event.UpdatedAt.Second() {
-				eventTitle = fmt.Sprintf("%s (NEW)", eventTitle)
+			// Check if CreatedAt is within the last 24 hours
+			if event.CreatedAt.After(time.Now().Add(-24 * time.Hour)) {
+				eventTags = append(eventTags, "NEW")
 			}
+
+			if event.FormatID != 1 {
+				format := event.Format
+				eventTags = append(eventTags, strings.Replace(format, "Attack-Defense", "AD", -1))
+			}
+
+			// strip current year from the title
+			eventTitle = strings.Replace(eventTitle, fmt.Sprintf(" %d", time.Now().Year()), "", -1)
 
 			// !TODO: BUG
 			/* if event.URLIsCTFD {
 				eventTitle = fmt.Sprintf("%s (CTFD)", eventTitle)
 			} */
+
+			if len(eventTags) > 0 {
+				eventTitle = fmt.Sprintf("%s (%s)", eventTitle, strings.Join(eventTags, ", "))
+				eventTitle = strings.TrimSuffix(eventTitle, ", ")
+			}
 
 			if event.Weight == 0 && eventFinish.Sub(eventStart).Hours() < 120 {
 				prettyWeight = "TBD"
