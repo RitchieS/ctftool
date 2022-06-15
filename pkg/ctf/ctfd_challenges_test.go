@@ -9,12 +9,12 @@ import (
 
 func TestListChallenges(t *testing.T) {
 	challengex := new(struct {
-		Data    []ChallengeData `json:"data"`
-		Success bool            `json:"success"`
+		Data    []ChallengesData `json:"data"`
+		Success bool             `json:"success"`
 	})
 
 	challengex.Success = true
-	challengex.Data = []ChallengeData{
+	challengex.Data = []ChallengesData{
 		{
 			ID:         1,
 			Type:       "file",
@@ -79,12 +79,12 @@ func TestListChallenges_Error(t *testing.T) {
 	tests := []struct {
 		name       string
 		want       error
-		challenges []ChallengeData
+		challenges []ChallengesData
 	}{
 		{
 			name:       "no challenges",
 			want:       fmt.Errorf("failed to get challenges"),
-			challenges: []ChallengeData{},
+			challenges: []ChallengesData{},
 		},
 	}
 
@@ -96,10 +96,10 @@ func TestListChallenges_Error(t *testing.T) {
 	mux.HandleFunc("/api/v1/challenges", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(struct {
-			Data    []ChallengeData `json:"data"`
-			Success bool            `json:"success"`
+			Data    []ChallengesData `json:"data"`
+			Success bool             `json:"success"`
 		}{
-			Data:    []ChallengeData{},
+			Data:    []ChallengesData{},
 			Success: false,
 		})
 	})

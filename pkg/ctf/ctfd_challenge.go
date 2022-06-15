@@ -31,18 +31,18 @@ type Hint struct {
 	Content string `json:"content"`
 }
 
-type Challenge struct {
+type ChallengeData struct {
 	ID             int64  `json:"id"`
 	Name           string `json:"name"`
 	Description    string `json:"description"`
 	ConnectionInfo string `json:"connection_info"`
-	// NextID       int64  `json:"next_id"`
-	Attempts    int64  `json:"attempts"`
-	MaxAttempts int64  `json:"max_attempts"`
-	Value       int64  `json:"value"`
-	Category    string `json:"category"`
-	Type        string `json:"type"`
-	TypeData    struct {
+	NextID         int64  `json:"next_id"`
+	Attempts       int64  `json:"attempts"`
+	MaxAttempts    int64  `json:"max_attempts"`
+	Value          int64  `json:"value"`
+	Category       string `json:"category"`
+	Type           string `json:"type"`
+	TypeData       struct {
 		ID        string `json:"id"`
 		Name      string `json:"name"`
 		Templates struct {
@@ -56,24 +56,19 @@ type Challenge struct {
 			View   string `json:"view"`
 		} `json:"scripts"`
 	} `json:"type_data"`
-	State string `json:"state"`
-	// Requirements []struct {
-	// 	ID   int64  `json:"id"`
-	// 	Name string `json:"name"`
-	// } `json:"requirements"`
+	State      string        `json:"state"`
 	Solves     int64         `json:"solves"`
 	SolvedByMe bool          `json:"solved_by_me"`
 	Files      []string      `json:"files"`
 	Hints      []Hint        `json:"hints"`
 	Tags       []interface{} `json:"tags"`
-	// View
 }
 
 // Challenge returns a challenge by ID
-func (c *Client) Challenge(id int64) (*Challenge, error) {
+func (c *Client) Challenge(id int64) (*ChallengeData, error) {
 	response := new(struct {
-		Success bool      `json:"success"`
-		Data    Challenge `json:"data"`
+		Success bool          `json:"success"`
+		Data    ChallengeData `json:"data"`
 	})
 
 	challengeAPI, err := joinPath(c.BaseURL.String(), "api/v1/challenges", fmt.Sprintf("%d", id))
@@ -178,7 +173,7 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 }
 
 // GetDescription retrieves a challenge and returns a writeup template of the challenge
-func (c *Client) GetDescription(challenge *Challenge, challengePath string) error {
+func (c *Client) GetDescription(challenge *ChallengeData, challengePath string) error {
 	challengePath = path.Join(challengePath, "README.md")
 
 	var oldWriteupText []string

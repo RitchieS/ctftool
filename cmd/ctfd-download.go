@@ -116,7 +116,7 @@ var ctfdDownloadCmd = &cobra.Command{
 				rl.Take()
 			}
 
-			go func(challenge ctf.ChallengeData) {
+			go func(challenge ctf.ChallengesData) {
 				name := lib.CleanSlug(challenge.Name, false)
 
 				category := strings.Split(challenge.Category, " ")[0]

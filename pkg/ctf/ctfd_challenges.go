@@ -7,24 +7,22 @@ import (
 	"time"
 )
 
-type ChallengeData struct {
-	ID         int64  `json:"id"`
-	Type       string `json:"type"`
-	Name       string `json:"name"`
-	Value      int64  `json:"value"`
-	Solves     int64  `json:"solves"`
-	SolvedByMe bool   `json:"solved_by_me"`
-	Category   string `json:"category"`
-	// Tags
-	// Template
-	// Script
+type ChallengesData struct {
+	ID         int64         `json:"id"`
+	Type       string        `json:"type"`
+	Name       string        `json:"name"`
+	Value      int64         `json:"value"`
+	Solves     int64         `json:"solves"`
+	SolvedByMe bool          `json:"solved_by_me"`
+	Category   string        `json:"category"`
+	Tags       []interface{} `json:"tags"`
 }
 
 // ListChallenges returns a list of challenges
-func (c *Client) ListChallenges() ([]ChallengeData, error) {
+func (c *Client) ListChallenges() ([]ChallengesData, error) {
 	response := new(struct {
-		Data    []ChallengeData `json:"data"`
-		Success bool            `json:"success"`
+		Success bool             `json:"success"`
+		Data    []ChallengesData `json:"data"`
 	})
 
 	challengeAPI, err := joinPath(c.BaseURL.String(), "api/v1/challenges")

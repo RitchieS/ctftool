@@ -8,12 +8,12 @@ import (
 
 func TestGetChallenge(t *testing.T) {
 	challengex := new(struct {
-		Success bool      `json:"success"`
-		Data    Challenge `json:"data"`
+		Success bool          `json:"success"`
+		Data    ChallengeData `json:"data"`
 	})
 
 	challengex.Success = true
-	challengex.Data = Challenge{
+	challengex.Data = ChallengeData{
 		ID:             1,
 		Name:           "test challenge",
 		Description:    "test description",
@@ -120,12 +120,12 @@ func TestGetChallenge(t *testing.T) {
 // fail tests
 func TestGetChallengeFail(t *testing.T) {
 	challengex := new(struct {
-		Success bool      `json:"success"`
-		Data    Challenge `json:"data"`
+		Success bool          `json:"success"`
+		Data    ChallengeData `json:"data"`
 	})
 
 	challengex.Success = false
-	challengex.Data = Challenge{}
+	challengex.Data = ChallengeData{}
 
 	// setup mux
 	client, mux, cleanup := setup()
@@ -148,7 +148,7 @@ func TestGetChallengeFail(t *testing.T) {
 	}
 
 	challengex.Success = true
-	challengex.Data = Challenge{
+	challengex.Data = ChallengeData{
 		ID:             2,
 		Name:           "test challenge",
 		Description:    "test description",
@@ -202,7 +202,7 @@ func TestGetChallengeFail(t *testing.T) {
 	}
 
 	challengex.Success = true
-	challengex.Data = Challenge{}
+	challengex.Data = ChallengeData{}
 
 	_, err = client.Challenge(4)
 	if err == nil {
