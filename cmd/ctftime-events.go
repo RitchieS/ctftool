@@ -117,9 +117,6 @@ var ctftimeEventsCmd = &cobra.Command{
 				eventTags = append(eventTags, strings.Replace(format, "Attack-Defense", "AD", -1))
 			}
 
-			// strip current year from the title
-			eventTitle = strings.Replace(eventTitle, fmt.Sprintf(" %d", time.Now().Year()), "", -1)
-
 			// !TODO: BUG
 			/* if event.URLIsCTFD {
 				eventTitle = fmt.Sprintf("%s (CTFD)", eventTitle)
