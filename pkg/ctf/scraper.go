@@ -60,8 +60,8 @@ func NewClient(transport http.RoundTripper) *Client {
 	}
 }
 
-// getDoc fetches a urlStr (URL relative to the client's BaseURL) and returns the parsed response document.
-func (c *Client) getDoc(urlStr string, a ...interface{}) (*goquery.Document, error) {
+// GetDoc fetches a urlStr (URL relative to the client's BaseURL) and returns the parsed response document.
+func (c *Client) GetDoc(urlStr string, a ...interface{}) (*goquery.Document, error) {
 	u, err := c.BaseURL.Parse(fmt.Sprintf(urlStr, a...))
 	if err != nil {
 		return nil, fmt.Errorf("error parsing url %q: %v", urlStr, err)
@@ -106,8 +106,8 @@ func (c *Client) getDoc(urlStr string, a ...interface{}) (*goquery.Document, err
 	return doc, nil
 }
 
-// getJson fetches a urlStr (URL relative to the client's BaseURL) and returns the parsed response body.
-func (c *Client) getJson(urlStr string, a ...interface{}) (*http.Response, error) {
+// GetJson fetches a urlStr (URL relative to the client's BaseURL) and returns the parsed response body.
+func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error) {
 	u, err := c.BaseURL.Parse(fmt.Sprintf(urlStr, a...))
 	if err != nil {
 		return nil, fmt.Errorf("error parsing url %q: %v", urlStr, err)

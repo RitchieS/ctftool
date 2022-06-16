@@ -155,7 +155,7 @@ func (c *Client) GetCTFEvents() ([]Event, error) {
 
 	ctf_api := fmt.Sprintf("api/v1/events/?%s", params.Encode())
 
-	doc, err := c.getDoc(ctf_api)
+	doc, err := c.GetDoc(ctf_api)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get CTF events: %v", err)
 	}
@@ -200,7 +200,7 @@ func (c *Client) GetCTFEvent(id int) (Event, error) {
 	var event Event
 	uri := fmt.Sprintf("api/v1/events/%d/", id)
 
-	doc, err := c.getDoc(uri)
+	doc, err := c.GetDoc(uri)
 	if err != nil {
 		return event, err
 	}
@@ -218,7 +218,7 @@ func (c *Client) GetCTFTeam(id int) (CTFTeam, error) {
 	var team CTFTeam
 	uri := fmt.Sprintf("api/v1/teams/%d/", id)
 
-	doc, err := c.getDoc(uri)
+	doc, err := c.GetDoc(uri)
 	if err != nil {
 		return team, err
 	}
@@ -250,7 +250,7 @@ func (c *Client) GetTopTeams() ([]TopTeam, error) {
 	// https://ctftime.org/api/v1/top/2022/
 	uri := fmt.Sprintf("api/v1/top/%d/", currentYear)
 
-	doc, err := c.getDoc(uri)
+	doc, err := c.GetDoc(uri)
 	if err != nil {
 		return result, err
 	}

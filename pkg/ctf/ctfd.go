@@ -12,7 +12,7 @@ import (
 
 // Check will check if the instance is a CTFd instance.
 func (c *Client) Check() error {
-	doc, err := c.getDoc(c.BaseURL.String())
+	doc, err := c.GetDoc(c.BaseURL.String())
 	if err != nil {
 		return err
 	}
