@@ -4,6 +4,8 @@ before:
 
 release:
   prerelease: auto
+  # Set draft to true to manually release
+  draft: false
 
 builds:
   - env: 
@@ -54,3 +56,25 @@ changelog:
   sort: 'asc'
   filters:
     exclude: ['^docs:', 'Merge pull request', 'Merge branch']
+
+announce:
+  discord:
+    # Whether its enabled or not.
+    # Defaults to false.
+    enabled: true
+
+    # Message template to use while publishing.
+    # Defaults to `{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}`
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+
+    # Set author of the embed.
+    # Defaults to `GoReleaser`
+    author: '{{ .ProjectName }}'
+
+    # URL to an image to use as the icon for the embed.
+    # Defaults to `https://goreleaser.com/static/avatar.png`
+    #icon_url: ''
+
+    # Color code of the embed. You have to use decimal numeral system, not hexadecimal.
+    # Defaults to `3888754` - the grey-ish from goreleaser
+    #color: ''
