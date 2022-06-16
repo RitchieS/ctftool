@@ -69,7 +69,7 @@ announce:
 
     # Set author of the embed.
     # Defaults to `GoReleaser`
-    author: '{{ .ProjectName }}'
+    #author: ''
 
     # URL to an image to use as the icon for the embed.
     # Defaults to `https://goreleaser.com/static/avatar.png`
