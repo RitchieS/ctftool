@@ -58,7 +58,7 @@ var ctfdDownloadCmd = &cobra.Command{
 		}
 
 		client.Creds = &credentials
-		client.MaxFileSize = opts.MaxFileSize
+		client.MaxFileSize = options.MaxFileSize
 
 		if err := client.Authenticate(); err != nil {
 			log.Fatal(err)

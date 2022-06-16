@@ -54,6 +54,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&options.Interactive, "interactive", false, "Interactive mode")
 
 	rootCmd.PersistentFlags().IntVarP(&options.RateLimit, "rate-limit", "", 3, "Rate limit (per second)")
+	rootCmd.PersistentFlags().Int64VarP(&options.MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
 
 	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "Config file (default is .ctftool.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Verbose logging")
@@ -65,6 +66,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print version information")
 
 	rootCmd.PersistentFlags().MarkHidden("debug")
+	rootCmd.PersistentFlags().MarkHidden("log-format")
+	rootCmd.PersistentFlags().MarkHidden("version")
 }
 
 // initConfig reads in config file and ENV variables if set.

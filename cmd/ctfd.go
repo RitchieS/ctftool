@@ -31,13 +31,10 @@ func init() {
 	ctfdCmd.PersistentFlags().BoolVarP(&opts.Overwrite, "overwrite", "", false, "Overwrite existing files")
 	ctfdCmd.PersistentFlags().BoolVarP(&opts.SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
-	ctfdCmd.PersistentFlags().Int64VarP(&opts.MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
-
 	// viper
 	viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))
 	viper.BindPFlag("username", ctfdCmd.Flags().Lookup("username"))
 	viper.BindPFlag("password", ctfdCmd.Flags().Lookup("password"))
 	viper.BindPFlag("output", ctfdCmd.PersistentFlags().Lookup("output"))
 	viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
-
 }

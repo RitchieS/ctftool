@@ -1,13 +1,12 @@
 package ctf
 
 type CTFOpts struct {
-	URL         string
-	Username    string
-	Password    string
-	Output      string
-	Overwrite   bool
-	SaveConfig  bool
-	MaxFileSize int64
+	URL        string
+	Username   string
+	Password   string
+	Output     string
+	Overwrite  bool
+	SaveConfig bool
 }
 
 // NewOptions returns a new Options struct
