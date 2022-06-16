@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/ritchies/ctftool/internal/lib"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -51,7 +52,7 @@ func NewClient(transport http.RoundTripper) *Client {
 
 	return &Client{
 		Client: &http.Client{
-			Transport: transport,
+			Transport: lib.Bypass(transport),
 			Jar:       cookieJar,
 		},
 		Creds:       &Credentials{},
