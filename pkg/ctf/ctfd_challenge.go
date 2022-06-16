@@ -153,16 +153,16 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 			time.Sleep(time.Second * 1)
 		}
 
+		if resp.ContentLength > (c.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
+			sizeInMegaBytes := resp.ContentLength / OneMB
+			return fmt.Errorf("file size is too big : %v/%vmb", sizeInMegaBytes, c.MaxFileSize)
+		}
+
 		file, err := os.Create(path.Join(outputPath, fileName))
 		if err != nil {
 			return fmt.Errorf("error creating file: %v", err)
 		}
 		defer file.Close()
-
-		if resp.ContentLength > (c.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
-			sizeInMegaBytes := resp.ContentLength / OneMB
-			return fmt.Errorf("file size is too big : %v/%vmb", sizeInMegaBytes, c.MaxFileSize)
-		}
 
 		_, err = io.Copy(file, resp.Body)
 		if err != nil {
