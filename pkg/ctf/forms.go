@@ -77,8 +77,8 @@ func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(value
 	if err != nil {
 		return nil, fmt.Errorf("error fetching url: %q: %v", urlStr, err)
 	}
-
 	defer resp.Body.Close()
+
 	root, err := html.Parse(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing response body: %v", err)
