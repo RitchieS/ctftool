@@ -22,11 +22,11 @@ var ctfdSubmitCmd = &cobra.Command{
 		client := ctf.NewClient(nil)
 
 		// check if flags are set using viper
-		CTFDUrl = viper.GetString("url")
-		CTFDUser = viper.GetString("username")
-		CTFDPass = viper.GetString("password")
+		opts.URL = viper.GetString("url")
+		opts.Username = viper.GetString("username")
+		opts.Password = viper.GetString("password")
 
-		baseURL, err := url.Parse(CTFDUrl)
+		baseURL, err := url.Parse(opts.URL)
 		if err != nil || baseURL.Host == "" {
 			cmd.Help()
 			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
@@ -44,22 +44,22 @@ var ctfdSubmitCmd = &cobra.Command{
 			log.Fatal("CTFD Submission is required")
 		}
 
-		if CTFDUser != "" && CTFDPass == "" {
+		if opts.Username != "" && opts.Password == "" {
 			fmt.Print("Enter your password: ")
 			var password string
 			fmt.Scanln(&password)
-			CTFDPass = strings.TrimSpace(password)
+			opts.Password = strings.TrimSpace(password)
 		}
 
-		// CTFDUser and password are required
-		if CTFDUser == "" || CTFDPass == "" {
+		// opts.Username and password are required
+		if opts.Username == "" || opts.Password == "" {
 			cmd.Help()
 			log.Fatal("CTFD User and Password are required")
 		}
 
 		credentials := ctf.Credentials{
-			Username: CTFDUser,
-			Password: CTFDPass,
+			Username: opts.Username,
+			Password: opts.Password,
 		}
 
 		client.Creds = &credentials
@@ -67,7 +67,7 @@ var ctfdSubmitCmd = &cobra.Command{
 		if err := client.Authenticate(); err != nil {
 			log.Fatal(err)
 		}
-		log.Infof("Authenticated as %q", CTFDUser)
+		log.Infof("Authenticated as %q", opts.Username)
 
 		submission := ctf.Submission{
 			ID:   CTFDSubmissionID,
@@ -85,9 +85,9 @@ var ctfdSubmitCmd = &cobra.Command{
 func init() {
 	ctfdCmd.AddCommand(ctfdSubmitCmd)
 
-	ctfdSubmitCmd.Flags().StringVarP(&CTFDUrl, "url", "", "", "CTFd URL")
-	ctfdSubmitCmd.Flags().StringVarP(&CTFDUser, "username", "u", "", "CTFd Username")
-	ctfdSubmitCmd.Flags().StringVarP(&CTFDPass, "password", "p", "", "CTFd Password")
+	ctfdSubmitCmd.Flags().StringVarP(&opts.URL, "url", "", "", "CTFd URL")
+	ctfdSubmitCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "CTFd Username")
+	ctfdSubmitCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
 
 	ctfdSubmitCmd.Flags().IntVarP(&CTFDSubmissionID, "id", "i", 0, "CTFd Submission ID")
 	ctfdSubmitCmd.Flags().StringVarP(&CTFDSubmission, "submission", "s", "", "Submission")

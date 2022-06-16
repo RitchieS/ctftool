@@ -57,7 +57,7 @@ var ctfdTopCmd = &cobra.Command{
 func init() {
 	ctfdCmd.AddCommand(ctfdTopCmd)
 
-	ctfdTopCmd.Flags().StringVarP(&CTFDUrl, "url", "u", "", "CTFD instance URL")
+	ctfdTopCmd.Flags().StringVarP(&opts.URL, "url", "u", "", "CTFD instance URL")
 
 	viper.BindPFlag("url", ctfdTopCmd.Flags().Lookup("url"))
 }

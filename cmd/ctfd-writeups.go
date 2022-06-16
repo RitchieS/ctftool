@@ -24,13 +24,13 @@ var ctfdWriteupCmd = &cobra.Command{
 		client := ctf.NewClient(nil)
 
 		// check if flags are set using viper
-		CTFDUrl = viper.GetString("url")
-		CTFDUser = viper.GetString("username")
-		CTFDPass = viper.GetString("password")
-		CTFDOutputFolder = viper.GetString("output")
-		OutputOverwrite = viper.GetBool("overwrite")
+		opts.URL = viper.GetString("url")
+		opts.Username = viper.GetString("username")
+		opts.Password = viper.GetString("password")
+		opts.Output = viper.GetString("output")
+		opts.Overwrite = viper.GetBool("overwrite")
 
-		baseURL, err := url.Parse(CTFDUrl)
+		baseURL, err := url.Parse(opts.URL)
 		if err != nil || baseURL.Host == "" {
 			cmd.Help()
 			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
@@ -38,22 +38,22 @@ var ctfdWriteupCmd = &cobra.Command{
 
 		client.BaseURL = baseURL
 
-		if CTFDUser != "" && CTFDPass == "" {
+		if opts.Username != "" && opts.Password == "" {
 			fmt.Print("Enter your password: ")
 			var password string
 			fmt.Scanln(&password)
-			CTFDPass = strings.TrimSpace(password)
+			opts.Password = strings.TrimSpace(password)
 		}
 
-		// CTFDUser and password are required
-		if CTFDUser == "" || CTFDPass == "" {
+		// opts.Username and password are required
+		if opts.Username == "" || opts.Password == "" {
 			cmd.Help()
 			log.Fatal("CTFD User and Password are required")
 		}
 
 		credentials := ctf.Credentials{
-			Username: CTFDUser,
-			Password: CTFDPass,
+			Username: opts.Username,
+			Password: opts.Password,
 		}
 
 		client.Creds = &credentials
@@ -61,7 +61,7 @@ var ctfdWriteupCmd = &cobra.Command{
 		if err := client.Authenticate(); err != nil {
 			log.Fatal(err)
 		}
-		log.Infof("Authenticated as %q", CTFDUser)
+		log.Infof("Authenticated as %q", opts.Username)
 
 		// List challenges
 		challenges, err := client.ListChallenges()
@@ -77,8 +77,8 @@ var ctfdWriteupCmd = &cobra.Command{
 		outputFolder := cwd
 
 		// if using config file
-		if viper.ConfigFileUsed() == "" && CTFDOutputFolder != "" {
-			outputFolder = path.Join(cwd, CTFDOutputFolder)
+		if viper.ConfigFileUsed() == "" && opts.Output != "" {
+			outputFolder = path.Join(cwd, opts.Output)
 		}
 
 		var wg sync.WaitGroup
@@ -145,9 +145,9 @@ var ctfdWriteupCmd = &cobra.Command{
 		wg.Wait()
 
 		// values to config file if --save-config is set
-		if SaveConfig {
-			viper.Set("url", CTFDUrl)
-			viper.Set("username", CTFDUser)
+		if opts.SaveConfig {
+			viper.Set("url", opts.URL)
+			viper.Set("username", opts.Username)
 			viper.Set("password", "")
 			viper.Set("output", outputFolder)
 			viper.Set("overwrite", true)
@@ -162,9 +162,9 @@ var ctfdWriteupCmd = &cobra.Command{
 func init() {
 	ctfdCmd.AddCommand(ctfdWriteupCmd)
 
-	ctfdWriteupCmd.Flags().StringVarP(&CTFDUrl, "url", "", "", "CTFd URL")
-	ctfdWriteupCmd.Flags().StringVarP(&CTFDUser, "username", "u", "", "CTFd Username")
-	ctfdWriteupCmd.Flags().StringVarP(&CTFDPass, "password", "p", "", "CTFd Password")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.URL, "url", "", "", "CTFd URL")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "CTFd Username")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
 
 	// viper
 	viper.BindPFlag("url", ctfdWriteupCmd.Flags().Lookup("url"))
