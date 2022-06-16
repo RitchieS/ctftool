@@ -44,7 +44,6 @@ var defaultMagnitudes = []RelativeTimeMagnitude{
 	{Year, "%d months %s", Month},
 	{2 * Year, "1 year %s", 1},
 	{LongTime, "%d years %s", Year},
-	{2 * LongTime, "1 century %s", 1},
 }
 
 func RelativeTime(a, b time.Time, albl, blbl string) string {
