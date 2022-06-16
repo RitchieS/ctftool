@@ -1,6 +1,7 @@
 package ctf
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -312,6 +313,84 @@ func (c *Client) GetDescription(challenge *ChallengeData, challengePath string) 
 
 	if len(oldWriteupText) > 1 {
 		file.WriteString(oldWriteupText[1])
+	}
+
+	return nil
+}
+
+type Submission struct {
+	ID   int    `json:"challenge_id"`
+	Flag string `json:"submission"`
+}
+
+func (c *Client) SubmitFlag(submission Submission) error {
+	c.BaseURL, _ = c.BaseURL.Parse("challenges")
+
+	resp, err := c.Client.Get(c.BaseURL.String())
+	if err != nil {
+		return fmt.Errorf("error getting nonce: %v", err)
+	}
+	defer resp.Body.Close()
+
+	nonce := extractCSRF(resp)
+
+	c.BaseURL, _ = c.BaseURL.Parse("api/v1/challenges/attempt")
+
+	data, err := json.Marshal(submission)
+	if err != nil {
+		return fmt.Errorf("error marshalling submission: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", c.BaseURL.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return fmt.Errorf("error creating request: %v", err)
+	}
+
+	req.Header.Set("Csrf-Token", nonce)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err = c.Client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error submitting flag: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("error submitting flag: %v", resp.Status)
+	}
+
+	response := new(struct {
+		Success bool `json:"success"`
+		Data    struct {
+			Status  string `json:"status"`
+			Message string `json:"message"`
+		} `json:"data"`
+	})
+
+	data, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error reading response: %v", err)
+	}
+
+	err = json.Unmarshal(data, &response)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling response: %v", err)
+	}
+
+	if !response.Success {
+		return fmt.Errorf("error submitting flag: %v", response.Data.Message)
+	}
+
+	c.BaseURL.Path = ""
+
+	// check the challenge id and if we actually solved it
+	challenge, err := c.Challenge(int64(submission.ID))
+	if err != nil {
+		return fmt.Errorf("error getting challenge: %v", err)
+	}
+
+	if !challenge.SolvedByMe {
+		return fmt.Errorf("error submitting flag: %v", response.Data.Message)
 	}
 
 	return nil
