@@ -2,6 +2,7 @@ package ctf
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -32,9 +33,19 @@ func NewClient(transport http.RoundTripper) *Client {
 	// Set long timeout to avoid timeouts because CTFd is slow
 	if transport == nil {
 		transport = &http.Transport{
-			MaxIdleConns:          10,
-			IdleConnTimeout:       30 * time.Second,
-			ResponseHeaderTimeout: time.Duration(30) * time.Second,
+			DialContext: (&net.Dialer{
+				Timeout:   time.Duration(3 * time.Minute),
+				KeepAlive: time.Duration(15 * time.Second),
+				DualStack: true,
+			}).DialContext,
+			MaxConnsPerHost:       0,
+			MaxIdleConns:          100,
+			MaxIdleConnsPerHost:   100,
+			Proxy:                 http.ProxyFromEnvironment,
+			ExpectContinueTimeout: time.Duration(1 * time.Second),
+			TLSHandshakeTimeout:   time.Duration(10 * time.Second),
+			IdleConnTimeout:       time.Duration(90 * time.Second),
+			ResponseHeaderTimeout: time.Duration(2 * time.Minute),
 		}
 	}
 
