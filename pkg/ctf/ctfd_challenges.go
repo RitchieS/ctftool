@@ -25,14 +25,9 @@ func (c *Client) ListChallenges() ([]ChallengesData, error) {
 		Data    []ChallengesData `json:"data"`
 	})
 
-	challengeAPI, err := joinPath(c.BaseURL.String(), "api/v1/challenges")
+	resp, err := c.GetJson("api/v1/challenges")
 	if err != nil {
-		return nil, fmt.Errorf("error joining path: %v", err)
-	}
-
-	resp, err := c.Client.Get(challengeAPI.String())
-	if err != nil {
-		return nil, fmt.Errorf("error fetching challenges from %s: %v", challengeAPI.String(), err)
+		return nil, fmt.Errorf("error fetching challenges from %q: %v", resp.Request.URL, err)
 	}
 	defer resp.Body.Close()
 
@@ -41,9 +36,9 @@ func (c *Client) ListChallenges() ([]ChallengesData, error) {
 		if resp.StatusCode == http.StatusOK {
 			break
 		}
-		resp, err = c.Client.Get(challengeAPI.String())
+		resp, err = c.GetJson("api/v1/challenges")
 		if err != nil {
-			return nil, fmt.Errorf("error fetching challenges from %s: %v", challengeAPI.String(), err)
+			return nil, fmt.Errorf("error fetching challenges from %q: %v", resp.Request.URL, err)
 		}
 		defer resp.Body.Close()
 
@@ -51,16 +46,16 @@ func (c *Client) ListChallenges() ([]ChallengesData, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error fetching challenges: received %v status code from %q", resp.StatusCode, challengeAPI.String())
+		return nil, fmt.Errorf("error fetching challenges from %q: %v", resp.Request.URL, resp.StatusCode)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling challenges from %q: %v", challengeAPI.String(), err)
+		return nil, fmt.Errorf("error unmarshalling challenges from %q: %v", resp.Request.URL, err)
 	}
 
 	if !response.Success {
-		return nil, fmt.Errorf("failed to get challenges")
+		return nil, fmt.Errorf("failed to get challenges from %q", resp.Request.URL)
 	}
 	return response.Data, nil
 }

@@ -72,14 +72,9 @@ func (c *Client) Challenge(id int64) (*ChallengeData, error) {
 		Data    ChallengeData `json:"data"`
 	})
 
-	challengeAPI, err := joinPath(c.BaseURL.String(), "api/v1/challenges", fmt.Sprintf("%d", id))
+	resp, err := c.GetJson(fmt.Sprintf("api/v1/challenges/%d", id))
 	if err != nil {
-		return nil, fmt.Errorf("error joining path: %v", err)
-	}
-
-	resp, err := c.Client.Get(challengeAPI.String())
-	if err != nil {
-		return nil, fmt.Errorf("error fetching challenge from %q: %v", challengeAPI.String(), err)
+		return nil, fmt.Errorf("error fetching challenge from %q: %v", resp.Request.URL, err)
 	}
 	defer resp.Body.Close()
 
@@ -88,9 +83,9 @@ func (c *Client) Challenge(id int64) (*ChallengeData, error) {
 		if resp.StatusCode == http.StatusOK {
 			break
 		}
-		resp, err = c.Client.Get(challengeAPI.String())
+		resp, err = c.GetJson(fmt.Sprintf("api/v1/challenges/%d", id))
 		if err != nil {
-			return nil, fmt.Errorf("error fetching challenge from %q: %v", challengeAPI.String(), err)
+			return nil, fmt.Errorf("error fetching challenge from %q: %v", resp.Request.URL, err)
 		}
 		defer resp.Body.Close()
 
@@ -98,16 +93,16 @@ func (c *Client) Challenge(id int64) (*ChallengeData, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error fetching challenge: received %v status code", resp.StatusCode)
+		return nil, fmt.Errorf("error fetching challenge from %q: %v", resp.Request.URL, resp.StatusCode)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling challenge from %q: %v", challengeAPI.String(), err)
+		return nil, fmt.Errorf("error unmarshalling challenge from %q: %v", resp.Request.URL, err)
 	}
 
 	if !response.Success {
-		return nil, fmt.Errorf("failed to get challenge")
+		return nil, fmt.Errorf("failed to get challenge from %q", resp.Request.URL)
 	}
 
 	return &response.Data, nil
@@ -130,21 +125,20 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 	}
 
 	for _, file := range files {
-		challengeFileURL, _ := c.BaseURL.Parse(file)
-		fileName := getFileName(challengeFileURL.String())
-
-		resp, err := c.Client.Get(challengeFileURL.String())
+		resp, err := c.GetJson(file)
 		if err != nil {
 			return fmt.Errorf("error getting challenge file: %v", err)
 		}
 		defer resp.Body.Close()
+
+		fileName := getFileName(resp.Request.URL.String())
 
 		// 5 retries to get the challenge if the status code is not http.StatusOK
 		for i := 0; i < 5; i++ {
 			if resp.StatusCode == http.StatusOK {
 				break
 			}
-			resp, err = c.Client.Get(challengeFileURL.String())
+			resp, err = c.GetJson(file)
 			if err != nil {
 				return fmt.Errorf("error getting challenge file: %v", err)
 			}
@@ -324,9 +318,7 @@ type Submission struct {
 }
 
 func (c *Client) SubmitFlag(submission Submission) error {
-	c.BaseURL, _ = c.BaseURL.Parse("challenges")
-
-	resp, err := c.Client.Get(c.BaseURL.String())
+	resp, err := c.GetJson("challenges")
 	if err != nil {
 		return fmt.Errorf("error getting nonce: %v", err)
 	}

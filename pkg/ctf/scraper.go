@@ -124,7 +124,6 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 	if err != nil {
 		return nil, fmt.Errorf("error fetching url %q: %v", u, err)
 	}
-	defer resp.Body.Close()
 
 	// 5 retries to get the challenge if the status code is not http.StatusOK
 	for i := 0; i < 5; i++ {
@@ -135,7 +134,6 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 		if err != nil {
 			return nil, fmt.Errorf("error fetching url %q: %v", u, err)
 		}
-		defer resp.Body.Close()
 
 		time.Sleep(time.Second * 1)
 	}

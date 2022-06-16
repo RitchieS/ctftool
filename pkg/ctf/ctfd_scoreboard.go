@@ -41,14 +41,9 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 		Success bool        `json:"success"`
 	})
 
-	scoreboardAPI, err := joinPath(c.BaseURL.String(), "api/v1/scoreboard/top", fmt.Sprintf("%d", count))
+	resp, err := c.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
 	if err != nil {
-		return response.Data, fmt.Errorf("error joining path: %v", err)
-	}
-
-	resp, err := c.Client.Get(scoreboardAPI.String())
-	if err != nil {
-		return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
+		return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", resp.Request.URL, err)
 	}
 	defer resp.Body.Close()
 
@@ -57,9 +52,9 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 		if resp.StatusCode == http.StatusOK {
 			break
 		}
-		resp, err = c.Client.Get(scoreboardAPI.String())
+		resp, err = c.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
 		if err != nil {
-			return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", scoreboardAPI.String(), err)
+			return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", resp.Request.URL, err)
 		}
 		defer resp.Body.Close()
 
@@ -67,16 +62,16 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return response.Data, fmt.Errorf("error fetching scoreboard: received %v status code", resp.StatusCode)
+		return response.Data, fmt.Errorf("error fetching challenges from %q: %v", resp.Request.URL, resp.StatusCode)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
-		return response.Data, fmt.Errorf("error unmarshalling scoreboard from %q: %v", scoreboardAPI.String(), err)
+		return response.Data, fmt.Errorf("error unmarshalling scoreboard from %q: %v", resp.Request.URL, err)
 	}
 
 	if !response.Success {
-		return response.Data, fmt.Errorf("failed to get scoreboard")
+		return response.Data, fmt.Errorf("failed to get scoreboard from %q", resp.Request.URL)
 	}
 
 	return response.Data, nil
