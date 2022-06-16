@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -103,10 +104,49 @@ func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(value
 	// Store cookies from the response into the cookie jar
 	client.Jar.SetCookies(actionURL, resp.Cookies())
 
-	resp, err = client.PostForm(actionURL.String(), form.Values)
+	req, err := http.NewRequest("POST", actionURL.String(), strings.NewReader(form.Values.Encode()))
 	if err != nil {
-		return nil, fmt.Errorf("error submitting form: %q: %v", actionURL, err)
+		return nil, fmt.Errorf("error creating request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Set CSRF token
+	if csrf := extractCSRF(resp); csrf != "" {
+		req.Header.Set("Csrf-Token", csrf)
+	}
+
+	resp, err = client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error submitting form: %v", err)
 	}
 
 	return resp, nil
+}
+
+func extractCSRF(resp *http.Response) string {
+	root, err := html.Parse(resp.Body)
+	if err != nil {
+		return ""
+	}
+
+	var csrf string
+
+	doc := goquery.NewDocumentFromNode(root)
+
+	// 'csrfNonce': "[a-zA-Z0-9]{64}",
+	initRegex := regexp.MustCompile(`'csrfNonce': "([a-zA-Z0-9]{64})"`)
+	initToken := initRegex.FindStringSubmatch(doc.Text())
+	if len(initToken) == 2 {
+		csrf = initToken[1]
+	}
+
+	// <input id="nonce" name="nonce" type="hidden" value="[a-zA-Z0-9]{64}">
+	inputRegex := regexp.MustCompile(`<input id="nonce" name="nonce" type="hidden" value="([a-zA-Z0-9]{64})">`)
+	inputToken := inputRegex.FindStringSubmatch(doc.Text())
+	if len(inputToken) == 2 {
+		csrf = inputToken[1]
+	}
+
+	return csrf
 }
