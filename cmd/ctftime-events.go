@@ -194,7 +194,7 @@ var ctftimeEventsCmd = &cobra.Command{
 			}
 		}
 
-		if PrintPretty {
+		if options.Interactive {
 			p := tea.NewProgram(newModel(eventStringsArray))
 			if err := p.Start(); err != nil {
 				log.Fatalf("Error creating tea program: %s", err)

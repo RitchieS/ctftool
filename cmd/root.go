@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/ratelimit"
 )
 
 var (
@@ -50,7 +51,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().BoolVar(&PrintPretty, "interactive", false, "Interactive mode")
+	rootCmd.PersistentFlags().BoolVar(&options.Interactive, "interactive", false, "Interactive mode")
+
+	rootCmd.PersistentFlags().IntVarP(&options.RateLimit, "rate-limit", "", 3, "Rate limit (per second)")
 
 	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "Config file (default is .ctftool.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Verbose logging")
@@ -119,4 +122,16 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		log.WithField("config", viper.ConfigFileUsed()).Debug("Using config file")
 	}
+}
+
+func GetRateLimit() ratelimit.Limiter {
+	var rl ratelimit.Limiter
+
+	if options.RateLimit > 0 && options.RateLimit < 100 {
+		rl = ratelimit.New(options.RateLimit)
+	} else {
+		rl = ratelimit.New(100)
+	}
+
+	return rl
 }

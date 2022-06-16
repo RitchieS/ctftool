@@ -12,7 +12,6 @@ import (
 	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/ratelimit"
 )
 
 // ctfdWriteupCmd represents the writeups command
@@ -83,13 +82,8 @@ var ctfdWriteupCmd = &cobra.Command{
 		}
 
 		var wg sync.WaitGroup
-		var rl ratelimit.Limiter
 
-		if RateLimit > 0 && RateLimit < 100 {
-			rl = ratelimit.New(RateLimit)
-		} else {
-			rl = ratelimit.New(100)
-		}
+		rl := GetRateLimit()
 
 		// Warn the user that they are about to overwrite files
 		log.Warn("This action will overwrite existing files")
@@ -108,7 +102,7 @@ var ctfdWriteupCmd = &cobra.Command{
 		for _, challenge := range challenges {
 			wg.Add(1)
 
-			if RateLimit > 0 {
+			if options.RateLimit > 0 {
 				rl.Take()
 			}
 

@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/ratelimit"
 )
 
 // ctfdDownloadCmd represents the download command
@@ -85,13 +84,8 @@ var ctfdDownloadCmd = &cobra.Command{
 		}
 
 		var wg sync.WaitGroup
-		var rl ratelimit.Limiter
 
-		if RateLimit > 0 && RateLimit < 100 {
-			rl = ratelimit.New(RateLimit)
-		} else {
-			rl = ratelimit.New(100)
-		}
+		rl := GetRateLimit()
 
 		// Warn the user that they are about to overwrite files
 		if OutputOverwrite {
@@ -112,7 +106,7 @@ var ctfdDownloadCmd = &cobra.Command{
 		for _, challenge := range challenges {
 			wg.Add(1)
 
-			if RateLimit > 0 {
+			if options.RateLimit > 0 {
 				rl.Take()
 			}
 

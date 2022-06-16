@@ -11,9 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var (
-	PrintPretty bool // PrintPretty is a flag to print pretty output
-)
+var ()
 
 const padding = 3                         // padding is the amount of padding to add to the left and right of bubbletea's list
 const ctftimeURL = "https://ctftime.org/" // ctftimeURL is the URL of the CTFTime website
