@@ -49,12 +49,9 @@ func (c *Client) Authenticate() error {
 		return err
 	}
 
-	username := c.Creds.Username
-	password := c.Creds.Password
-
 	setPassword := func(values url.Values) {
-		values.Set("name", username)
-		values.Set("password", password)
+		values.Set("name", c.Creds.Username)
+		values.Set("password", c.Creds.Password)
 	}
 
 	loginURL, err := joinPath(c.BaseURL.String(), "login")
