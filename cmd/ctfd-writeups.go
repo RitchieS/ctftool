@@ -84,7 +84,7 @@ var ctfdWriteupCmd = &cobra.Command{
 		// Warn the user that they are about to overwrite files
 		log.Warn("This action will overwrite existing files")
 		log.Info("Writeups will be updated if they exist")
-		log.Info("Press enter or ctrl+c to cancel")
+		log.Info("Press enter to continue or ctrl+c to cancel")
 
 		// Ask the user if they want to continue (default is yes)
 		fmt.Print("Do you want to continue? [Y/n]: ")
