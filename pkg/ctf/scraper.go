@@ -10,6 +10,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/ritchies/ctftool/internal/lib"
+	"go.uber.org/ratelimit"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -108,6 +109,8 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 func (c *Client) DoRequest(req *http.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
 
+	rl := ratelimit.New(1)
+
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching url %q: %v", req.URL, err)
@@ -123,10 +126,11 @@ func (c *Client) DoRequest(req *http.Request) (*http.Response, error) {
 			return nil, fmt.Errorf("error fetching url %q: %v", req.URL, err)
 		}
 
-		time.Sleep(time.Second * 1)
+		rl.Take()
 	}
 
-	if resp.StatusCode == (http.StatusUnauthorized | http.StatusForbidden) {
+	if resp.StatusCode >= http.StatusBadRequest &&
+		resp.StatusCode <= http.StatusNetworkAuthenticationRequired {
 		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, req.URL)
 	}
 
