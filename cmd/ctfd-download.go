@@ -177,7 +177,7 @@ var ctfdDownloadCmd = &cobra.Command{
 			viper.Set("password", "")
 			viper.Set("output", outputFolder)
 			viper.Set("overwrite", true)
-			viper.WriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
+			viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
 
 			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
 			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
