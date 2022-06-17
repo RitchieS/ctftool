@@ -81,10 +81,6 @@ var ctfdWriteupCmd = &cobra.Command{
 			outputFolder = path.Join(cwd, opts.Output)
 		}
 
-		var wg sync.WaitGroup
-
-		rl := GetRateLimit()
-
 		// Warn the user that they are about to overwrite files
 		log.Warn("This action will overwrite existing files")
 		log.Info("Writeups will be updated if they exist")
@@ -98,6 +94,9 @@ var ctfdWriteupCmd = &cobra.Command{
 		case "n", "no":
 			log.Fatal("Aborting by user request")
 		}
+
+		rl := GetRateLimit()
+		var wg sync.WaitGroup
 
 		for _, challenge := range challenges {
 			wg.Add(1)
