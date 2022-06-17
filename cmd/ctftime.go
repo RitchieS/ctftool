@@ -31,7 +31,7 @@ func init() {
 	rootCmd.AddCommand(ctftimeCmd)
 }
 
-func newModel(items []string) model {
+func newModel(items []string) paginatorModel {
 	for i, item := range items {
 		items[i] = strings.TrimSpace(item)
 	}
@@ -43,22 +43,22 @@ func newModel(items []string) model {
 	p.InactiveDot = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "250", Dark: "238"}).Render("•")
 	p.SetTotalPages(len(items))
 
-	return model{
+	return paginatorModel{
 		paginator: p,
 		items:     items,
 	}
 }
 
-type model struct {
+type paginatorModel struct {
 	items     []string
 	paginator paginator.Model
 }
 
-func (m model) Init() tea.Cmd {
+func (m paginatorModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m paginatorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -71,7 +71,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m model) View() string {
+func (m paginatorModel) View() string {
 	var b strings.Builder
 
 	b.WriteString("\n  Upcoming CTF Events\n\n")
