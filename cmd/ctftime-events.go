@@ -203,10 +203,16 @@ var ctftimeEventsCmd = &cobra.Command{
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
 
+			// ID WEIGHT TITLE ETA
+			fmt.Fprintln(w, "ID\tWEIGHT\tTITLE\tETA")
+			fmt.Fprintln(w, "----\t-----\t-----\t---")
+
 			for _, eventString := range eventStringsArray {
 				fmt.Fprintln(w, eventString)
 			}
 			w.Flush()
+
+			// !TODO: add a legend to the bottom of the table
 		}
 
 	},
