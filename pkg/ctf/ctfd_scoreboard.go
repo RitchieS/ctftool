@@ -3,7 +3,6 @@ package ctf
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -46,24 +45,6 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 		return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", resp.Request.URL, err)
 	}
 	defer resp.Body.Close()
-
-	// 5 retries to get the scoreboard if the status code is not http.StatusOK
-	for i := 0; i < 5; i++ {
-		if resp.StatusCode == http.StatusOK {
-			break
-		}
-		resp, err = c.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
-		if err != nil {
-			return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", resp.Request.URL, err)
-		}
-		defer resp.Body.Close()
-
-		time.Sleep(time.Second * 1)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return response.Data, fmt.Errorf("error fetching challenges from %q: %v", resp.Request.URL, resp.StatusCode)
-	}
 
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {

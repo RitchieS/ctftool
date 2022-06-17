@@ -78,24 +78,6 @@ func (c *Client) Challenge(id int64) (*ChallengeData, error) {
 	}
 	defer resp.Body.Close()
 
-	// 5 retries to get the challenge if the status code is not http.StatusOK
-	for i := 0; i < 5; i++ {
-		if resp.StatusCode == http.StatusOK {
-			break
-		}
-		resp, err = c.GetJson(fmt.Sprintf("api/v1/challenges/%d", id))
-		if err != nil {
-			return nil, fmt.Errorf("error fetching challenge from %q: %v", resp.Request.URL, err)
-		}
-		defer resp.Body.Close()
-
-		time.Sleep(time.Second * 1)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error fetching challenge from %q: %v", resp.Request.URL, resp.StatusCode)
-	}
-
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling challenge from %q: %v", resp.Request.URL, err)

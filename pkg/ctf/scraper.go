@@ -72,30 +72,9 @@ func (c *Client) GetDoc(urlStr string, a ...interface{}) (*goquery.Document, err
 		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
-
-	resp, err := c.Client.Do(req)
+	resp, err := c.DoRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching url %q: %v", u, err)
-	}
-	defer resp.Body.Close()
-
-	// 5 retries to get the challenge if the status code is not http.StatusOK
-	for i := 0; i < 5; i++ {
-		if resp.StatusCode == http.StatusOK {
-			break
-		}
-		resp, err = c.Client.Do(req)
-		if err != nil {
-			return nil, fmt.Errorf("error fetching url %q: %v", u, err)
-		}
-		defer resp.Body.Close()
-
-		time.Sleep(time.Second * 1)
-	}
-
-	if resp.StatusCode == (http.StatusUnauthorized | http.StatusForbidden) {
-		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, u)
+		return nil, err
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
@@ -118,11 +97,20 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
+	resp, err := c.DoRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (c *Client) DoRequest(req *http.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching url %q: %v", u, err)
+		return nil, fmt.Errorf("error fetching url %q: %v", req.URL, err)
 	}
 
 	// 5 retries to get the challenge if the status code is not http.StatusOK
@@ -132,14 +120,14 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 		}
 		resp, err = c.Client.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching url %q: %v", u, err)
+			return nil, fmt.Errorf("error fetching url %q: %v", req.URL, err)
 		}
 
 		time.Sleep(time.Second * 1)
 	}
 
 	if resp.StatusCode == (http.StatusUnauthorized | http.StatusForbidden) {
-		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, u)
+		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, req.URL)
 	}
 
 	return resp, nil
