@@ -20,7 +20,7 @@ func (c *Client) Check() error {
 	// Check for "<small class="text-muted">Powered by CTFd</small>"
 	footerText := doc.Find("small.text-muted").Text()
 	if !strings.Contains(footerText, "Powered by CTFd") {
-		return fmt.Errorf("instance is not a CTFd instance")
+		return &Error{"check", c.BaseURL.String(), fmt.Errorf("not a CTFd instance")}
 	}
 
 	// check /login
@@ -56,27 +56,27 @@ func (c *Client) Authenticate() error {
 
 	loginURL, err := joinPath(c.BaseURL.String(), "login")
 	if err != nil {
-		return fmt.Errorf("error joining path: %v", err)
+		return &Error{"authenticate", loginURL.String(), err}
 	}
 
 	resp, err := fetchAndSubmitForm(c.Client, loginURL.String(), setPassword)
 	if err != nil {
-		return fmt.Errorf("error authenticating: %v", err)
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error authenticating: received %v status code", resp.StatusCode)
+		return &Error{"authenticate", loginURL.String(), fmt.Errorf("unexpected status code: %d", resp.StatusCode)}
 	}
 
 	html, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("error reading response body: %v", err)
+		return &Error{"authenticate", loginURL.String(), err}
 	}
 
 	errorRegex := regexp.MustCompile(`<div class="alert alert-danger alert-dismissible text-center" role="alert">\s*<span>([^<]+)</span>`)
 	if errorRegex.MatchString(string(html)) {
 		errorMessage := errorRegex.FindStringSubmatch(string(html))[1]
-		return fmt.Errorf("error authenticating: %s", errorMessage)
+		return &Error{"authenticate", loginURL.String(), fmt.Errorf(errorMessage)}
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (c *Client) Authenticate() error {
 func joinPath(base string, elements ...string) (*url.URL, error) {
 	u, err := url.Parse(base)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing base url: %v", err)
+		return nil, err
 	}
 
 	if len(elements) > 0 {

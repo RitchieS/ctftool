@@ -19,9 +19,7 @@ var ctftimeModifyCmd = &cobra.Command{
 
 		// Get ID
 		id, err := cmd.Flags().GetUint64("id")
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		// Check if ID is set
 		if id == 0 {
@@ -30,34 +28,22 @@ var ctftimeModifyCmd = &cobra.Command{
 
 		// Get title, description, url, start, finish or hidden are set
 		title, err := cmd.Flags().GetString("title")
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		description, err := cmd.Flags().GetString("description")
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		uri, err := cmd.Flags().GetString("url")
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		start, err := cmd.Flags().GetString("start")
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		finish, err := cmd.Flags().GetString("finish")
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		hidden, err := cmd.Flags().GetBool("hidden")
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		// Check if any of the fields are set
 		if title == "" && description == "" && uri == "" && start == "" && finish == "" && hidden {
@@ -66,15 +52,12 @@ var ctftimeModifyCmd = &cobra.Command{
 
 		// Get the database
 		db, err := dB.Get()
-		if err != nil {
-			log.Fatalf("Error getting db: %s", err)
-		}
+		CheckErr(err)
 
 		// Check if the event exists
 		var event ctf.Event
-		if err := db.Where("id = ?", id).First(&event).Error; err != nil {
-			log.Fatalf("Error getting event: %s", err)
-		}
+		err = db.Where("id = ?", id).First(&event).Error
+		CheckErr(err)
 
 		// Modify the event
 		if title != "" {
@@ -86,9 +69,8 @@ var ctftimeModifyCmd = &cobra.Command{
 				customTitle.Title = title
 
 				// Save the custom title
-				if err := db.Create(&customTitle).Error; err != nil {
-					log.Fatalf("Error creating custom title: %s", err)
-				}
+				err := db.Create(&customTitle).Error
+				CheckErr(err)
 			}
 		}
 
@@ -100,9 +82,8 @@ var ctftimeModifyCmd = &cobra.Command{
 				customDescription.ID = event.ID
 				customDescription.Description = description
 
-				if err := db.Create(&customDescription).Error; err != nil {
-					log.Fatalf("Error creating custom description: %s", err)
-				}
+				err := db.Create(&customDescription).Error
+				CheckErr(err)
 			}
 		}
 
@@ -114,9 +95,8 @@ var ctftimeModifyCmd = &cobra.Command{
 				customURL.ID = event.ID
 				customURL.URL = uri
 
-				if err := db.Create(&customURL).Error; err != nil {
-					log.Fatalf("Error creating custom url: %s", err)
-				}
+				err := db.Create(&customURL).Error
+				CheckErr(err)
 			}
 		}
 
@@ -124,11 +104,7 @@ var ctftimeModifyCmd = &cobra.Command{
 
 		if start != "" {
 			parsedTime, err := time.Parse(time.RFC3339, start)
-			if err != nil {
-				// print example time format
-				exampleTime := time.Now().Format(time.RFC3339)
-				log.Fatalf("Error parsing start time: %s. Example time format: %s", err, exampleTime)
-			}
+			CheckErr(err)
 
 			inUTC := parsedTime.UTC()
 
@@ -144,11 +120,7 @@ var ctftimeModifyCmd = &cobra.Command{
 
 		if finish != "" {
 			parsedTime, err := time.Parse(time.RFC3339, finish)
-			if err != nil {
-				// print example time format
-				exampleTime := time.Now().Format(time.RFC3339)
-				log.Fatalf("Error parsing finish time: %s. Example time format: %s", err, exampleTime)
-			}
+			CheckErr(err)
 
 			inUTC := parsedTime.UTC()
 
@@ -167,10 +139,8 @@ var ctftimeModifyCmd = &cobra.Command{
 		}
 
 		// Save the event
-		if err := db.Save(&event).Error; err != nil {
-			log.Fatalf("Error saving event: %s", err)
-		}
-
+		err = db.Save(&event).Error
+		CheckErr(err)
 	},
 }
 

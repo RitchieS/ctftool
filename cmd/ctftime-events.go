@@ -28,14 +28,10 @@ var ctftimeEventsCmd = &cobra.Command{
 		client.BaseURL, _ = url.Parse(ctftimeURL)
 
 		events, err := client.GetCTFEvents()
-		if err != nil {
-			log.Fatalf("Error getting events: %s", err)
-		}
+		CheckErr(err)
 
 		db, err := dB.Get()
-		if err != nil {
-			log.Fatalf("Error getting db: %s", err)
-		}
+		CheckErr(err)
 
 		err = db.Clauses(clause.OnConflict{
 			Columns: []clause.Column{{Name: "id"}},
@@ -56,17 +52,13 @@ var ctftimeEventsCmd = &cobra.Command{
 				"finish",
 			}),
 		}).Create(&events).Error
-		if err != nil {
-			log.Fatalf("Error creating events in DB: %s", err)
-		}
+		CheckErr(err)
 
 		eventStringsArray := make([]string, 0)
 
 		// Make sure active events are at the top
-		result := db.Order("finish asc, start asc, weight desc").Find(&events)
-		if result.Error != nil {
-			log.Fatal(result.Error)
-		}
+		err = db.Order("finish asc, start asc, weight desc").Find(&events).Error
+		CheckErr(err)
 
 		for _, event := range events {
 
@@ -196,9 +188,8 @@ var ctftimeEventsCmd = &cobra.Command{
 
 		if options.Interactive {
 			p := tea.NewProgram(newModel(eventStringsArray))
-			if err := p.Start(); err != nil {
-				log.Fatalf("Error creating tea program: %s", err)
-			}
+			err := p.Start()
+			CheckErr(err)
 		} else {
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)

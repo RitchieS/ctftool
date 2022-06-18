@@ -19,7 +19,9 @@ var ctfdTopCmd = &cobra.Command{
 		uri := viper.GetString("url")
 
 		baseURL, err := url.Parse(uri)
-		if err != nil || baseURL.Host == "" {
+		CheckErr(err)
+
+		if baseURL.Host == "" {
 			cmd.Help()
 			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
 		}
@@ -27,15 +29,11 @@ var ctfdTopCmd = &cobra.Command{
 		client.BaseURL = baseURL
 
 		teamsData, err := client.ScoreboardTop(10)
-		if err != nil {
-			log.Fatalf("Failed to retrieve scoreboard: %s", err)
-		}
+		CheckErr(err)
 
 		for i := 1; i <= 10; i++ {
 			team, err := teamsData.GetTeam(i)
-			if err != nil {
-				log.Fatalf("Failed to retrieve team %d: %s", i, err)
-			}
+			CheckErr(err)
 
 			if team.ID == 0 {
 				continue

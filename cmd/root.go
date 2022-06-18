@@ -43,9 +43,7 @@ and can interact with CTFd API to retrieve the challenges and files.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
+	CheckErr(err)
 }
 
 func init() {
@@ -77,11 +75,11 @@ func initConfig() {
 		viper.SetConfigFile(options.ConfigFile)
 	} else {
 		cwd, err := os.Getwd()
-		cobra.CheckErr(err)
+		CheckErr(err)
 
 		// Find home directory.
 		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
+		CheckErr(err)
 
 		// Search .config in home directory with name "ctftool"
 		homeConfig := path.Join(home, ".config", "ctftool")
@@ -137,4 +135,11 @@ func GetRateLimit() ratelimit.Limiter {
 	}
 
 	return rl
+}
+
+// CheckErr prints the msg with the prefix 'Error:' and exits with error code 1. If the msg is nil, it does nothing.
+func CheckErr(msg interface{}) {
+	if msg != nil {
+		log.Fatalf("Error: %v", msg)
+	}
 }

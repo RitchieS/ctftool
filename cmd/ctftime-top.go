@@ -20,9 +20,7 @@ var ctftimeTopCmd = &cobra.Command{
 		client.BaseURL, _ = url.Parse(ctftimeURL)
 
 		teams, err := client.GetTopTeams()
-		if err != nil {
-			log.Fatalf("Error getting teams: %s", err)
-		}
+		CheckErr(err)
 
 		for i, team := range teams {
 			teamID := team.TeamID

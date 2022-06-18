@@ -30,17 +30,13 @@ var ctftimeTeamCmd = &cobra.Command{
 		}
 
 		team, err := client.GetCTFTeam(TeamID)
-		if err != nil {
-			log.Fatalf("Error getting team: %s", err)
-		}
+		CheckErr(err)
 
 		// pretty print the json result
 		json, err := json.MarshalIndent(team, "", "  ")
-		if err != nil {
-			log.Fatalf("Error marshalling team: %s", err)
-		}
-		fmt.Println(string(json))
+		CheckErr(err)
 
+		fmt.Println(string(json))
 	},
 }
 

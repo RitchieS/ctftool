@@ -1,7 +1,7 @@
 package ctf
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -75,24 +75,24 @@ func parseForms(node *html.Node) (forms []htmlForm) {
 func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(values url.Values)) (*http.Response, error) {
 	resp, err := client.Get(urlStr)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching url: %q: %v", urlStr, err)
+		return nil, &Error{"fetch form", urlStr, err}
 	}
 	defer resp.Body.Close()
 
 	root, err := html.Parse(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing response body: %v", err)
+		return nil, &Error{"fetch form", urlStr, err}
 	}
 
 	forms := parseForms(root)
 	if len(forms) == 0 {
-		return nil, fmt.Errorf("no forms found at url: %q", urlStr)
+		return nil, &Error{"fetch form", urlStr, errors.New("no forms found")}
 	}
 	form := forms[0]
 
 	actionURL, err := url.Parse(form.Action)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing form action: %q: %v", form.Action, err)
+		return nil, &Error{"fetch form", urlStr, err}
 	}
 	actionURL = resp.Request.URL.ResolveReference(actionURL)
 
@@ -106,7 +106,7 @@ func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(value
 
 	req, err := http.NewRequest("POST", actionURL.String(), strings.NewReader(form.Values.Encode()))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return nil, &Error{"fetch form", urlStr, err}
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -118,7 +118,7 @@ func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(value
 
 	resp, err = client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error submitting form: %v", err)
+		return nil, &Error{"fetch form", urlStr, err}
 	}
 
 	return resp, nil

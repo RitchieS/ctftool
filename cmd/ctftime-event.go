@@ -91,21 +91,15 @@ var ctftimeEventCmd = &cobra.Command{
 
 		if EventID != 0 {
 			event, err := client.GetCTFEvent(EventID)
-			if err != nil {
-				log.Fatalf("Error getting event: %s", err)
-			}
+			CheckErr(err)
 
 			json, err := json.MarshalIndent(event, "", "  ")
-			if err != nil {
-				log.Fatalf("Error marshalling event: %s", err)
-			}
-			fmt.Println(string(json))
+			CheckErr(err)
 
+			fmt.Println(string(json))
 		} else {
 			events, err := client.GetCTFEvents()
-			if err != nil {
-				log.Fatalf("Error getting events: %s", err)
-			}
+			CheckErr(err)
 
 			now := time.Now()
 			nextWeek := now.AddDate(0, 0, 7-int(now.Weekday()))

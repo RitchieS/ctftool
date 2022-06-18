@@ -27,7 +27,9 @@ var ctfdSubmitCmd = &cobra.Command{
 		opts.Password = viper.GetString("password")
 
 		baseURL, err := url.Parse(opts.URL)
-		if err != nil || baseURL.Host == "" {
+		CheckErr(err)
+
+		if baseURL.Host == "" {
 			cmd.Help()
 			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
 		}
@@ -64,9 +66,9 @@ var ctfdSubmitCmd = &cobra.Command{
 
 		client.Creds = &credentials
 
-		if err := client.Authenticate(); err != nil {
-			log.Fatal(err)
-		}
+		err = client.Authenticate()
+		CheckErr(err)
+
 		log.Infof("Authenticated as %q", opts.Username)
 
 		submission := ctf.Submission{
@@ -74,9 +76,8 @@ var ctfdSubmitCmd = &cobra.Command{
 			Flag: strings.TrimSpace(CTFDSubmission),
 		}
 
-		if err := client.SubmitFlag(submission); err != nil {
-			log.Fatal(err)
-		}
+		err = client.SubmitFlag(submission)
+		CheckErr(err)
 
 		log.Infof("Successfully submitted flag %q for challenge %d", CTFDSubmission, CTFDSubmissionID)
 	},

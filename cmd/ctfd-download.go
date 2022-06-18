@@ -32,7 +32,9 @@ var ctfdDownloadCmd = &cobra.Command{
 		opts.Overwrite = viper.GetBool("overwrite")
 
 		baseURL, err := url.Parse(opts.URL)
-		if err != nil || baseURL.Host == "" {
+		CheckErr(err)
+
+		if baseURL.Host == "" {
 			cmd.Help()
 			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
 		}
@@ -60,21 +62,17 @@ var ctfdDownloadCmd = &cobra.Command{
 		client.Creds = &credentials
 		client.MaxFileSize = options.MaxFileSize
 
-		if err := client.Authenticate(); err != nil {
-			log.Fatal(err)
-		}
+		err = client.Authenticate()
+		CheckErr(err)
+
 		log.Infof("Authenticated as %q", opts.Username)
 
 		// List challenges
 		challenges, err := client.ListChallenges()
-		if err != nil {
-			log.Fatal(err)
-		}
+		CheckErr(err)
 
 		cwd, err := os.Getwd()
-		if err != nil {
-			log.Fatalf("error getting current working directory: %v", err)
-		}
+		CheckErr(err)
 
 		outputFolder := cwd
 
@@ -133,24 +131,19 @@ var ctfdDownloadCmd = &cobra.Command{
 					}
 				}
 
-				if err := os.MkdirAll(challengePath, os.ModePerm); err != nil {
-					log.Fatalf("error creating directory %q: %v", challengePath, err)
-				}
+				err := os.MkdirAll(challengePath, os.ModePerm)
+				CheckErr(err)
 
 				chall, err := client.Challenge(challenge.ID)
-				if err != nil {
-					log.Fatalf("error getting challenge %q: %v", name, err)
-				}
+				CheckErr(err)
 
 				// download challenge files
-				if err := client.DownloadFiles(chall.ID, challengePath); err != nil {
-					log.Errorf("error downloading files for %q: %v", name, err)
-				}
+				err = client.DownloadFiles(chall.ID, challengePath)
+				CheckErr(err)
 
 				// get description
-				if err := client.GetDescription(chall, challengePath); err != nil {
-					log.Fatalf("error getting description for %q: %v", name, err)
-				}
+				err = client.GetDescription(chall, challengePath)
+				CheckErr(err)
 
 				if len(chall.Files) > 0 {
 					log.WithFields(logrus.Fields{

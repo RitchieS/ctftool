@@ -65,12 +65,12 @@ func NewClient(transport http.RoundTripper) *Client {
 func (c *Client) GetDoc(urlStr string, a ...interface{}) (*goquery.Document, error) {
 	u, err := c.BaseURL.Parse(fmt.Sprintf(urlStr, a...))
 	if err != nil {
-		return nil, fmt.Errorf("error parsing url %q: %v", urlStr, err)
+		return nil, &Error{"get doc", u.String(), err}
 	}
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return nil, &Error{"get doc", u.String(), err}
 	}
 
 	resp, err := c.DoRequest(req)
@@ -80,7 +80,7 @@ func (c *Client) GetDoc(urlStr string, a ...interface{}) (*goquery.Document, err
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing response body: %v", err)
+		return nil, &Error{"get doc", u.String(), err}
 	}
 
 	return doc, nil
@@ -90,12 +90,12 @@ func (c *Client) GetDoc(urlStr string, a ...interface{}) (*goquery.Document, err
 func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error) {
 	u, err := c.BaseURL.Parse(fmt.Sprintf(urlStr, a...))
 	if err != nil {
-		return nil, fmt.Errorf("error parsing url %q: %v", urlStr, err)
+		return nil, &Error{"get json", u.String(), err}
 	}
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return nil, &Error{"get json", u.String(), err}
 	}
 
 	resp, err := c.DoRequest(req)
@@ -113,7 +113,7 @@ func (c *Client) DoRequest(req *http.Request) (*http.Response, error) {
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching url %q: %v", req.URL, err)
+		return nil, &Error{"do request", req.URL.String(), err}
 	}
 
 	// 5 retries to get the challenge if the status code is not http.StatusOK
@@ -123,7 +123,7 @@ func (c *Client) DoRequest(req *http.Request) (*http.Response, error) {
 		}
 		resp, err = c.Client.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching url %q: %v", req.URL, err)
+			return nil, &Error{"do request", req.URL.String(), err}
 		}
 
 		rl.Take()
@@ -131,7 +131,7 @@ func (c *Client) DoRequest(req *http.Request) (*http.Response, error) {
 
 	if resp.StatusCode >= http.StatusBadRequest &&
 		resp.StatusCode <= http.StatusNetworkAuthenticationRequired {
-		return nil, fmt.Errorf("received %v status code for url %q", resp.StatusCode, req.URL)
+		return nil, &Error{"do request", req.URL.String(), fmt.Errorf("received status code %d (%s)", resp.StatusCode, http.StatusText(resp.StatusCode))}
 	}
 
 	return resp, nil
