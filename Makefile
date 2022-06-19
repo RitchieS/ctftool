@@ -53,7 +53,7 @@ clean: ## remove all generated files
 	@rm -vrf tests bin output
 
 fmt: ## format the source files
-	go fmt ./...
+	gofmt -s -w $(SRC)
 
 vet: ## run go vet on the source files
 	go vet ./...
