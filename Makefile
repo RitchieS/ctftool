@@ -15,7 +15,7 @@ SRC 		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Commit=$(BUILD) -X=github.com/ritchies/ctftool/cmd.BuildTime=$(CURDATE) -s -w"
 
 .DEFAULT_GOAL: $(TARGET)
-.PHONY: help build install uninstall clean fmt vet test test-it test-bench test-race test-cover test-all run doc all
+.PHONY: help build install uninstall clean fmt vet check test test-it test-bench test-race test-cover test-all run doc all
 
 default: help
 
@@ -57,6 +57,12 @@ fmt: ## format the source files
 
 vet: ## run go vet on the source files
 	go vet ./...
+
+tidy: ## go mod tidy on the source files
+	go mod tidy
+
+check: fmt vet tidy
+	go test ./... -short
 
 test: vet ## run short unit tests
 	go test -v ./... -short
