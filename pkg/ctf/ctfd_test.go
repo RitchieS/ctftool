@@ -44,8 +44,6 @@ func readFile(s string) (*html.Node, error) {
 }
 
 func TestCheck(t *testing.T) {
-	// Test the Check function using the testdata/ctfd_login.html file.
-	// It should return true because the web page contains the 'Powered by CTFd' text.
 	tests := []struct {
 		description string
 		html        string
@@ -112,9 +110,6 @@ func TestCheck(t *testing.T) {
 
 // Test Check Failure
 func TestCheckFailure(t *testing.T) {
-	// Test the Check function using the testdata/ctfd_login.html file.
-	// It should return false because the web page does not contain the 'Powered by CTFd' text.
-
 	tests := []struct {
 		description string
 		html        string
