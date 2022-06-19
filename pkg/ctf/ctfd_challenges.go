@@ -25,13 +25,13 @@ func (c *Client) ListChallenges() ([]ChallengesData, error) {
 
 	resp, err := c.GetJson("api/v1/challenges")
 	if err != nil {
-		return nil, fmt.Errorf("error fetching challenges from %q: %v", resp.Request.URL, err)
+		return nil, fmt.Errorf("failed to get challenges: %v", err)
 	}
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling challenges from %q: %v", resp.Request.URL, err)
+		return nil, fmt.Errorf("failed to decode challenges: %v", err)
 	}
 
 	if !response.Success {

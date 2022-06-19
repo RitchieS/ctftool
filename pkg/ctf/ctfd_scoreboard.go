@@ -42,13 +42,13 @@ func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
 
 	resp, err := c.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
 	if err != nil {
-		return response.Data, fmt.Errorf("error fetching scoreboard from %q: %v", resp.Request.URL, err)
+		return response.Data, fmt.Errorf("failed to get scoreboard: %v", err)
 	}
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
-		return response.Data, fmt.Errorf("error unmarshalling scoreboard from %q: %v", resp.Request.URL, err)
+		return response.Data, fmt.Errorf("failed to decode scoreboard: %v", err)
 	}
 
 	if !response.Success {

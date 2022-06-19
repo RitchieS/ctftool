@@ -74,13 +74,13 @@ func (c *Client) Challenge(id int64) (*ChallengeData, error) {
 
 	resp, err := c.GetJson(fmt.Sprintf("api/v1/challenges/%d", id))
 	if err != nil {
-		return nil, fmt.Errorf("error fetching challenge from %q: %v", resp.Request.URL, err)
+		return nil, fmt.Errorf("failed to get challenge: %v", err)
 	}
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(response)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling challenge from %q: %v", resp.Request.URL, err)
+		return nil, fmt.Errorf("failed to decode challenge: %v", err)
 	}
 
 	if !response.Success {
@@ -95,7 +95,7 @@ func (c *Client) Challenge(id int64) (*ChallengeData, error) {
 func (c *Client) DownloadFiles(id int64, outputPath string) error {
 	challenge, err := c.Challenge(id)
 	if err != nil {
-		return fmt.Errorf("error getting challenge: %v", err)
+		return err
 	}
 
 	files := make([]string, len(challenge.Files))
@@ -109,7 +109,7 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 	for _, file := range files {
 		resp, err := c.GetJson(file)
 		if err != nil {
-			return fmt.Errorf("error getting challenge file: %v", err)
+			return fmt.Errorf("failed to get file: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -122,7 +122,7 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 			}
 			resp, err = c.GetJson(file)
 			if err != nil {
-				return fmt.Errorf("error getting challenge file: %v", err)
+				return fmt.Errorf("failed to get file: %v", err)
 			}
 			defer resp.Body.Close()
 
@@ -131,18 +131,18 @@ func (c *Client) DownloadFiles(id int64, outputPath string) error {
 
 		if resp.ContentLength > (c.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
 			sizeInMegaBytes := resp.ContentLength / OneMB
-			return fmt.Errorf("file size is too big : %v/%vmb", sizeInMegaBytes, c.MaxFileSize)
+			return fmt.Errorf("file %q is too large (%d/%d MB)", fileName, sizeInMegaBytes, c.MaxFileSize)
 		}
 
 		file, err := os.Create(path.Join(outputPath, fileName))
 		if err != nil {
-			return fmt.Errorf("error creating file: %v", err)
+			return fmt.Errorf("failed to create file: %v", err)
 		}
 		defer file.Close()
 
 		_, err = io.Copy(file, resp.Body)
 		if err != nil {
-			return fmt.Errorf("error copying file: %v", err)
+			return fmt.Errorf("failed to copy file: %v", err)
 		}
 	}
 
@@ -158,13 +158,13 @@ func (c *Client) GetDescription(challenge *ChallengeData, challengePath string) 
 	if _, err := os.Stat(challengePath); err == nil {
 		oldChallenge, err := os.Open(challengePath)
 		if err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("error opening challenge file: %v", err)
+			return fmt.Errorf("failed to open challenge file: %v", err)
 		}
 		defer oldChallenge.Close()
 
 		oldChallengeString, err := ioutil.ReadAll(oldChallenge)
 		if err != nil && err != io.EOF {
-			return fmt.Errorf("error reading challenge file: %v", err)
+			return fmt.Errorf("failed to read challenge file: %v", err)
 		}
 
 		oldWriteupText = strings.Split(string(oldChallengeString), "## Writeup\n")
@@ -302,7 +302,7 @@ type Submission struct {
 func (c *Client) SubmitFlag(submission Submission) error {
 	resp, err := c.GetJson("challenges")
 	if err != nil {
-		return fmt.Errorf("error getting nonce: %v", err)
+		return fmt.Errorf("request failed: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -312,12 +312,12 @@ func (c *Client) SubmitFlag(submission Submission) error {
 
 	data, err := json.Marshal(submission)
 	if err != nil {
-		return fmt.Errorf("error marshalling submission: %v", err)
+		return fmt.Errorf("failed to marshal submission: %v", err)
 	}
 
 	req, err := http.NewRequest("POST", c.BaseURL.String(), bytes.NewBuffer(data))
 	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
+		return fmt.Errorf("failed to create request: %v", err)
 	}
 
 	req.Header.Set("Csrf-Token", nonce)
@@ -325,12 +325,12 @@ func (c *Client) SubmitFlag(submission Submission) error {
 
 	resp, err = c.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error submitting flag: %v", err)
+		return fmt.Errorf("request failed: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("error submitting flag: %v", resp.Status)
+		return fmt.Errorf("received status code %d (%s)", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
 	response := new(struct {
@@ -343,16 +343,16 @@ func (c *Client) SubmitFlag(submission Submission) error {
 
 	data, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("error reading response: %v", err)
+		return fmt.Errorf("failed to read response: %v", err)
 	}
 
 	err = json.Unmarshal(data, &response)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling response: %v", err)
+		return fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
 	if !response.Success {
-		return fmt.Errorf("error submitting flag: %v", response.Data.Message)
+		return fmt.Errorf("failed to submit flag: %s", response.Data.Message)
 	}
 
 	c.BaseURL.Path = ""
@@ -360,11 +360,11 @@ func (c *Client) SubmitFlag(submission Submission) error {
 	// check the challenge id and if we actually solved it
 	challenge, err := c.Challenge(int64(submission.ID))
 	if err != nil {
-		return fmt.Errorf("error getting challenge: %v", err)
+		return fmt.Errorf("failed to get challenge: %v", err)
 	}
 
 	if !challenge.SolvedByMe {
-		return fmt.Errorf("error submitting flag: %v", response.Data.Message)
+		return fmt.Errorf("failed to submit flag: %v", response.Data.Message)
 	}
 
 	return nil

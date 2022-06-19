@@ -75,24 +75,24 @@ func parseForms(node *html.Node) (forms []htmlForm) {
 func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(values url.Values)) (*http.Response, error) {
 	resp, err := client.Get(urlStr)
 	if err != nil {
-		return nil, &Error{"fetch form", urlStr, err}
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	root, err := html.Parse(resp.Body)
 	if err != nil {
-		return nil, &Error{"fetch form", urlStr, err}
+		return nil, err
 	}
 
 	forms := parseForms(root)
 	if len(forms) == 0 {
-		return nil, &Error{"fetch form", urlStr, errors.New("no forms found")}
+		return nil, errors.New("no forms found")
 	}
 	form := forms[0]
 
 	actionURL, err := url.Parse(form.Action)
 	if err != nil {
-		return nil, &Error{"fetch form", urlStr, err}
+		return nil, err
 	}
 	actionURL = resp.Request.URL.ResolveReference(actionURL)
 
@@ -106,7 +106,7 @@ func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(value
 
 	req, err := http.NewRequest("POST", actionURL.String(), strings.NewReader(form.Values.Encode()))
 	if err != nil {
-		return nil, &Error{"fetch form", urlStr, err}
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -118,7 +118,7 @@ func fetchAndSubmitForm(client *http.Client, urlStr string, setValues func(value
 
 	resp, err = client.Do(req)
 	if err != nil {
-		return nil, &Error{"fetch form", urlStr, err}
+		return nil, err
 	}
 
 	return resp, nil

@@ -1,6 +1,7 @@
 package ctf
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -20,7 +21,7 @@ func (c *Client) Check() error {
 	// Check for "<small class="text-muted">Powered by CTFd</small>"
 	footerText := doc.Find("small.text-muted").Text()
 	if !strings.Contains(footerText, "Powered by CTFd") {
-		return &Error{"check", c.BaseURL.String(), fmt.Errorf("not a CTFd instance")}
+		return errors.New("not a CTFd instance")
 	}
 
 	// check /login
@@ -56,7 +57,7 @@ func (c *Client) Authenticate() error {
 
 	loginURL, err := joinPath(c.BaseURL.String(), "login")
 	if err != nil {
-		return &Error{"authenticate", loginURL.String(), err}
+		return err
 	}
 
 	resp, err := fetchAndSubmitForm(c.Client, loginURL.String(), setPassword)
@@ -65,18 +66,18 @@ func (c *Client) Authenticate() error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return &Error{"authenticate", loginURL.String(), fmt.Errorf("unexpected status code: %d", resp.StatusCode)}
+		return fmt.Errorf("failed to authenticate: %s", resp.Status)
 	}
 
 	html, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return &Error{"authenticate", loginURL.String(), err}
+		return err
 	}
 
 	errorRegex := regexp.MustCompile(`<div class="alert alert-danger alert-dismissible text-center" role="alert">\s*<span>([^<]+)</span>`)
 	if errorRegex.MatchString(string(html)) {
 		errorMessage := errorRegex.FindStringSubmatch(string(html))[1]
-		return &Error{"authenticate", loginURL.String(), fmt.Errorf(errorMessage)}
+		return fmt.Errorf("failed to authenticate: %s", errorMessage)
 	}
 
 	return nil
