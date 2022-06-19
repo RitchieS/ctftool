@@ -1,60 +1,93 @@
 SHELL := /bin/bash
 
 # The name of the executable (default is current directory name)
-TARGET := $(echo $${PWD\#\#*/})
-.DEFAULT_GOAL: $(TARGET)
+TARGET 		?= $(shell basename `go list`)
 
 # These will be provided to the target
-VERSION := `git describe --tags`
-BUILD := `git rev-parse --short HEAD`
-CURDATE := `date +%Y-%m-%d`
+VERSION 	?= $(shell git describe --tags --always)
+BUILD 		?= $(shell git rev-parse --short HEAD)
+CURDATE 	?= $(shell date +%Y/%m/%d_%H:%M:%S)
+
+# go source files, ignore vendor directory
+SRC 		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 # Use linker flags to provide version/build settings to the target
 # LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD) -s -w"
 LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Commit=$(BUILD) -X=github.com/ritchies/ctftool/cmd.BuildTime=$(CURDATE) -s -w"
 
 
-# go source files, ignore vendor directory
-SRC = $(find . -type f -name '*.go' -not -path "./vendor/*")
+.DEFAULT_GOAL: $(TARGET)
+.PHONY: help build install uninstall clean fmt vet test test-it test-bench test-race test-cover test-all run doc all
 
-.PHONY: all build clean install uninstall fmt check run doc
+default: help
 
-all: check install
+help: ## show this help
+	@echo 'usage: make [target] ...'
+	@echo ''
+	@echo 'targets:'
+	@egrep '^(.+)\:\ .*##\ (.+)' ${MAKEFILE_LIST} | sed 's/:.*##/#/' | column -t -c 2 -s '#'
 
 $(TARGET): $(SRC)
-	@go build $(LDFLAGS) -o $(TARGET)
+	@go build $(LDFLAGS) -o bin/$(TARGET)
+	@echo "Built $(TARGET) version $(VERSION) commit $(BUILD)"
+	@echo "Built $(TARGET) version $(VERSION) commit $(BUILD)" > bin/$(TARGET).version
+	@echo "You can run the program by typing './bin/$(TARGET)'"
 
-build: $(TARGET)
+all: clean fmt test build ## clean, format, unit test and build
+
+build: $(TARGET) ## build the executable
 	@true
 
-clean:
-	@rm -vf $(TARGET)
+install: ## install the executable to $GOPATH/bin	
+	@go install -v $(LDFLAGS) ./...
+	@echo "Installed $(TARGET) version $(VERSION) commit $(BUILD)"
+	@echo "You can run the program by typing '$(TARGET)'"
 
-install:
-	@go install $(LDFLAGS)
+uninstall: clean ## uninstall the executable from $GOPATH/bin
+	go clean -i ./...
+	@rm -vf `which $(TARGET)`
 
-uninstall: clean
-	@echo rm -vf $$(which $(TARGET))
+clean: ## remove all generated files
+	go clean
+	@rm -vf `which $(TARGET)`
+	@rm -vf bin/$(TARGET) bin/$(TARGET).version
+	@rm -vf tests/coverage.out tests/coverage.html
+	@rm -vrf tests bin
 
-fmt:
-	@go fmt $(SRC)
+fmt: ## format the source files
+	go fmt ./...
 
-check:
+vet: ## run go vet on the source files
+	go vet ./...
+
+test: vet ## run short unit tests
+	go test -v ./... -short
+
+test-it: ## run the integration tests
+	go test -v ./...
+
+test-bench: ## run the benchmark tests
+	go test -bench ./...
+
+test-race: ## run the race condition tests
+	go test -race ./...
+
+test-cover: 	## generate test coverage report
+	@rm -vrf tests
 	@mkdir -p tests
-	@go test $(LDFLAGS)
-	@go test -race ./...
 	@go test -coverprofile=tests/coverage.out ./...
 	@go tool cover -func=tests/coverage.out
 	@go tool cover -html=tests/coverage.out -o tests/coverage.html
-	@rm -f tests/coverage.out
-	@go vet ${SRC}
 
 	@echo "Coverage file:"
 	@echo " - $(PWD)/tests/coverage.html"
+	@rm -f tests/coverage.out
 
-run: install
+test-all: test test-it test-bench test-race test-cover ## run all tests
+
+run: install ## install and run the binary
 	@$(TARGET)
 
-doc:
-	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/ritchies/ctftool to see the documentation"
-	@godoc -http=:6060 -index
+doc: ## generate docs
+	@echo "NOTE: Visit http://localhost:6060/pkg/github.com/ritchies/ctftool to see the documentation"
+	godoc -http=:6060 -index

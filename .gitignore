@@ -24,8 +24,9 @@ go.work
 .vscode
 
 # CUSTOM
-tests*
-output*
+bin/
+tests/
+output/
 
 .ctftool.yaml
 *.sqlite
