@@ -10,28 +10,14 @@ A cli tool to check upcoming CTF's from [ctftime.org](https://ctftime.org) and d
 
 `ctftool` is a cli tool for interacting with [ctftime](https://ctftime.org) and [CTFd](https://ctfd.io) to list upcoming CTFs, download challenges from CTFd, get the scores of your team, and more.
 
-It provides:
+It can:
 
-- Interactive CLI interface `cobra` and `bubbletea`
-- Interact with [ctftime](https://ctftime.org)
+- Interact with [ctftime](https://ctftime.org) and [CTFd](https://ctfd.io)
 - List upcoming CTFs
-- List the top 10 teams
-- Adjust information for each CTF locally stored in a sqlite db
-- Interact with [CTFd](https://ctfd.io)
+- List the top 10 teams on ctftime and CTFd
+- Adjust information for each CTF locally stored in a sqlite db (like start/finish time)
 - Download challenges from CTFd
 - Creates a writeup template for each challenge
-- Get the top 10 teams in a CTF
-
-### Upcoming features
-
-- [ ] Get the scores of your team on ctftime.org
-- [ ] Get the scores of your team on ctfd
-- [ ] Search teams by name
-- [ ] Search teams by country
-- [ ] Scoreboard by country
-- [ ] Ability to announce CTFs on Discord
-- [ ] Various Discord related features, like creating channels, threads and allowing users to solve challenges
-- [ ] Complete interactive TUI using bubbletea
 
 ## Concepts
 
@@ -49,8 +35,10 @@ If no command is given, the default command is `ctftool ctftime` or if a config 
 
 #### Current issues
 
-- [ ] Does not handle cloudflare correctly
-- [ ] Does not handle catpcha's yet
+- [ ] Does not handle cloudflare correctly, yet
+- [ ] Does not handle catpcha's, yet
+- [ ] Does not support other CTF instances yet like;
+  - [ ] rCTF
 
 ## Commands
 
