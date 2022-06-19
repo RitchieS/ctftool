@@ -14,7 +14,6 @@ SRC 		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 # Use linker flags to provide version/build settings to the target
 LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Commit=$(BUILD) -X=github.com/ritchies/ctftool/cmd.BuildTime=$(CURDATE) -s -w"
 
-
 .DEFAULT_GOAL: $(TARGET)
 .PHONY: help build install uninstall clean fmt vet test test-it test-bench test-race test-cover test-all run doc all
 
@@ -51,7 +50,7 @@ clean: ## remove all generated files
 	@rm -vf `which $(TARGET)`
 	@rm -vf bin/$(TARGET) bin/$(TARGET).version
 	@rm -vf tests/coverage.out tests/coverage.html
-	@rm -vrf tests bin
+	@rm -vrf tests bin output
 
 fmt: ## format the source files
 	go fmt ./...
