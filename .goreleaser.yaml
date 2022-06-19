@@ -65,7 +65,7 @@ announce:
 
     # Message template to use while publishing.
     # Defaults to `{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}`
-    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}'
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out [here]({{ .ReleaseURL }})'
 
     # Set author of the embed.
     # Defaults to `GoReleaser`
