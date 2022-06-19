@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-# The name of the executable (default is current directory name)
+# The name of the executable
 TARGET 		?= $(shell basename `go list`)
 
 # These will be provided to the target
@@ -8,11 +8,10 @@ VERSION 	?= $(shell git describe --tags --always)
 BUILD 		?= $(shell git rev-parse --short HEAD)
 CURDATE 	?= $(shell date +%Y/%m/%d_%H:%M:%S)
 
-# go source files, ignore vendor directory
+# Source files, ignore vendor directory
 SRC 		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 # Use linker flags to provide version/build settings to the target
-# LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD) -s -w"
 LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Commit=$(BUILD) -X=github.com/ritchies/ctftool/cmd.BuildTime=$(CURDATE) -s -w"
 
 
@@ -72,7 +71,7 @@ test-bench: ## run the benchmark tests
 test-race: ## run the race condition tests
 	go test -race ./...
 
-test-cover: 	## generate test coverage report
+test-cover: ## generate test coverage report
 	@rm -vrf tests
 	@mkdir -p tests
 	@go test -coverprofile=tests/coverage.out ./...
