@@ -42,13 +42,26 @@ build-single: ## GoReleaser: build executable
 build-all: ## GoReleaser: build for all platforms
 	@goreleaser build --rm-dist 
 
-build-tools: ## fetch and install all required tools (goreleaser, golint, gofmt and godoc)
+build-tools: ## fetch and install all required tools
 	go install -v github.com/goreleaser/goreleaser@latest
 	go install -v golang.org/x/tools/cmd/godoc@latest
 	go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
+	go install -v github.com/caarlos0/svu@latest
 
 release:
-	@goreleaser release
+	@goreleaser release --rm-dist
+
+major:
+	git tag $$(svu major)
+.PHONY: major
+
+minor:
+	git tag $$(svu minor)
+.PHONY: minor
+
+patch:
+	git tag $$(svu patch)
+.PHONY: patch
 
 install: ## install the executable to $GOPATH/bin	
 	@go install -v $(LDFLAGS) ./...
