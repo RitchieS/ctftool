@@ -36,9 +36,9 @@ builds:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser
 
 archives:
-  - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    id: tgz
+  - id: tgz
     format: tar.gz
+    #name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     replacements:
       linux: Linux
       darwin: macOS
