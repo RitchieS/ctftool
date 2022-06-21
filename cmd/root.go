@@ -137,9 +137,18 @@ func GetRateLimit() ratelimit.Limiter {
 	return rl
 }
 
-// CheckErr prints the msg with the prefix 'Error:' and exits with error code 1. If the msg is nil, it does nothing.
+// CheckErr prints the msg with the prefix 'Error:' and exits.
+// If the msg is nil, it does nothing.
 func CheckErr(msg interface{}) {
 	if msg != nil {
 		log.Fatalf("Error: %v", msg)
+	}
+}
+
+// CheckWarn prints the msg with the prefix 'Warning:'.
+// If the msg is nil, it does nothing.
+func CheckWarn(msg interface{}) {
+	if msg != nil {
+		log.Warnf("Warning: %v", msg)
 	}
 }

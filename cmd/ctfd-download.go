@@ -139,7 +139,7 @@ var ctfdDownloadCmd = &cobra.Command{
 
 				// download challenge files
 				err = client.DownloadFiles(chall.ID, challengePath)
-				CheckErr(err)
+				CheckWarn(err)
 
 				// get description
 				err = client.GetDescription(chall, challengePath)
