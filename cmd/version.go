@@ -7,11 +7,10 @@ import (
 )
 
 var (
-	// The Commit and Version are set to "dev" by default, or set by the Makefile
-	Commit    = "dev" // Commit is the commit hash of the current build
-	Version   = "dev" // Version is the current version of the program
-	BuildTime = "dev" // BuildTime is the time the program was built
-	BuiltBy   = "dev" // BuiltBy is how the program was built (dev, goreleaser, etc)
+	Version = "dev"     // Version is the current version of the program
+	Commit  = "none"    // Commit is the commit hash of the current build
+	Date    = "unknown" // Date is the time the program was built
+	BuiltBy = "unknown" // BuiltBy is how the program was built (unknown, goreleaser, etc)
 )
 
 func init() {
@@ -26,7 +25,7 @@ var versionCmd = &cobra.Command{
 		if Commit == "dev" {
 			fmt.Printf("You are running a development build of ctftool\n")
 		} else {
-			fmt.Printf("ctftool %s (%s) built by %s on %s\n", Version, Commit, BuiltBy, BuildTime)
+			fmt.Printf("ctftool %s (%s) built by %s on %s\n", Version, Commit, BuiltBy, Date)
 		}
 	},
 }

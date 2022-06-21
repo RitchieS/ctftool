@@ -12,7 +12,7 @@ CURDATE 	?= $(shell date +%Y/%m/%d_%H:%M:%S)
 SRC 		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 # Use linker flags to provide version/build settings to the target
-LDFLAGS=-ldflags "-X=github.com/ritchies/ctftool/cmd.Version=$(VERSION) -X=github.com/ritchies/ctftool/cmd.Commit=$(BUILD) -X=github.com/ritchies/ctftool/cmd.BuildTime=$(CURDATE) -s -w"
+LDFLAGS=-ldflags "-X=main.version=$(VERSION) -X=main.commit=$(BUILD) -X=main.date=$(CURDATE) -s -w"
 
 .DEFAULT_GOAL: $(TARGET)
 .PHONY: help build install uninstall clean fmt vet check test test-it test-bench test-race test-cover test-all run doc all
