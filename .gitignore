@@ -25,6 +25,7 @@ go.work
 
 # CUSTOM
 bin/
+dist/
 tests/
 output/
 
