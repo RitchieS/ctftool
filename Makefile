@@ -15,7 +15,7 @@ SRC 		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 LDFLAGS=-ldflags "-X=main.version=$(VERSION) -X=main.commit=$(BUILD) -X=main.date=$(CURDATE) -s -w"
 
 .DEFAULT_GOAL: $(TARGET)
-.PHONY: help build install uninstall clean fmt vet check test test-it test-bench test-race test-cover test-all run doc all
+.PHONY: help build build-all release install uninstall clean fmt vet lint tidy check test test-it test-bench test-race test-cover test-all run doc all
 
 default: help
 
@@ -33,8 +33,22 @@ $(TARGET): $(SRC)
 
 all: clean fmt test build ## clean, format, unit test and build
 
-build: $(TARGET) ## build the executable
+build: $(TARGET) ## Go: build executable
 	@true
+
+build-single: ## GoReleaser: build executable
+	@goreleaser build --rm-dist --single-target
+
+build-all: ## GoReleaser: build for all platforms
+	@goreleaser build --rm-dist 
+
+build-tools: ## fetch and install all required tools (goreleaser, golint, gofmt and godoc)
+	go install -v github.com/goreleaser/goreleaser@latest
+	go install -v golang.org/x/tools/cmd/godoc@latest
+	go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
+
+release:
+	@goreleaser release
 
 install: ## install the executable to $GOPATH/bin	
 	@go install -v $(LDFLAGS) ./...
@@ -50,13 +64,16 @@ clean: ## remove all generated files
 	@rm -vf `which $(TARGET)`
 	@rm -vf bin/$(TARGET) bin/$(TARGET).version
 	@rm -vf tests/coverage.out tests/coverage.html
-	@rm -vrf tests bin output
+	@rm -vrf bin dist tests output
 
 fmt: ## format the source files
 	gofmt -s -w $(SRC)
 
 vet: ## run go vet on the source files
 	go vet ./...
+
+lint: ## run golangci-lint on the source files
+	golangci-lint run --exclude-use-default ./...
 
 tidy: ## go mod tidy on the source files
 	go mod tidy
