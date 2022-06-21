@@ -184,32 +184,56 @@ func (c *Client) GetDescription(challenge *ChallengeData, challengePath string) 
 		solved = "❌"
 	}
 
-	file.WriteString(fmt.Sprintf("# %s %s - %s\n\n", solved, strings.ToUpper(challenge.Category), challenge.Name))
+	_, err = file.WriteString(fmt.Sprintf("# %s %s - %s\n\n", solved, strings.ToUpper(challenge.Category), challenge.Name))
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
 
 	// tags (if available)
 	if len(challenge.Tags) > 0 {
-		file.WriteString("## Tags\n\n")
+		_, err = file.WriteString("## Tags\n\n")
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 		for _, tag := range challenge.Tags {
-			file.WriteString(fmt.Sprintf("- %s\n", tag))
+			_, err = file.WriteString(fmt.Sprintf("- %s\n", tag))
+			if err != nil {
+				return fmt.Errorf("error writing to file: %v", err)
+			}
 		}
 
-		file.WriteString("\n")
+		_, err = file.WriteString("\n")
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 	}
 
 	// connection info (if available)
 	if challenge.ConnectionInfo != "" {
-		file.WriteString(fmt.Sprintf("Connection Info: %s\n\n", challenge.ConnectionInfo))
+		_, err := file.WriteString(fmt.Sprintf("Connection Info: %s\n\n", challenge.ConnectionInfo))
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 	}
 
 	// files (if available)
 	if len(challenge.Files) > 0 {
-		file.WriteString("Files:\n\n")
+		_, err := file.WriteString("Files:\n\n")
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 		for _, challengeFile := range challenge.Files {
 			fileURL, _ := c.BaseURL.Parse(challengeFile)
-			file.WriteString(fmt.Sprintf("- [%s](%s)\n", getFileName(challengeFile), fileURL.String()))
+			_, err := file.WriteString(fmt.Sprintf("- [%s](%s)\n", getFileName(challengeFile), fileURL.String()))
+			if err != nil {
+				return fmt.Errorf("error writing to file: %v", err)
+			}
 		}
 
-		file.WriteString("\n")
+		_, err = file.WriteString("\n")
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 	}
 
 	// description
@@ -258,7 +282,10 @@ func (c *Client) GetDescription(challenge *ChallengeData, challengePath string) 
 
 	}(challenge.Description)
 
-	file.WriteString("## Description\n\n")
+	_, err = file.WriteString("## Description\n\n")
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
 
 	// trip leading and trailing newlines
 	description := strings.TrimSpace(cleanDescription)
@@ -270,25 +297,43 @@ func (c *Client) GetDescription(challenge *ChallengeData, challengePath string) 
 	// remove html entities
 	description = html.UnescapeString(description)
 
-	file.WriteString(fmt.Sprintf("%s\n", description))
+	_, err = file.WriteString(fmt.Sprintf("%s\n", description))
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
 
 	// hints (if available)
 	if len(challenge.Hints) > 0 && challenge.Hints[0].Content != "" {
-		file.WriteString("## Hints\n")
+		_, err = file.WriteString("## Hints\n")
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 		for _, hint := range challenge.Hints {
 			if hint.Content != "" {
-				file.WriteString(fmt.Sprintf("- %s\n", hint.Content))
+				_, err = file.WriteString(fmt.Sprintf("- %s\n", hint.Content))
+				if err != nil {
+					return fmt.Errorf("error writing to file: %v", err)
+				}
 			}
 		}
 
-		file.WriteString("\n")
+		_, err = file.WriteString("\n")
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 	}
 
 	// writeup
-	file.WriteString("\n## Writeup\n")
+	_, err = file.WriteString("\n## Writeup\n")
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
 
 	if len(oldWriteupText) > 1 {
-		file.WriteString(oldWriteupText[1])
+		_, err = file.WriteString(oldWriteupText[1])
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
 	}
 
 	return nil

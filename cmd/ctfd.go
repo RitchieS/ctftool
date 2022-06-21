@@ -32,9 +32,18 @@ func init() {
 	ctfdCmd.PersistentFlags().BoolVarP(&opts.SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
 
 	// viper
-	viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))
-	viper.BindPFlag("username", ctfdCmd.Flags().Lookup("username"))
-	viper.BindPFlag("password", ctfdCmd.Flags().Lookup("password"))
-	viper.BindPFlag("output", ctfdCmd.PersistentFlags().Lookup("output"))
-	viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
+	err := viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("username", ctfdCmd.Flags().Lookup("username"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("password", ctfdCmd.Flags().Lookup("password"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("output", ctfdCmd.PersistentFlags().Lookup("output"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
+	CheckErr(err)
 }

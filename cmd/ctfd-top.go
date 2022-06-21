@@ -22,8 +22,7 @@ var ctfdTopCmd = &cobra.Command{
 		CheckErr(err)
 
 		if baseURL.Host == "" {
-			cmd.Help()
-			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
+			ShowHelp(cmd, fmt.Sprintf("Invalid or empty URL provided: %q", baseURL.String()))
 		}
 
 		client.BaseURL = baseURL
@@ -57,5 +56,6 @@ func init() {
 
 	ctfdTopCmd.Flags().StringVarP(&opts.URL, "url", "u", "", "CTFD instance URL")
 
-	viper.BindPFlag("url", ctfdTopCmd.Flags().Lookup("url"))
+	err := viper.BindPFlag("url", ctfdTopCmd.Flags().Lookup("url"))
+	CheckErr(err)
 }

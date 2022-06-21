@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -63,9 +64,14 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print version information")
 
-	rootCmd.PersistentFlags().MarkHidden("debug")
-	rootCmd.PersistentFlags().MarkHidden("log-format")
-	rootCmd.PersistentFlags().MarkHidden("version")
+	err := rootCmd.PersistentFlags().MarkHidden("debug")
+	CheckErr(err)
+
+	err = rootCmd.PersistentFlags().MarkHidden("log-format")
+	CheckErr(err)
+
+	err = rootCmd.PersistentFlags().MarkHidden("version")
+	CheckErr(err)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -151,4 +157,17 @@ func CheckWarn(msg interface{}) {
 	if msg != nil {
 		log.Warnf("Warning: %v", msg)
 	}
+}
+
+// ShowHelp prints the help for the command.
+// If the msg is not nil, it prints the msg after the help.
+func ShowHelp(cmd *cobra.Command, msg interface{}) {
+	err := cmd.Help()
+	CheckErr(err)
+
+	if msg != nil {
+		fmt.Println()
+		log.Error(msg)
+	}
+	os.Exit(1)
 }

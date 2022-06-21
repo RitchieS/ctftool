@@ -30,20 +30,17 @@ var ctfdSubmitCmd = &cobra.Command{
 		CheckErr(err)
 
 		if baseURL.Host == "" {
-			cmd.Help()
-			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
+			ShowHelp(cmd, fmt.Sprintf("Invalid or empty URL provided: %s", baseURL.String()))
 		}
 
 		client.BaseURL = baseURL
 
 		if CTFDSubmissionID == 0 {
-			cmd.Help()
-			log.Fatal("CTFD Submission ID is required")
+			ShowHelp(cmd, "CTFD Submission ID is required")
 		}
 
 		if CTFDSubmission == "" {
-			cmd.Help()
-			log.Fatal("CTFD Submission is required")
+			ShowHelp(cmd, "CTFD Submission is required")
 		}
 
 		if opts.Username != "" && opts.Password == "" {
@@ -55,8 +52,7 @@ var ctfdSubmitCmd = &cobra.Command{
 
 		// opts.Username and password are required
 		if opts.Username == "" || opts.Password == "" {
-			cmd.Help()
-			log.Fatal("CTFD User and Password are required")
+			ShowHelp(cmd, "CTFD User and Password are required")
 		}
 
 		credentials := ctf.Credentials{
@@ -94,7 +90,12 @@ func init() {
 	ctfdSubmitCmd.Flags().StringVarP(&CTFDSubmission, "submission", "s", "", "Submission")
 
 	// viper
-	viper.BindPFlag("url", ctfdSubmitCmd.Flags().Lookup("url"))
-	viper.BindPFlag("username", ctfdSubmitCmd.Flags().Lookup("username"))
-	viper.BindPFlag("password", ctfdSubmitCmd.Flags().Lookup("password"))
+	err := viper.BindPFlag("url", ctfdSubmitCmd.Flags().Lookup("url"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("username", ctfdSubmitCmd.Flags().Lookup("username"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("password", ctfdSubmitCmd.Flags().Lookup("password"))
+	CheckErr(err)
 }

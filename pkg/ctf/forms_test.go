@@ -143,7 +143,10 @@ func Test_FetchAndSubmitForm(t *testing.T) {
 	})
 
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
+		err := r.ParseForm()
+		if err != nil {
+			t.Errorf("error parsing form: %v", err)
+		}
 		want := url.Values{
 			"name":     {"test"},
 			"password": {"test"},
@@ -157,7 +160,10 @@ func Test_FetchAndSubmitForm(t *testing.T) {
 	})
 
 	setValues := func(values url.Values) { values.Set("name", "test") }
-	fetchAndSubmitForm(client.Client, client.BaseURL.String()+"/", setValues)
+	_, err := fetchAndSubmitForm(client.Client, client.BaseURL.String()+"/", setValues)
+	if err != nil {
+		t.Errorf("error submitting form: %v", err)
+	}
 	if !submitted {
 		t.Errorf("expected form to be submitted")
 	}

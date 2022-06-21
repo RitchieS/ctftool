@@ -60,7 +60,10 @@ func (db *Db) Get() (*gorm.DB, error) {
 	}
 
 	if !db.SkipMigration {
-		conn.AutoMigrate(&Event{}, &EventCustomTitle{}, &EventCustomDescription{}, &EventCustomDate{}, &EventCustomURL{})
+		err := conn.AutoMigrate(&Event{}, &EventCustomTitle{}, &EventCustomDescription{}, &EventCustomDate{}, &EventCustomURL{})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return conn, nil

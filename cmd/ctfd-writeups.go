@@ -34,8 +34,7 @@ var ctfdWriteupCmd = &cobra.Command{
 		CheckErr(err)
 
 		if baseURL.Host == "" {
-			cmd.Help()
-			log.Fatalf("Invalid or empty URL provided: %s", baseURL.String())
+			ShowHelp(cmd, fmt.Sprintf("Invalid or empty URL provided: %q", baseURL.String()))
 		}
 
 		client.BaseURL = baseURL
@@ -49,8 +48,7 @@ var ctfdWriteupCmd = &cobra.Command{
 
 		// opts.Username and password are required
 		if opts.Username == "" || opts.Password == "" {
-			cmd.Help()
-			log.Fatal("CTFD User and Password are required")
+			ShowHelp(cmd, "CTFD User and Password are required")
 		}
 
 		credentials := ctf.Credentials{
@@ -144,7 +142,8 @@ var ctfdWriteupCmd = &cobra.Command{
 			viper.Set("password", "")
 			viper.Set("output", outputFolder)
 			viper.Set("overwrite", true)
-			viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
+			err := viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
+			CheckErr(err)
 
 			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
 			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
@@ -160,7 +159,12 @@ func init() {
 	ctfdWriteupCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
 
 	// viper
-	viper.BindPFlag("url", ctfdWriteupCmd.Flags().Lookup("url"))
-	viper.BindPFlag("username", ctfdWriteupCmd.Flags().Lookup("username"))
-	viper.BindPFlag("password", ctfdWriteupCmd.Flags().Lookup("password"))
+	err := viper.BindPFlag("url", ctfdWriteupCmd.Flags().Lookup("url"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("username", ctfdWriteupCmd.Flags().Lookup("username"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("password", ctfdWriteupCmd.Flags().Lookup("password"))
+	CheckErr(err)
 }

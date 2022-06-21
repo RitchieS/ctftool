@@ -63,7 +63,10 @@ func TestCheck(t *testing.T) {
 		t.Run(fmt.Sprintf("%s mux", test.description), func(t *testing.T) {
 			mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(test.html))
+				_, err := w.Write([]byte(test.html))
+				if err != nil {
+					t.Errorf("Write() returned error: %v", err)
+				}
 			})
 		})
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
@@ -129,7 +132,10 @@ func TestCheckFailure(t *testing.T) {
 		t.Run(fmt.Sprintf("%s mux", test.description), func(t *testing.T) {
 			mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(test.html))
+				_, err := w.Write([]byte(test.html))
+				if err != nil {
+					t.Errorf("Write() returned error: %v", err)
+				}
 			})
 		})
 

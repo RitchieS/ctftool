@@ -33,7 +33,10 @@ func TestListChallenges(t *testing.T) {
 	// mock response
 	mux.HandleFunc("/api/v1/challenges", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(challengex)
+		err := json.NewEncoder(w).Encode(challengex)
+		if err != nil {
+			t.Errorf("failed to encode json: %v", err)
+		}
 	})
 
 	// test
@@ -95,13 +98,16 @@ func TestListChallenges_Error(t *testing.T) {
 	// mock response
 	mux.HandleFunc("/api/v1/challenges", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(struct {
+		err := json.NewEncoder(w).Encode(struct {
 			Data    []ChallengesData `json:"data"`
 			Success bool             `json:"success"`
 		}{
 			Data:    []ChallengesData{},
 			Success: false,
 		})
+		if err != nil {
+			t.Errorf("failed to encode json: %v", err)
+		}
 	})
 
 	// test
@@ -124,7 +130,10 @@ func TestListChallenges_InvalidJSON(t *testing.T) {
 	// mock response
 	mux.HandleFunc("/api/v1/challenges", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("invalid json"))
+		_, err := w.Write([]byte("invalid json"))
+		if err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	})
 
 	// test

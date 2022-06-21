@@ -148,7 +148,8 @@ func init() {
 	ctftimeCmd.AddCommand(ctftimeModifyCmd)
 
 	ctftimeModifyCmd.Flags().Uint64("id", 0, "The ID of the event to modify")
-	cobra.MarkFlagRequired(ctftimeModifyCmd.Flags(), "id")
+	err := cobra.MarkFlagRequired(ctftimeModifyCmd.Flags(), "id")
+	CheckErr(err)
 
 	ctftimeModifyCmd.Flags().String("title", "", "The title of the event")
 	ctftimeModifyCmd.Flags().String("description", "", "The description of the event")
