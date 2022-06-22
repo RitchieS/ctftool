@@ -149,3 +149,23 @@ func CleanSlug(s string, setLower bool) string {
 
 	return s
 }
+
+func Unique(x []time.Time) []time.Time {
+	// Use map to record duplicates as we find them.
+	encountered := map[time.Time]bool{}
+	result := []time.Time{}
+
+	for v := range x {
+		if encountered[x[v]] {
+			// Do not add duplicate.
+		} else {
+			// Record this element as an encountered element.
+			encountered[x[v]] = true
+			// Append to result slice.
+			result = append(result, x[v])
+		}
+	}
+
+	// Return the new slice.
+	return result
+}

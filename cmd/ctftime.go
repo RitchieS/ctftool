@@ -27,6 +27,8 @@ var ctftimeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(ctftimeCmd)
+
+	ctftimeCmd.Flags().IntVarP(&limit, "limit", "l", 10, "Limit the number of events to display")
 }
 
 func newModel(items []string) paginatorModel {

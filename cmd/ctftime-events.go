@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/internal/storage"
 	"github.com/ritchies/ctftool/pkg/ctf"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm/clause"
 )
@@ -27,34 +27,57 @@ var ctftimeEventsCmd = &cobra.Command{
 		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse(ctftimeURL)
 
-		events, err := client.GetCTFEvents()
-		CheckErr(err)
-
 		db, err := dB.Get()
 		CheckErr(err)
 
-		err = db.Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "id"}},
-			DoUpdates: clause.AssignmentColumns([]string{
-				"title",
-				"description",
-				"url",
-				"url_is_ctfd",
-				"logo",
-				"weight",
-				"onsite",
-				"location",
-				"restrictions",
-				"format",
-				"format_id",
-				"participants",
-				"start",
-				"finish",
-			}),
-		}).Create(&events).Error
-		CheckErr(err)
+		// use gorm to get the first xEvents from the events database
+		var events []ctf.Event
+
+		// check when the last update was to the database
+		var lastUpdate time.Time
+		err = db.Model(&events).Select("updated_at").Row().Scan(&lastUpdate)
+		if err == nil {
+			log.Debugf("Last update: %s", lib.HumanizeTime(lastUpdate))
+		}
+
+		if err == nil && time.Since(lastUpdate) <= time.Minute*10 {
+			log.Debug("Not updating database, last update was within the last 10 minutes")
+		} else {
+			log.Info("Updating database")
+			events, err = client.GetCTFEvents()
+			CheckErr(err)
+
+			err = db.Clauses(clause.OnConflict{
+				Columns: []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{
+					"title",
+					"description",
+					"url",
+					"url_is_ctfd",
+					"logo",
+					"weight",
+					"onsite",
+					"location",
+					"restrictions",
+					"format",
+					"format_id",
+					"participants",
+					"start",
+					"finish",
+				}),
+			}).Create(&events).Error
+			CheckErr(err)
+		}
 
 		eventStringsArray := make([]string, 0)
+		newEvents := make([]ctf.Event, 0)
+
+		createdTimes := make([]time.Time, 0)
+		for _, event := range events {
+			createdTimes = append(createdTimes, event.CreatedAt)
+		}
+
+		createdTimes = lib.Unique(createdTimes)
 
 		// Make sure active events are at the top
 		err = db.Order("finish asc, start asc, weight desc").Find(&events).Error
@@ -69,7 +92,6 @@ var ctftimeEventsCmd = &cobra.Command{
 			eventTitle := event.Title
 			eventStart := event.Start
 			eventFinish := event.Finish
-			eventURL := event.URL
 			eventTags := []string{}
 
 			prettyETA := lib.HumanizeTime(eventStart)
@@ -95,24 +117,33 @@ var ctftimeEventsCmd = &cobra.Command{
 			var customURL storage.EventCustomURL
 			err = db.Where("id = ?", event.ID).Find(&customURL).Error
 			if err == nil && customURL.URL != "" {
-				eventURL = customURL.URL
 				event.URL = customURL.URL
 			}
 
 			// Check if CreatedAt is within the last 24 hours
-			if event.CreatedAt.After(time.Now().Add(-24 * time.Hour)) {
+			if event.CreatedAt.After(time.Now().Add(-24*time.Hour)) &&
+				len(createdTimes) > 1 {
 				eventTags = append(eventTags, "NEW")
+				newEvents = append(newEvents, event)
 			}
 
-			if event.FormatID != 1 {
-				format := event.Format
-				eventTags = append(eventTags, strings.Replace(format, "Attack-Defense", "AD", -1))
+			switch event.FormatID {
+			case 2:
+				eventTags = append(eventTags, "AD")
+			case 3:
+				eventTags = append(eventTags, "HQ")
 			}
+
+			if event.Onsite {
+				eventTags = append(eventTags, "ONSITE")
+			}
+
+			eventTitle = cleanTitle(eventTitle)
 
 			// !TODO: BUG
-			/* if event.URLIsCTFD {
+			if event.URLIsCTFD {
 				eventTags = append(eventTags, "CTFD")
-			} */
+			}
 
 			if len(eventTags) > 0 {
 				eventTitle = fmt.Sprintf("%s (%s)", eventTitle, strings.Join(eventTags, ", "))
@@ -126,17 +157,12 @@ var ctftimeEventsCmd = &cobra.Command{
 				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render(prettyWeight)
 			}
 
-			db.Save(&event)
+			if time.Since(lastUpdate) > time.Minute*10 {
+				db.Save(&event)
+			}
 
 			if ctf.IsCTFEventActive(event) {
 				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
-
-				log.WithFields(logrus.Fields{
-					"id":     event.ID,
-					"weight": event.Weight,
-					"eta":    fmt.Sprintf("active (%s)", prettyETA),
-					"url":    eventURL,
-				}).Debug(event.Title)
 
 				if eventFinish.Sub(eventStart).Hours() > 1 && eventFinish.Sub(eventStart).Hours() < 120 {
 					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
@@ -156,12 +182,6 @@ var ctftimeEventsCmd = &cobra.Command{
 				if event.Finish.Before(time.Now()) {
 					continue
 				}
-
-				log.WithFields(logrus.Fields{
-					"id":     event.ID,
-					"weight": event.Weight,
-					"eta":    prettyETA,
-				}).Debug(event.Title)
 
 				prettyEND := lib.FtoaWithDigits(eventFinish.Sub(eventStart).Hours(), 2)
 				if eventFinish.Sub(eventStart).Hours() >= 120 {
@@ -192,24 +212,83 @@ var ctftimeEventsCmd = &cobra.Command{
 			CheckErr(err)
 		} else {
 
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', tabwriter.StripEscape)
 
 			// ID WEIGHT TITLE ETA
 			fmt.Fprintln(w, "ID\tWEIGHT\tTITLE\tETA")
 			fmt.Fprintln(w, "----\t-----\t-----\t---")
 
-			for _, eventString := range eventStringsArray {
+			for i, eventString := range eventStringsArray {
+				if i >= limit {
+					break
+				}
 				fmt.Fprintln(w, eventString)
 			}
 			w.Flush()
 
+			if len(newEvents) > 0 {
+				fmt.Fprintln(w, "")
+				fmt.Fprintln(w, "New events:")
+				fmt.Fprintln(w, "------------")
+				for _, event := range newEvents {
+					fmt.Fprintf(w, "%d \t%.2f \t%s \t(%s)\n", event.ID, event.Weight, cleanTitle(event.Title), lib.RelativeTime(event.Finish, time.Now(), "ago", "left"))
+				}
+			}
+
 			// !TODO: add a legend to the bottom of the table
+			fmt.Fprintln(w, "")
+			fmt.Fprintln(w, "Legend:")
+			fmt.Fprintln(w, "NEW = Event added in the last 24 hours")
+			fmt.Fprintln(w, "AD = Attack Defend")
+			fmt.Fprintln(w, "HQ = Hack Quest")
 		}
 
 	},
 }
+var limit int
 
 func init() {
 	ctftimeCmd.AddCommand(ctftimeEventsCmd)
 
+	// limit
+	ctftimeEventsCmd.Flags().IntVarP(&limit, "limit", "l", 10, "Limit the number of events to display")
+}
+
+func cleanTitle(str string) string {
+	// remove all the text between ( and ) and [ and ]
+	str = regexp.MustCompile(`\(.*?\)`).ReplaceAllString(str, "")
+	str = regexp.MustCompile(`\[.*?\]`).ReplaceAllString(str, "")
+
+	// remove anything between () and [] and then remove the empty () and []
+	replacers := []string{
+		`\(.*?\)`,
+		`\[.*?\]`,
+	}
+	for _, replacer := range replacers {
+		str = regexp.MustCompile(replacer).ReplaceAllString(str, "")
+	}
+
+	replaceArray := [][]string{
+		{"Capture the Flag", "CTF"},
+		{"Attack Defend", "AD"},
+		{"Hack Quest", "HQ"},
+		{"Qualification Round", "Quals"},
+		{"Qualification", "Quals"},
+	}
+	for _, replace := range replaceArray {
+		// case insensitive replace
+		r := regexp.MustCompile(fmt.Sprintf(`(?i)%s`, replace[0]))
+		str = r.ReplaceAllString(str, replace[1])
+	}
+
+	str = strings.Trim(str, "-_ ")
+
+	if len(str) > 20 {
+		str = strings.Replace(str, fmt.Sprintf(" %d", time.Now().Year()), "", -1)
+	}
+
+	r := regexp.MustCompile(`\s+`)
+	str = r.ReplaceAllString(str, " ")
+
+	return str
 }
