@@ -65,13 +65,8 @@ var versionCmd = &cobra.Command{
 				fmt.Printf("Update using: go install -v github.com/ritchies/ctftool@latest\n")
 				// go install using the latest tag
 				fmt.Printf("Update using: go install -v github.com/ritchies/ctftool@%s\n", latest)
-			}
-
-			// compare versions if newer
-			if compareVersions(latest, Version) {
+			} else {
 				fmt.Printf("You are running a newer version of ctftool\n")
-				fmt.Println()
-				fmt.Printf("%s is the latest version and you are running %s\n", latest, Version)
 			}
 		}
 	},
