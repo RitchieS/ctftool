@@ -11,18 +11,11 @@ import (
 
 // Struct for API Endpoint ctftime.org/api/v1/events/
 type Event struct {
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt time.Time
-
-	Hidden bool
-
 	ID            uint64    `json:"id"`
 	CTFID         int       `json:"ctf_id"`
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`
 	URL           string    `json:"url"`
-	URLIsCTFD     bool      `json:"url_is_ctfd"`
 	Logo          string    `json:"logo"`
 	Weight        float64   `json:"weight"`
 	Onsite        bool      `json:"onsite"`
@@ -170,27 +163,6 @@ func (c *Client) GetCTFEvents() ([]Event, error) {
 	if err != nil {
 		return events, fmt.Errorf("failed to clean CTF events: %v", err)
 	}
-
-	/* var wg sync.WaitGroup
-	for i := 0; i < len(events); i++ {
-		wg.Add(1)
-		go func(e Event) {
-			c.BaseURL, err = url.Parse(e.URL)
-			if err != nil {
-				return
-			}
-
-			err = c.Check()
-			if err == nil {
-				e.URLIsCTFD = true
-				fmt.Printf("%s is a CTFD instance\n", e.URL)
-			}
-
-			wg.Done()
-		}(events[i])
-	}
-
-	wg.Wait() */
 
 	return events, nil
 }

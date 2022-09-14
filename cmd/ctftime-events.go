@@ -36,11 +36,6 @@ var ctftimeEventsCmd = &cobra.Command{
 		newEvents := make([]ctf.Event, 0)
 
 		for _, event := range events {
-
-			if event.Hidden {
-				continue
-			}
-
 			eventTitle := event.Title
 			eventStart := event.Start
 			eventFinish := event.Finish
@@ -61,11 +56,6 @@ var ctftimeEventsCmd = &cobra.Command{
 			}
 
 			eventTitle = cleanTitle(eventTitle)
-
-			// !TODO: BUG
-			if event.URLIsCTFD {
-				eventTags = append(eventTags, "CTFD")
-			}
 
 			if len(eventTags) > 0 {
 				eventTitle = fmt.Sprintf("%s (%s)", eventTitle, strings.Join(eventTags, ", "))
