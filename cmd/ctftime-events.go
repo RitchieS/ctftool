@@ -35,13 +35,6 @@ var ctftimeEventsCmd = &cobra.Command{
 		eventStringsArray := make([]string, 0)
 		newEvents := make([]ctf.Event, 0)
 
-		createdTimes := make([]time.Time, 0)
-		for _, event := range events {
-			createdTimes = append(createdTimes, event.CreatedAt)
-		}
-
-		createdTimes = lib.Unique(createdTimes)
-
 		for _, event := range events {
 
 			if event.Hidden {

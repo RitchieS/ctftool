@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -162,7 +161,7 @@ func (c *Client) GetDescription(challenge *ChallengeData, challengePath string) 
 		}
 		defer oldChallenge.Close()
 
-		oldChallengeString, err := ioutil.ReadAll(oldChallenge)
+		oldChallengeString, err := io.ReadAll(oldChallenge)
 		if err != nil && err != io.EOF {
 			return fmt.Errorf("failed to read challenge file: %v", err)
 		}
@@ -386,7 +385,7 @@ func (c *Client) SubmitFlag(submission Submission) error {
 		} `json:"data"`
 	})
 
-	data, err = ioutil.ReadAll(resp.Body)
+	data, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response: %v", err)
 	}

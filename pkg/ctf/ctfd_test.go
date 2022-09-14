@@ -3,7 +3,6 @@ package ctf
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -36,7 +35,7 @@ func copyTestFile(w io.Writer, filename string) error {
 }
 
 func readFile(s string) (*html.Node, error) {
-	b, err := ioutil.ReadFile(s)
+	b, err := os.ReadFile(s)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,7 @@ package ctf
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -69,7 +69,7 @@ func (c *Client) Authenticate() error {
 		return fmt.Errorf("failed to authenticate: %s", resp.Status)
 	}
 
-	html, err := ioutil.ReadAll(resp.Body)
+	html, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
