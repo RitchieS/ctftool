@@ -15,7 +15,6 @@ It can:
 - Interact with [ctftime](https://ctftime.org) and [CTFd](https://ctfd.io)
 - List upcoming CTFs
 - List the top 10 teams on ctftime and CTFd
-- Adjust information for each CTF locally stored in a sqlite db (like start/finish time)
 - Download challenges from CTFd
 - Creates a writeup template for each challenge
 
@@ -52,7 +51,6 @@ Available Commands:
 
 Flags:
       --config string       Config file (default is .ctftool.yaml)
-      --db-path string      Path to the database file (default "ctftool.sqlite")
   -h, --help                help for ctftool
       --interactive         Interactive mode
       --log-format string   Logger output format (text|json) (default "text")

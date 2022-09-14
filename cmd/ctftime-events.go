@@ -12,10 +12,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ritchies/ctftool/internal/lib"
-	"github.com/ritchies/ctftool/internal/storage"
 	"github.com/ritchies/ctftool/pkg/ctf"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm/clause"
 )
 
 // ctftimeEventsCmd represents the events command
@@ -27,47 +25,12 @@ var ctftimeEventsCmd = &cobra.Command{
 		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse(ctftimeURL)
 
-		db, err := dB.Get()
-		CheckErr(err)
-
 		// use gorm to get the first xEvents from the events database
 		var events []ctf.Event
 
-		// check when the last update was to the database
-		var lastUpdate time.Time
-		err = db.Model(&events).Select("updated_at").Row().Scan(&lastUpdate)
-		if err == nil {
-			log.Debugf("Last update: %s", lib.HumanizeTime(lastUpdate))
-		}
+		events, err := client.GetCTFEvents()
 
-		if err == nil && time.Since(lastUpdate) <= time.Minute*10 {
-			log.Debug("Not updating database, last update was within the last 10 minutes")
-		} else {
-			log.Info("Updating database")
-			events, err = client.GetCTFEvents()
-			CheckErr(err)
-
-			err = db.Clauses(clause.OnConflict{
-				Columns: []clause.Column{{Name: "id"}},
-				DoUpdates: clause.AssignmentColumns([]string{
-					"title",
-					"description",
-					"url",
-					"url_is_ctfd",
-					"logo",
-					"weight",
-					"onsite",
-					"location",
-					"restrictions",
-					"format",
-					"format_id",
-					"participants",
-					"start",
-					"finish",
-				}),
-			}).Create(&events).Error
-			CheckErr(err)
-		}
+		CheckErr(err)
 
 		eventStringsArray := make([]string, 0)
 		newEvents := make([]ctf.Event, 0)
@@ -78,10 +41,6 @@ var ctftimeEventsCmd = &cobra.Command{
 		}
 
 		createdTimes = lib.Unique(createdTimes)
-
-		// Make sure active events are at the top
-		err = db.Order("finish asc, start asc, weight desc").Find(&events).Error
-		CheckErr(err)
 
 		for _, event := range events {
 
@@ -96,36 +55,6 @@ var ctftimeEventsCmd = &cobra.Command{
 
 			prettyETA := lib.HumanizeTime(eventStart)
 			prettyWeight := lib.FtoaWithDigits(event.Weight, 2)
-
-			var customTitle storage.EventCustomTitle
-			err := db.Where("id = ?", event.ID).Find(&customTitle).Error
-			if err == nil && customTitle.Title != "" {
-				eventTitle = customTitle.Title
-				event.Title = customTitle.Title
-			}
-
-			var customDate storage.EventCustomDate
-			err = db.Where("id = ?", event.ID).Find(&customDate).Error
-			if err == nil && customDate != (storage.EventCustomDate{}) {
-				eventStart = customDate.Start
-				eventFinish = customDate.Finish
-
-				event.Start = customDate.Start
-				event.Finish = customDate.Finish
-			}
-
-			var customURL storage.EventCustomURL
-			err = db.Where("id = ?", event.ID).Find(&customURL).Error
-			if err == nil && customURL.URL != "" {
-				event.URL = customURL.URL
-			}
-
-			// Check if CreatedAt is within the last 24 hours
-			if event.CreatedAt.After(time.Now().Add(-24*time.Hour)) &&
-				len(createdTimes) > 1 {
-				eventTags = append(eventTags, "NEW")
-				newEvents = append(newEvents, event)
-			}
 
 			switch event.FormatID {
 			case 2:
@@ -155,10 +84,6 @@ var ctftimeEventsCmd = &cobra.Command{
 				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "222", Dark: "222"}).Render(prettyWeight)
 			} else {
 				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render(prettyWeight)
-			}
-
-			if time.Since(lastUpdate) > time.Minute*10 {
-				db.Save(&event)
 			}
 
 			if ctf.IsCTFEventActive(event) {

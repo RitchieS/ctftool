@@ -14,8 +14,6 @@ require (
 	github.com/spf13/viper v1.13.0
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9
-	gorm.io/driver/sqlite v1.3.6
-	gorm.io/gorm v1.23.8
 )
 
 require (
@@ -26,14 +24,11 @@ require (
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
-	github.com/mattn/go-sqlite3 v1.14.13 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect

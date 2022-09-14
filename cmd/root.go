@@ -6,7 +6,6 @@ import (
 	"path"
 
 	"github.com/ritchies/ctftool/internal/lib"
-	"github.com/ritchies/ctftool/internal/storage"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,7 +15,6 @@ import (
 var (
 	options = lib.NewOptions() // global options
 	log     = logrus.New()     // global logger
-	dB      = storage.NewDb()  // global database
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -59,8 +57,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "debug", "d", false, "Verbose logging")
 	rootCmd.PersistentFlags().BoolVarP(&options.Debug, "verbose", "v", false, "Verbose logging")
 	rootCmd.PersistentFlags().StringVar(&options.DebugFormat, "log-format", "text", "Logger output format (text|json)")
-
-	rootCmd.PersistentFlags().StringVar(&dB.Path, "db-path", "ctftool.sqlite", "Path to the database file")
 
 	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print version information")
 
