@@ -146,7 +146,7 @@ var ctftimeEventsCmd = &cobra.Command{
 			// !TODO: add a legend to the bottom of the table
 			fmt.Fprintln(w, "")
 			fmt.Fprintln(w, "Legend:")
-			fmt.Fprintln(w, "NEW = Event added in the last 24 hours")
+			fmt.Fprintln(w, "ONSITE = In person")
 			fmt.Fprintln(w, "AD = Attack Defend")
 			fmt.Fprintln(w, "HQ = Hack Quest")
 		}
