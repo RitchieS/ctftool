@@ -20,7 +20,12 @@ import (
 var ctftimeEventsCmd = &cobra.Command{
 	Use:   "events",
 	Short: "Get information about CTF events",
-	Long:  `Display the current and upcoming CTF events from CTFTime.`,
+	Long: `Display the current and upcoming CTF events from CTFTime.
+	
+Legend:
+ONSITE = CTF requires team to be in person
+AD = Attack Defend
+HQ = Hack Quest`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse(ctftimeURL)
@@ -142,13 +147,6 @@ var ctftimeEventsCmd = &cobra.Command{
 					fmt.Fprintf(w, "%d \t%.2f \t%s \t(%s)\n", event.ID, event.Weight, cleanTitle(event.Title), lib.RelativeTime(event.Finish, time.Now(), "ago", "left"))
 				}
 			}
-
-			// !TODO: add a legend to the bottom of the table
-			fmt.Fprintln(w, "")
-			fmt.Fprintln(w, "Legend:")
-			fmt.Fprintln(w, "ONSITE = In person")
-			fmt.Fprintln(w, "AD = Attack Defend")
-			fmt.Fprintln(w, "HQ = Hack Quest")
 		}
 
 	},
