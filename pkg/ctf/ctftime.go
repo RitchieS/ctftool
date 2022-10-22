@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -130,7 +131,31 @@ func CleanCTFEvents(events []Event) ([]Event, error) {
 		return nil, fmt.Errorf("no events found")
 	}
 
-	return events, nil
+	// create a slice of active and upcoming events
+	var ctfEvents, activeEvents, upcomingEvents []Event
+	for i := 0; i < len(events); i++ {
+		if IsCTFEventActive(events[i]) {
+			activeEvents = append(activeEvents, events[i])
+		} else {
+			upcomingEvents = append(upcomingEvents, events[i])
+		}
+	}
+
+	// Sort the active events by finish time
+	sort.Slice(activeEvents, func(i, j int) bool {
+		return activeEvents[i].Finish.Before(activeEvents[j].Finish)
+	})
+
+	// Sort upcoming events by start time
+	sort.Slice(upcomingEvents, func(i, j int) bool {
+		return upcomingEvents[i].Start.Before(upcomingEvents[j].Start)
+	})
+
+	// Combine the active and upcoming events
+	ctfEvents = append(ctfEvents, activeEvents...)
+	ctfEvents = append(ctfEvents, upcomingEvents...)
+
+	return ctfEvents, nil
 }
 
 // Retrieve information about all CTF events on CTFTime

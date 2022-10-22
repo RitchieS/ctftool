@@ -30,7 +30,6 @@ HQ = Hack Quest`,
 		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse(ctftimeURL)
 
-		// use gorm to get the first xEvents from the events database
 		var events []ctf.Event
 
 		events, err := client.GetCTFEvents()
@@ -38,7 +37,6 @@ HQ = Hack Quest`,
 		CheckErr(err)
 
 		eventStringsArray := make([]string, 0)
-		newEvents := make([]ctf.Event, 0)
 
 		for _, event := range events {
 			eventTitle := event.Title
@@ -138,15 +136,6 @@ HQ = Hack Quest`,
 				fmt.Fprintln(w, eventString)
 			}
 			w.Flush()
-
-			if len(newEvents) > 0 {
-				fmt.Fprintln(w, "")
-				fmt.Fprintln(w, "New events:")
-				fmt.Fprintln(w, "------------")
-				for _, event := range newEvents {
-					fmt.Fprintf(w, "%d \t%.2f \t%s \t(%s)\n", event.ID, event.Weight, cleanTitle(event.Title), lib.RelativeTime(event.Finish, time.Now(), "ago", "left"))
-				}
-			}
 		}
 
 	},
