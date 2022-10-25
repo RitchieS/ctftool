@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/gosimple/slug v1.13.1
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9
