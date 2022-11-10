@@ -119,7 +119,7 @@ HQ = Hack Quest`,
 
 		if options.Interactive {
 			p := tea.NewProgram(newModel(eventStringsArray))
-			err := p.Run()
+			err := p.Start()
 			CheckErr(err)
 		} else {
 
