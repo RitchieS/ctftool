@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/charmbracelet/bubbles v0.14.0
-	github.com/charmbracelet/bubbletea v0.23.0
+	github.com/charmbracelet/bubbletea v0.22.1
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/gosimple/slug v1.13.1
@@ -19,7 +19,6 @@ require (
 require (
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
-	github.com/aymanbagabas/go-osc52 v1.0.3 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
@@ -29,12 +28,12 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.13.0 // indirect
+	github.com/muesli/termenv v0.12.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
