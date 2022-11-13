@@ -52,7 +52,6 @@ Available Commands:
 Flags:
       --config string       Config file (default is .ctftool.yaml)
   -h, --help                help for ctftool
-      --interactive         Interactive mode
       --log-format string   Logger output format (text|json) (default "text")
   -v, --verbose             Verbose logging
   -V, --version             Print version information
