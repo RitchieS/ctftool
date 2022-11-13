@@ -9,7 +9,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/pkg/ctf"
@@ -117,26 +116,19 @@ HQ = Hack Quest`,
 			}
 		}
 
-		if options.Interactive {
-			p := tea.NewProgram(newModel(eventStringsArray))
-			_, err := p.Run()
-			CheckErr(err)
-		} else {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.StripEscape)
 
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', tabwriter.StripEscape)
+		// ID WEIGHT TITLE ETA
+		fmt.Fprintln(w, "ID\tWEIGHT\tTITLE\tETA")
+		fmt.Fprintln(w, "----\t-----\t-----\t---")
 
-			// ID WEIGHT TITLE ETA
-			fmt.Fprintln(w, "ID\tWEIGHT\tTITLE\tETA")
-			fmt.Fprintln(w, "----\t-----\t-----\t---")
-
-			for i, eventString := range eventStringsArray {
-				if i >= limit {
-					break
-				}
-				fmt.Fprintln(w, eventString)
+		for i, eventString := range eventStringsArray {
+			if i >= limit {
+				break
 			}
-			w.Flush()
+			fmt.Fprintln(w, eventString)
 		}
+		w.Flush()
 
 	},
 }

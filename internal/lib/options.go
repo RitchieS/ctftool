@@ -6,7 +6,6 @@ type Options struct {
 	DebugFormat string
 	RateLimit   int   // rate limit per second
 	MaxFileSize int64 // max file size in mb
-	Interactive bool  // Interactive is a flag to enable interactive mode
 }
 
 // NewOptions returns a new Options struct
