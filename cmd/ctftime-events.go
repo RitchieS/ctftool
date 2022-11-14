@@ -61,32 +61,26 @@ HQ = Hack Quest`,
 
 			if len(eventTags) > 0 {
 				eventTitle = fmt.Sprintf("%s (%s)", eventTitle, strings.Join(eventTags, ", "))
-				eventTitle = strings.TrimSuffix(eventTitle, ", ")
 			}
 
 			if event.Weight == 0 && eventFinish.Sub(eventStart).Hours() < 120 {
 				prettyWeight = "TBD"
-				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "222", Dark: "222"}).Render(prettyWeight)
+				prettyWeight = colorize(prettyWeight, "222", "222")
+			} else if event.Weight == 0 {
+				prettyWeight = "N/A"
+				prettyWeight = colorize(prettyWeight, "223", "223")
 			} else {
-				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render(prettyWeight)
+				prettyWeight = colorize(prettyWeight, "235", "252")
 			}
 
 			if ctf.IsActive(event) {
 				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
 
 				if eventFinish.Sub(eventStart).Hours() > 1 && eventFinish.Sub(eventStart).Hours() < 120 {
-					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#00ff00",
-						Dark:  "#00ff00",
-					}).Render(fmt.Sprintf("%s - active", prettyETA))
+					prettyETA = colorize(fmt.Sprintf("%s - active", prettyETA), "#00ff00", "#00ff00")
 				} else if eventFinish.Sub(eventStart).Hours() >= 120 {
-					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ffa500",
-						Dark:  "#ffa500",
-					}).Render(fmt.Sprintf("%s - active", prettyETA))
+					prettyETA = colorize(fmt.Sprintf("%s - active", prettyETA), "#ffa500", "#ffa500")
 				}
-
-				eventStringsArray = append(eventStringsArray, fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA))
 			} else {
 
 				if event.Finish.Before(time.Now()) {
@@ -178,4 +172,11 @@ func cleanTitle(str string) string {
 	str = r.ReplaceAllString(str, " ")
 
 	return str
+}
+
+func colorize(text string, light string, dark string) string {
+	return lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+		Light: light,
+		Dark:  dark,
+	}).Render(text)
 }
