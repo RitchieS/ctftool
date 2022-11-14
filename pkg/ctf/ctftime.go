@@ -54,9 +54,9 @@ type CTFTeam struct {
 	} `json:"rating"`
 }
 
-// IsCTFEventActive returns true if the CTF event is active based on the
+// IsActive returns true if the CTF event is active based on the
 // start and finish times
-func IsCTFEventActive(event Event) bool {
+func IsActive(event Event) bool {
 	now := time.Now()
 
 	if event.Finish.Before(now) {
@@ -86,38 +86,13 @@ func CleanDescription(description string) string {
 	return description
 }
 
-// CleanCTFEvents will clean the CTF events, removing any events that are
-// not "Open", are on-site, are not of jeopardy style or that have finished
+// CleanCTFEvents will clean the CTF events, removing any events that have finished
 func CleanCTFEvents(events []Event) ([]Event, error) {
 	for i := 0; i < len(events); i++ {
 		events[i].Title = strings.TrimSpace(events[i].Title)
 		events[i].Description = strings.TrimSpace(events[i].Description)
 		events[i].Description = CleanDescription(events[i].Description)
 	}
-
-	// Remove events that are not "Open"
-	/* 	for i := 0; i < len(events); i++ {
-		if events[i].Restrictions != "Open" {
-			events = append(events[:i], events[i+1:]...)
-			i--
-		}
-	} */
-
-	// Remove events that are onsite
-	/* 	for i := 0; i < len(events); i++ {
-		if events[i].Onsite {
-			events = append(events[:i], events[i+1:]...)
-			i--
-		}
-	} */
-
-	// Remove events with format_id != 1 (Jeopardy Style)
-	/* 	for i := 0; i < len(events); i++ {
-		if events[i].FormatID != 1 {
-			events = append(events[:i], events[i+1:]...)
-			i--
-		}
-	} */
 
 	// Remove events that have finished
 	for i := 0; i < len(events); i++ {
@@ -134,7 +109,7 @@ func CleanCTFEvents(events []Event) ([]Event, error) {
 	// create a slice of active and upcoming events
 	var ctfEvents, activeEvents, upcomingEvents []Event
 	for i := 0; i < len(events); i++ {
-		if IsCTFEventActive(events[i]) {
+		if IsActive(events[i]) {
 			activeEvents = append(activeEvents, events[i])
 		} else {
 			upcomingEvents = append(upcomingEvents, events[i])

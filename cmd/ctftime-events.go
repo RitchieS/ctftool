@@ -22,9 +22,9 @@ var ctftimeEventsCmd = &cobra.Command{
 	Long: `Display the current and upcoming CTF events from CTFTime.
 	
 Legend:
-ONSITE = CTF requires team to be in person
-AD = Attack Defend
-HQ = Hack Quest`,
+ ONSITE = CTF requires team to be in person
+ AD = Attack Defend
+ HQ = Hack Quest`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse(ctftimeURL)
@@ -32,7 +32,6 @@ HQ = Hack Quest`,
 		var events []ctf.Event
 
 		events, err := client.GetCTFEvents()
-
 		CheckErr(err)
 
 		eventStringsArray := make([]string, 0)
@@ -61,59 +60,36 @@ HQ = Hack Quest`,
 
 			if len(eventTags) > 0 {
 				eventTitle = fmt.Sprintf("%s (%s)", eventTitle, strings.Join(eventTags, ", "))
-				eventTitle = strings.TrimSuffix(eventTitle, ", ")
 			}
 
 			if event.Weight == 0 && eventFinish.Sub(eventStart).Hours() < 120 {
 				prettyWeight = "TBD"
-				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "222", Dark: "222"}).Render(prettyWeight)
+				prettyWeight = colorize(prettyWeight, "222", "222")
+			} else if event.Weight == 0 {
+				prettyWeight = "N/A"
+				prettyWeight = colorize(prettyWeight, "223", "223")
 			} else {
-				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render(prettyWeight)
+				prettyWeight = colorize(prettyWeight, "235", "252")
 			}
 
-			if ctf.IsCTFEventActive(event) {
+			if ctf.IsActive(event) {
 				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
 
 				if eventFinish.Sub(eventStart).Hours() > 1 && eventFinish.Sub(eventStart).Hours() < 120 {
-					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#00ff00",
-						Dark:  "#00ff00",
-					}).Render(fmt.Sprintf("%s - active", prettyETA))
+					prettyETA = colorize(fmt.Sprintf("%s - active", prettyETA), "#00ff00", "#00ff00")
 				} else if eventFinish.Sub(eventStart).Hours() >= 120 {
-					prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ffa500",
-						Dark:  "#ffa500",
-					}).Render(fmt.Sprintf("%s - active", prettyETA))
+					prettyETA = colorize(fmt.Sprintf("%s - active", prettyETA), "#ffa500", "#ffa500")
 				}
-
-				eventStringsArray = append(eventStringsArray, fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA))
 			} else {
-
 				if event.Finish.Before(time.Now()) {
 					continue
 				}
 
-				prettyEND := lib.FtoaWithDigits(eventFinish.Sub(eventStart).Hours(), 2)
-				if eventFinish.Sub(eventStart).Hours() >= 120 {
-					prettyEND = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ffa500",
-						Dark:  "#ffa500",
-					}).Render(prettyEND)
-				}
-
-				prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-					Light: "#888888",
-					Dark:  "#888888",
-				}).Render(fmt.Sprintf("%s for %s hours", prettyETA, prettyEND))
-
-				eventStringsArray = append(eventStringsArray, fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA))
+				prettyEND := lib.FtoaWithDigits(eventFinish.Sub(eventStart).Hours(), 1)
+				prettyETA = fmt.Sprintf("%s for %s hours", prettyETA, prettyEND)
 			}
-		}
 
-		for i := len(eventStringsArray) - 1; i >= 0; i-- {
-			if eventStringsArray[i] == "" {
-				eventStringsArray = append(eventStringsArray[:i], eventStringsArray[i+1:]...)
-			}
+			eventStringsArray = append(eventStringsArray, fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA))
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.StripEscape)
@@ -132,6 +108,7 @@ HQ = Hack Quest`,
 
 	},
 }
+
 var limit int
 
 func init() {
@@ -143,29 +120,18 @@ func init() {
 
 func cleanTitle(str string) string {
 	// remove all the text between ( and ) and [ and ]
-	str = regexp.MustCompile(`\(.*?\)`).ReplaceAllString(str, "")
-	str = regexp.MustCompile(`\[.*?\]`).ReplaceAllString(str, "")
-
-	// remove anything between () and [] and then remove the empty () and []
-	replacers := []string{
-		`\(.*?\)`,
-		`\[.*?\]`,
-	}
-	for _, replacer := range replacers {
-		str = regexp.MustCompile(replacer).ReplaceAllString(str, "")
-	}
-
-	replaceArray := [][]string{
+	replacers := [][]string{
+		{`\(.*?\)`, ""},
+		{`\[.*?\]`, ""},
 		{"Capture the Flag", "CTF"},
 		{"Attack Defend", "AD"},
 		{"Hack Quest", "HQ"},
 		{"Qualification Round", "Quals"},
 		{"Qualification", "Quals"},
 	}
-	for _, replace := range replaceArray {
-		// case insensitive replace
-		r := regexp.MustCompile(fmt.Sprintf(`(?i)%s`, replace[0]))
-		str = r.ReplaceAllString(str, replace[1])
+
+	for _, replace := range replacers {
+		str = regexp.MustCompile(fmt.Sprintf(`(?i)%s`, replace[0])).ReplaceAllString(str, replace[1])
 	}
 
 	str = strings.Trim(str, "-_ ")
@@ -174,8 +140,14 @@ func cleanTitle(str string) string {
 		str = strings.Replace(str, fmt.Sprintf(" %d", time.Now().Year()), "", -1)
 	}
 
-	r := regexp.MustCompile(`\s+`)
-	str = r.ReplaceAllString(str, " ")
+	str = regexp.MustCompile(`\s+`).ReplaceAllString(str, " ")
 
 	return str
+}
+
+func colorize(text string, light string, dark string) string {
+	return lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+		Light: light,
+		Dark:  dark,
+	}).Render(text)
 }
