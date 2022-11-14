@@ -137,29 +137,18 @@ func init() {
 
 func cleanTitle(str string) string {
 	// remove all the text between ( and ) and [ and ]
-	str = regexp.MustCompile(`\(.*?\)`).ReplaceAllString(str, "")
-	str = regexp.MustCompile(`\[.*?\]`).ReplaceAllString(str, "")
-
-	// remove anything between () and [] and then remove the empty () and []
-	replacers := []string{
-		`\(.*?\)`,
-		`\[.*?\]`,
-	}
-	for _, replacer := range replacers {
-		str = regexp.MustCompile(replacer).ReplaceAllString(str, "")
-	}
-
-	replaceArray := [][]string{
+	replacers := [][]string{
+		{`\(.*?\)`, ""},
+		{`\[.*?\]`, ""},
 		{"Capture the Flag", "CTF"},
 		{"Attack Defend", "AD"},
 		{"Hack Quest", "HQ"},
 		{"Qualification Round", "Quals"},
 		{"Qualification", "Quals"},
 	}
-	for _, replace := range replaceArray {
-		// case insensitive replace
-		r := regexp.MustCompile(fmt.Sprintf(`(?i)%s`, replace[0]))
-		str = r.ReplaceAllString(str, replace[1])
+
+	for _, replace := range replacers {
+		str = regexp.MustCompile(fmt.Sprintf(`(?i)%s`, replace[0])).ReplaceAllString(str, replace[1])
 	}
 
 	str = strings.Trim(str, "-_ ")
@@ -168,8 +157,7 @@ func cleanTitle(str string) string {
 		str = strings.Replace(str, fmt.Sprintf(" %d", time.Now().Year()), "", -1)
 	}
 
-	r := regexp.MustCompile(`\s+`)
-	str = r.ReplaceAllString(str, " ")
+	str = regexp.MustCompile(`\s+`).ReplaceAllString(str, " ")
 
 	return str
 }
