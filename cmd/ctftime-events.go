@@ -22,9 +22,9 @@ var ctftimeEventsCmd = &cobra.Command{
 	Long: `Display the current and upcoming CTF events from CTFTime.
 	
 Legend:
-ONSITE = CTF requires team to be in person
-AD = Attack Defend
-HQ = Hack Quest`,
+ ONSITE = CTF requires team to be in person
+ AD = Attack Defend
+ HQ = Hack Quest`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctf.NewClient(nil)
 		client.BaseURL, _ = url.Parse(ctftimeURL)
@@ -32,7 +32,6 @@ HQ = Hack Quest`,
 		var events []ctf.Event
 
 		events, err := client.GetCTFEvents()
-
 		CheckErr(err)
 
 		eventStringsArray := make([]string, 0)
@@ -82,32 +81,15 @@ HQ = Hack Quest`,
 					prettyETA = colorize(fmt.Sprintf("%s - active", prettyETA), "#ffa500", "#ffa500")
 				}
 			} else {
-
 				if event.Finish.Before(time.Now()) {
 					continue
 				}
 
-				prettyEND := lib.FtoaWithDigits(eventFinish.Sub(eventStart).Hours(), 2)
-				if eventFinish.Sub(eventStart).Hours() >= 120 {
-					prettyEND = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-						Light: "#ffa500",
-						Dark:  "#ffa500",
-					}).Render(prettyEND)
-				}
-
-				prettyETA = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-					Light: "#888888",
-					Dark:  "#888888",
-				}).Render(fmt.Sprintf("%s for %s hours", prettyETA, prettyEND))
-
-				eventStringsArray = append(eventStringsArray, fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA))
+				prettyEND := lib.FtoaWithDigits(eventFinish.Sub(eventStart).Hours(), 1)
+				prettyETA = fmt.Sprintf("%s for %s hours", prettyETA, prettyEND)
 			}
-		}
 
-		for i := len(eventStringsArray) - 1; i >= 0; i-- {
-			if eventStringsArray[i] == "" {
-				eventStringsArray = append(eventStringsArray[:i], eventStringsArray[i+1:]...)
-			}
+			eventStringsArray = append(eventStringsArray, fmt.Sprintf("%d \t%s \t%s \t(%s)", event.ID, prettyWeight, eventTitle, prettyETA))
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.StripEscape)
@@ -126,6 +108,7 @@ HQ = Hack Quest`,
 
 	},
 }
+
 var limit int
 
 func init() {
