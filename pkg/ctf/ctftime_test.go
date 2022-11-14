@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func TestIsCTFEventActive(t *testing.T) {
+func TestIsActive(t *testing.T) {
 
 	now := time.Now()
 
@@ -41,8 +41,8 @@ func TestIsCTFEventActive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsCTFEventActive(tt.args.event); got != tt.want {
-				t.Errorf("IsCTFEventActive() = %v, want %v", got, tt.want)
+			if got := IsActive(tt.args.event); got != tt.want {
+				t.Errorf("IsActive() = %v, want %v", got, tt.want)
 			}
 		})
 	}

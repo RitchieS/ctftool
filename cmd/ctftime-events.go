@@ -71,7 +71,7 @@ HQ = Hack Quest`,
 				prettyWeight = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "235", Dark: "252"}).Render(prettyWeight)
 			}
 
-			if ctf.IsCTFEventActive(event) {
+			if ctf.IsActive(event) {
 				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
 
 				if eventFinish.Sub(eventStart).Hours() > 1 && eventFinish.Sub(eventStart).Hours() < 120 {

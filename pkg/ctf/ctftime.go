@@ -54,9 +54,9 @@ type CTFTeam struct {
 	} `json:"rating"`
 }
 
-// IsCTFEventActive returns true if the CTF event is active based on the
+// IsActive returns true if the CTF event is active based on the
 // start and finish times
-func IsCTFEventActive(event Event) bool {
+func IsActive(event Event) bool {
 	now := time.Now()
 
 	if event.Finish.Before(now) {
@@ -134,7 +134,7 @@ func CleanCTFEvents(events []Event) ([]Event, error) {
 	// create a slice of active and upcoming events
 	var ctfEvents, activeEvents, upcomingEvents []Event
 	for i := 0; i < len(events); i++ {
-		if IsCTFEventActive(events[i]) {
+		if IsActive(events[i]) {
 			activeEvents = append(activeEvents, events[i])
 		} else {
 			upcomingEvents = append(upcomingEvents, events[i])
