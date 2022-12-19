@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/ritchies/ctftool.svg)](https://pkg.go.dev/github.com/ritchies/ctftool)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ritchies/ctftool)](https://goreportcard.com/report/github.com/ritchies/ctftool)
-[![](https://img.shields.io/github/workflow/status/ritchies/ctftool/Tests?longCache=tru&label=Tests&logo=github%20actions&logoColor=fff)](https://github.com/ritchies/ctftool/actions?query=workflow%3ATests)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ritchies/ctftool/tests.yml?branch=main&label=Tests&logo=github%20actions&logoColor=fff)](https://github.com/RitchieS/ctftool/actions/workflows/tests.yml)
 
 A cli tool to check upcoming CTF's from [ctftime.org](https://ctftime.org) and download challenges from [CTFd](https://ctfd.io).
 
