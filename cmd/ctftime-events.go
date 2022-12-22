@@ -62,13 +62,14 @@ Legend:
 				eventTitle = fmt.Sprintf("%s (%s)", eventTitle, strings.Join(eventTags, ", "))
 			}
 
-			if event.Weight == 0 && eventFinish.Sub(eventStart).Hours() < 120 {
+			switch {
+			case event.Weight == 0 && eventFinish.Sub(eventStart).Hours() < 120:
 				prettyWeight = "TBD"
 				prettyWeight = colorize(prettyWeight, "222", "222")
-			} else if event.Weight == 0 {
+			case event.Weight == 0:
 				prettyWeight = "N/A"
 				prettyWeight = colorize(prettyWeight, "223", "223")
-			} else {
+			default:
 				prettyWeight = colorize(prettyWeight, "235", "252")
 			}
 
