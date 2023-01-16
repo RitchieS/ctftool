@@ -1,4 +1,4 @@
-package lib
+package scraper
 
 import (
 	"crypto/tls"
@@ -10,7 +10,7 @@ type roundTripper struct {
 	userAgent string
 }
 
-func Bypass(tripper http.RoundTripper) http.RoundTripper {
+func NewTransport(tripper http.RoundTripper) http.RoundTripper {
 	if transport, ok := tripper.(*http.Transport); ok {
 		transport.TLSClientConfig = getTLSConfig()
 	}
