@@ -7,11 +7,9 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/ritchies/ctftool/pkg/scraper"
-	"golang.org/x/net/html"
 )
 
 func setup() (client *scraper.Client, mux *http.ServeMux, cleanup func()) {
@@ -33,14 +31,6 @@ func copyTestFile(w io.Writer, filename string) error {
 
 	_, err = io.Copy(w, f)
 	return err
-}
-
-func readFile(s string) (*html.Node, error) {
-	b, err := os.ReadFile(s)
-	if err != nil {
-		return nil, err
-	}
-	return html.Parse(strings.NewReader(string(b)))
 }
 
 func TestCheck(t *testing.T) {

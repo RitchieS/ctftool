@@ -2,7 +2,6 @@ package scraper
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -261,15 +260,4 @@ func readFile(s string) (*html.Node, error) {
 		return nil, err
 	}
 	return html.Parse(strings.NewReader(string(b)))
-}
-
-func copyTestFile(w io.Writer, filename string) error {
-	f, err := os.Open("testdata/" + filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(w, f)
-	return err
 }
