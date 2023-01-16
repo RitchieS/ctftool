@@ -9,7 +9,8 @@ import (
 	"sync"
 
 	"github.com/ritchies/ctftool/internal/lib"
-	"github.com/ritchies/ctftool/pkg/ctf"
+	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/scraper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,7 +23,7 @@ var ctfdDownloadCmd = &cobra.Command{
 	Short:   "Download files and create writeups",
 	Long:    `Download files and create writeups for each challenge.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctf.NewClient(nil)
+		client := ctfd.NewClient()
 
 		// check if flags are set using viper
 		opts.URL = viper.GetString("url")
@@ -52,7 +53,7 @@ var ctfdDownloadCmd = &cobra.Command{
 			ShowHelp(cmd, "CTFD User and Password are required")
 		}
 
-		credentials := ctf.Credentials{
+		credentials := scraper.Credentials{
 			Username: opts.Username,
 			Password: opts.Password,
 		}
@@ -60,13 +61,13 @@ var ctfdDownloadCmd = &cobra.Command{
 		client.Creds = &credentials
 		client.MaxFileSize = options.MaxFileSize
 
-		err = client.Authenticate()
+		err = ctfd.Authenticate()
 		CheckErr(err)
 
 		log.Infof("Authenticated as %q", opts.Username)
 
 		// List challenges
-		challenges, err := client.ListChallenges()
+		challenges, err := ctfd.ListChallenges()
 		CheckErr(err)
 
 		cwd, err := os.Getwd()
@@ -106,7 +107,7 @@ var ctfdDownloadCmd = &cobra.Command{
 				rl.Take()
 			}
 
-			go func(challenge ctf.ChallengesData) {
+			go func(challenge ctfd.ChallengesData) {
 				name := lib.CleanSlug(challenge.Name, false)
 
 				category := strings.Split(challenge.Category, " ")[0]
@@ -132,15 +133,15 @@ var ctfdDownloadCmd = &cobra.Command{
 				err := os.MkdirAll(challengePath, os.ModePerm)
 				CheckErr(err)
 
-				chall, err := client.Challenge(challenge.ID)
+				chall, err := ctfd.Challenge(challenge.ID)
 				CheckErr(err)
 
 				// download challenge files
-				err = client.DownloadFiles(chall.ID, challengePath)
+				err = ctfd.DownloadFiles(chall.ID, challengePath)
 				CheckWarn(err)
 
 				// get description
-				err = client.GetDescription(chall, challengePath)
+				err = ctfd.GetDescription(chall, challengePath)
 				CheckErr(err)
 
 				if len(chall.Files) > 0 {

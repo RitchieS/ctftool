@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"github.com/ritchies/ctftool/pkg/ctf"
+	"github.com/ritchies/ctftool/pkg/ctfd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	opts = ctf.NewOpts()
+	opts = ctfd.NewOpts()
 )
 
 // ctfdCmd represents the ctfd command

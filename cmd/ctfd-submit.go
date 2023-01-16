@@ -5,7 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ritchies/ctftool/pkg/ctf"
+	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/scraper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,7 +20,7 @@ var ctfdSubmitCmd = &cobra.Command{
 	Short: "Submit a flag",
 	Long:  `Submit a flag for a challenge.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctf.NewClient(nil)
+		client := ctfd.NewClient()
 
 		// check if flags are set using viper
 		opts.URL = viper.GetString("url")
@@ -55,24 +56,24 @@ var ctfdSubmitCmd = &cobra.Command{
 			ShowHelp(cmd, "CTFD User and Password are required")
 		}
 
-		credentials := ctf.Credentials{
+		credentials := scraper.Credentials{
 			Username: opts.Username,
 			Password: opts.Password,
 		}
 
 		client.Creds = &credentials
 
-		err = client.Authenticate()
+		err = ctfd.Authenticate()
 		CheckErr(err)
 
 		log.Infof("Authenticated as %q", opts.Username)
 
-		submission := ctf.Submission{
+		submission := ctfd.Submission{
 			ID:   CTFDSubmissionID,
 			Flag: strings.TrimSpace(CTFDSubmission),
 		}
 
-		err = client.SubmitFlag(submission)
+		err = ctfd.SubmitFlag(submission)
 		CheckErr(err)
 
 		log.Infof("Successfully submitted flag %q for challenge %d", CTFDSubmission, CTFDSubmissionID)
