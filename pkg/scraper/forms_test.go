@@ -1,9 +1,11 @@
-package ctf
+package scraper
 
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -96,7 +98,7 @@ func Test_ParseForms(t *testing.T) {
 			if err != nil {
 				t.Errorf("error parsing html: %v", err)
 			}
-			if got, want := parseForms(node), tt.forms; !cmp.Equal(got, want) {
+			if got, want := ParseForms(node), tt.forms; !cmp.Equal(got, want) {
 				t.Errorf("parseForms(%q) returned %+v, want %+v", tt.html, got, want)
 			}
 		})
@@ -110,7 +112,7 @@ func Test_ParseForms_Login(t *testing.T) {
 		t.Errorf("error reading file: %v", err)
 	}
 
-	forms := parseForms(node)
+	forms := ParseForms(node)
 	if len(forms) != 1 {
 		t.Errorf("expected 1 form, got %d", len(forms))
 		return
@@ -160,7 +162,7 @@ func Test_FetchAndSubmitForm(t *testing.T) {
 	})
 
 	setValues := func(values url.Values) { values.Set("name", "test") }
-	_, err := fetchAndSubmitForm(client.Client, client.BaseURL.String()+"/", setValues)
+	_, err := FetchAndSubmitForm(client.Client, client.BaseURL.String()+"/", setValues)
 	if err != nil {
 		t.Errorf("error submitting form: %v", err)
 	}
@@ -210,7 +212,7 @@ func Test_ParseForms_Errors(t *testing.T) {
 			if err != nil {
 				t.Errorf("error parsing html: %v", err)
 			}
-			if got, want := parseForms(node), tt.returned; !cmp.Equal(got, want) {
+			if got, want := ParseForms(node), tt.returned; !cmp.Equal(got, want) {
 				t.Errorf("parseForms(%q) returned %+v, want %+v", tt.html, got, want)
 			}
 		})
@@ -235,9 +237,27 @@ func Test_ParseForms_Nil(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			if got, want := parseForms(nil), tt.returned; !cmp.Equal(got, want) {
+			if got, want := ParseForms(nil), tt.returned; !cmp.Equal(got, want) {
 				t.Errorf("parseForms(%q) returned %+v, want %+v", tt.html, got, want)
 			}
 		})
 	}
+}
+
+func setup() (client *Client, mux *http.ServeMux, cleanup func()) {
+	mux = http.NewServeMux()
+	server := httptest.NewServer(mux)
+
+	client = NewClient(nil)
+	client.BaseURL, _ = url.Parse(server.URL + "/")
+
+	return client, mux, server.Close
+}
+
+func readFile(s string) (*html.Node, error) {
+	b, err := os.ReadFile(s)
+	if err != nil {
+		return nil, err
+	}
+	return html.Parse(strings.NewReader(string(b)))
 }

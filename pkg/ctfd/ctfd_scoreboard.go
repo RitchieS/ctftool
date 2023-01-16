@@ -1,4 +1,4 @@
-package ctf
+package ctfd
 
 import (
 	"encoding/json"
@@ -34,13 +34,13 @@ type TopTeamData struct {
 }
 
 // ScoreboardTop returns the top teams on the scoreboard
-func (c *Client) ScoreboardTop(count int64) (TopTeamData, error) {
+func ScoreboardTop(count int64) (TopTeamData, error) {
 	response := new(struct {
 		Data    TopTeamData `json:"data"`
 		Success bool        `json:"success"`
 	})
 
-	resp, err := c.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
+	resp, err := client.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
 	if err != nil {
 		return response.Data, fmt.Errorf("failed to get scoreboard: %v", err)
 	}

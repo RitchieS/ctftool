@@ -1,4 +1,4 @@
-package ctf
+package ctfd
 
 type CTFOpts struct {
 	URL        string

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/ritchies/ctftool/pkg/ctf"
+	"github.com/ritchies/ctftool/pkg/ctfd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -15,7 +15,7 @@ var ctfdTopCmd = &cobra.Command{
 	Short: "Displays top 10 teams",
 	Long:  `Display the top 10 teams from CTFd`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctf.NewClient(nil)
+		client := ctfd.NewClient()
 		uri := viper.GetString("url")
 
 		baseURL, err := url.Parse(uri)
@@ -27,7 +27,7 @@ var ctfdTopCmd = &cobra.Command{
 
 		client.BaseURL = baseURL
 
-		teamsData, err := client.ScoreboardTop(10)
+		teamsData, err := ctfd.ScoreboardTop(10)
 		CheckErr(err)
 
 		for i := 1; i <= 10; i++ {

@@ -1,4 +1,4 @@
-package ctf
+package ctfd
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ func TestListChallenges(t *testing.T) {
 	}
 
 	// setup mux
-	client, mux, cleanup := setup()
+	_, mux, cleanup := setup()
 	defer cleanup()
 
 	// mock response
@@ -40,7 +40,7 @@ func TestListChallenges(t *testing.T) {
 	})
 
 	// test
-	challenges, err := client.ListChallenges()
+	challenges, err := ListChallenges()
 	if err != nil {
 		t.Errorf("error listing challenges: %v", err)
 		return
@@ -92,7 +92,7 @@ func TestListChallenges_Error(t *testing.T) {
 	}
 
 	// setup mux
-	client, mux, cleanup := setup()
+	_, mux, cleanup := setup()
 	defer cleanup()
 
 	// mock response
@@ -113,7 +113,7 @@ func TestListChallenges_Error(t *testing.T) {
 	// test
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := client.ListChallenges()
+			_, err := ListChallenges()
 			if err == nil {
 				t.Errorf("expected error, got nil")
 				return
@@ -124,7 +124,7 @@ func TestListChallenges_Error(t *testing.T) {
 
 func TestListChallenges_InvalidJSON(t *testing.T) {
 	// setup mux
-	client, mux, cleanup := setup()
+	_, mux, cleanup := setup()
 	defer cleanup()
 
 	// mock response
@@ -137,7 +137,7 @@ func TestListChallenges_InvalidJSON(t *testing.T) {
 	})
 
 	// test
-	_, err := client.ListChallenges()
+	_, err := ListChallenges()
 	if err == nil {
 		t.Errorf("expected error, got nil")
 		return

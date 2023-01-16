@@ -1,4 +1,4 @@
-package ctf
+package ctfd
 
 import (
 	"errors"
@@ -9,11 +9,19 @@ import (
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/ritchies/ctftool/pkg/scraper"
 )
 
+var client = scraper.NewClient(nil)
+
+func NewClient() *scraper.Client {
+	return client
+}
+
 // Check will check if the instance is a CTFd instance.
-func (c *Client) Check() error {
-	doc, err := c.GetDoc(c.BaseURL.String())
+func Check() error {
+	doc, err := client.GetDoc(client.BaseURL.String())
 	if err != nil {
 		return err
 	}
@@ -45,22 +53,22 @@ func (c *Client) Check() error {
 
 // Authenticate will attempt to authenticate the client with the provided
 // username and password.
-func (c *Client) Authenticate() error {
-	if err := c.Check(); err != nil {
+func Authenticate() error {
+	if err := Check(); err != nil {
 		return err
 	}
 
 	setPassword := func(values url.Values) {
-		values.Set("name", c.Creds.Username)
-		values.Set("password", c.Creds.Password)
+		values.Set("name", client.Creds.Username)
+		values.Set("password", client.Creds.Password)
 	}
 
-	loginURL, err := joinPath(c.BaseURL.String(), "login")
+	loginURL, err := joinPath(client.BaseURL.String(), "login")
 	if err != nil {
 		return err
 	}
 
-	resp, err := fetchAndSubmitForm(c.Client, loginURL.String(), setPassword)
+	resp, err := scraper.FetchAndSubmitForm(client.Client, loginURL.String(), setPassword)
 	if err != nil {
 		return err
 	}

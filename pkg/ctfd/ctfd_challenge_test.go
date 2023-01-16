@@ -1,4 +1,4 @@
-package ctf
+package ctfd
 
 import (
 	"encoding/json"
@@ -38,7 +38,7 @@ func TestGetChallenge(t *testing.T) {
 	}
 
 	// setup mux
-	client, mux, cleanup := setup()
+	_, mux, cleanup := setup()
 	defer cleanup()
 
 	// mock request
@@ -52,7 +52,7 @@ func TestGetChallenge(t *testing.T) {
 	})
 
 	// test
-	challenge, err := client.Challenge(1)
+	challenge, err := Challenge(1)
 	if err != nil {
 		t.Errorf("error getting challenge: %v", err)
 		return

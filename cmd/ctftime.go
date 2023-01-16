@@ -4,8 +4,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const ctftimeURL = "https://ctftime.org/" // ctftimeURL is the URL of the CTFTime website
-
 // ctftimeCmd represents the ctftime command
 var ctftimeCmd = &cobra.Command{
 	Use:     "ctftime",

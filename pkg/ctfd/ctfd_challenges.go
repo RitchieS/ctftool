@@ -1,4 +1,4 @@
-package ctf
+package ctfd
 
 import (
 	"encoding/json"
@@ -17,13 +17,13 @@ type ChallengesData struct {
 }
 
 // ListChallenges returns a list of challenges
-func (c *Client) ListChallenges() ([]ChallengesData, error) {
+func ListChallenges() ([]ChallengesData, error) {
 	response := new(struct {
 		Success bool             `json:"success"`
 		Data    []ChallengesData `json:"data"`
 	})
 
-	resp, err := c.GetJson("api/v1/challenges")
+	resp, err := client.GetJson("api/v1/challenges")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get challenges: %v", err)
 	}

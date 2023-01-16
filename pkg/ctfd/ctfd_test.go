@@ -1,4 +1,4 @@
-package ctf
+package ctfd
 
 import (
 	"fmt"
@@ -7,17 +7,16 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"strings"
 	"testing"
 
-	"golang.org/x/net/html"
+	"github.com/ritchies/ctftool/pkg/scraper"
 )
 
-func setup() (client *Client, mux *http.ServeMux, cleanup func()) {
+func setup() (client *scraper.Client, mux *http.ServeMux, cleanup func()) {
 	mux = http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client = NewClient(nil)
+	client = NewClient()
 	client.BaseURL, _ = url.Parse(server.URL + "/")
 
 	return client, mux, server.Close
@@ -34,14 +33,6 @@ func copyTestFile(w io.Writer, filename string) error {
 	return err
 }
 
-func readFile(s string) (*html.Node, error) {
-	b, err := os.ReadFile(s)
-	if err != nil {
-		return nil, err
-	}
-	return html.Parse(strings.NewReader(string(b)))
-}
-
 func TestCheck(t *testing.T) {
 	tests := []struct {
 		description string
@@ -55,7 +46,7 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	client, mux, cleanup := setup()
+	_, mux, cleanup := setup()
 	defer cleanup()
 
 	for _, test := range tests {
@@ -69,7 +60,7 @@ func TestCheck(t *testing.T) {
 			})
 		})
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			err := client.Check()
+			err := Check()
 			if err != nil {
 				t.Errorf("Check() returned error: %v", err)
 			}
@@ -124,7 +115,7 @@ func TestCheckFailure(t *testing.T) {
 		},
 	}
 
-	client, mux, cleanup := setup()
+	_, mux, cleanup := setup()
 	defer cleanup()
 
 	for _, test := range tests {
@@ -139,7 +130,7 @@ func TestCheckFailure(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			err := client.Check()
+			err := Check()
 			if err == nil {
 				t.Errorf("Check() returned no error")
 			}
@@ -276,11 +267,11 @@ func TestAuthenticate(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			client.Creds = &Credentials{
+			client.Creds = &scraper.Credentials{
 				Username: "admin",
 				Password: "password",
 			}
-			err := client.Authenticate()
+			err := Authenticate()
 			if err != nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}
@@ -315,11 +306,11 @@ func TestAuthenticateFails(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			client.Creds = &Credentials{
+			client.Creds = &scraper.Credentials{
 				Username: "admin",
 				Password: "password",
 			}
-			err := client.Authenticate()
+			err := Authenticate()
 			if err == nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}
@@ -335,12 +326,12 @@ func TestAuthenticateEmptyBaseurl(t *testing.T) {
 	fakeBaseurl, _ := url.Parse("")
 	client.BaseURL = fakeBaseurl
 
-	client.Creds = &Credentials{
+	client.Creds = &scraper.Credentials{
 		Username: "admin",
 		Password: "password",
 	}
 
-	err := client.Authenticate()
+	err := Authenticate()
 	if err == nil {
 		t.Errorf("Authenticate() returned error: %v", err)
 		return
@@ -374,11 +365,11 @@ func TestAuthenticateBrokenLoginPage(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			client.Creds = &Credentials{
+			client.Creds = &scraper.Credentials{
 				Username: "admin",
 				Password: "password",
 			}
-			err := client.Authenticate()
+			err := Authenticate()
 			if err == nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}
@@ -414,11 +405,11 @@ func TestCheckErrorRegex(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
-			client.Creds = &Credentials{
+			client.Creds = &scraper.Credentials{
 				Username: "admin",
 				Password: "password",
 			}
-			err := client.Authenticate()
+			err := Authenticate()
 			if err == nil {
 				t.Errorf("Authenticate() returned error: %v", err)
 			}

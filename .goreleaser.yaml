@@ -8,18 +8,18 @@ release:
   draft: false
 
 builds:
-  - env: 
-    - GO111MODULE=on
-    - CGO_ENABLED=0
+  - env:
+      - GO111MODULE=on
+      - CGO_ENABLED=0
     id: ctftool
     binary: ctftool
-    goos: ['linux', 'darwin', 'windows']
-    goarch: ['386', 'amd64', 'arm', 'arm64']
+    goos: ["linux", "darwin", "windows"]
+    goarch: ["386", "amd64", "arm", "arm64"]
     ignore:
       - goos: windows
-        goarch: '386'
+        goarch: "386"
       - goos: darwin
-        goarch: '386'
+        goarch: "386"
       - goos: windows
         goarch: arm
       - goos: darwin
@@ -45,17 +45,17 @@ archives:
       windows: Windows
       386: i386
     format_overrides:
-    - goos: 'windows'
-      format: 'zip'
-    files: ['LICENSE', 'README.md']
+      - goos: "windows"
+        format: "zip"
+    files: ["LICENSE", "README.md"]
 
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
 
 changelog:
-  sort: 'asc'
+  sort: "asc"
   filters:
-    exclude: ['^docs:', 'Merge pull request', 'Merge branch']
+    exclude: ["^docs:", "Merge pull request", "Merge branch", "Bump"]
 
 announce:
   discord:
@@ -65,7 +65,7 @@ announce:
 
     # Message template to use while publishing.
     # Defaults to `{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL }}`
-    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out [here]({{ .ReleaseURL }})'
+    message_template: "{{ .ProjectName }} {{ .Tag }} is out! Check it out [here]({{ .ReleaseURL }})"
 
     # Set author of the embed.
     # Defaults to `GoReleaser`
