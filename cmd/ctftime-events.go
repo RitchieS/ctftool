@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -11,7 +10,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ritchies/ctftool/internal/lib"
-	"github.com/ritchies/ctftool/pkg/ctf"
+	"github.com/ritchies/ctftool/pkg/ctftime"
 	"github.com/spf13/cobra"
 )
 
@@ -26,12 +25,9 @@ Legend:
  AD = Attack Defend
  HQ = Hack Quest`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ctf.NewClient(nil)
-		client.BaseURL, _ = url.Parse(ctftimeURL)
+		var events []ctftime.Event
 
-		var events []ctf.Event
-
-		events, err := client.GetCTFEvents()
+		events, err := ctftime.GetCTFEvents()
 		CheckErr(err)
 
 		eventStringsArray := make([]string, 0)
@@ -73,7 +69,7 @@ Legend:
 				prettyWeight = colorize(prettyWeight, "235", "252")
 			}
 
-			if ctf.IsActive(event) {
+			if ctftime.IsActive(event) {
 				prettyETA = lib.RelativeTime(eventFinish, time.Now(), "ago", "left")
 
 				if eventFinish.Sub(eventStart).Hours() > 1 && eventFinish.Sub(eventStart).Hours() < 120 {

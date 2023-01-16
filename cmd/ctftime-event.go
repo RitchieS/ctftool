@@ -3,14 +3,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"github.com/gosimple/slug"
-	"github.com/ritchies/ctftool/pkg/ctf"
+	"github.com/ritchies/ctftool/pkg/ctftime"
 	"github.com/spf13/cobra"
 )
 
@@ -77,11 +76,7 @@ var ctftimeEventCmd = &cobra.Command{
 	Short: "Get information about a CTF event by ID",
 	Long:  `Display information about a CTF event by ID.`,
 	Args:  cobra.RangeArgs(0, 1),
-	Run: func(cmd *cobra.Command, args []string) {
-		client := ctf.NewClient(nil)
-		client.BaseURL, _ = url.Parse(ctftimeURL)
-
-		// if args is not an integer, exit
+	Run: func(cmd *cobra.Command, args []string) { // if args is not an integer, exit
 		if len(args) > 0 {
 			if _, err := fmt.Sscanf(args[0], "%d", &EventID); err != nil {
 				log.Errorf("%v", err)
@@ -90,7 +85,7 @@ var ctftimeEventCmd = &cobra.Command{
 		}
 
 		if EventID != 0 {
-			event, err := client.GetCTFEvent(EventID)
+			event, err := ctftime.GetCTFEvent(EventID)
 			CheckErr(err)
 
 			json, err := json.MarshalIndent(event, "", "  ")
@@ -98,13 +93,13 @@ var ctftimeEventCmd = &cobra.Command{
 
 			fmt.Println(string(json))
 		} else {
-			events, err := client.GetCTFEvents()
+			events, err := ctftime.GetCTFEvents()
 			CheckErr(err)
 
 			now := time.Now()
 			nextWeek := now.AddDate(0, 0, 7-int(now.Weekday()))
 
-			thisWeekEvents := make([]ctf.Event, 0)
+			thisWeekEvents := make([]ctftime.Event, 0)
 
 			for _, event := range events {
 				if event.Start.After(now) && event.Start.Before(nextWeek) {
