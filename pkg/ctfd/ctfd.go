@@ -13,15 +13,15 @@ import (
 	"github.com/ritchies/ctftool/pkg/scraper"
 )
 
-var c = scraper.NewClient(nil)
+var client = scraper.NewClient(nil)
 
 func NewClient() *scraper.Client {
-	return c
+	return client
 }
 
 // Check will check if the instance is a CTFd instance.
 func Check() error {
-	doc, err := c.GetDoc(c.BaseURL.String())
+	doc, err := client.GetDoc(client.BaseURL.String())
 	if err != nil {
 		return err
 	}
@@ -59,16 +59,16 @@ func Authenticate() error {
 	}
 
 	setPassword := func(values url.Values) {
-		values.Set("name", c.Creds.Username)
-		values.Set("password", c.Creds.Password)
+		values.Set("name", client.Creds.Username)
+		values.Set("password", client.Creds.Password)
 	}
 
-	loginURL, err := joinPath(c.BaseURL.String(), "login")
+	loginURL, err := joinPath(client.BaseURL.String(), "login")
 	if err != nil {
 		return err
 	}
 
-	resp, err := scraper.FetchAndSubmitForm(c.Client, loginURL.String(), setPassword)
+	resp, err := scraper.FetchAndSubmitForm(client.Client, loginURL.String(), setPassword)
 	if err != nil {
 		return err
 	}

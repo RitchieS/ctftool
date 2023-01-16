@@ -60,8 +60,14 @@ type CTFTeam struct {
 	} `json:"rating"`
 }
 
-// IsActive returns true if the CTF event is active based on the
-// start and finish times
+// IsActive takes in an Event and returns whether the event is currently active or not
+// based on the current time. It compares the start and finish time of the event with the current time.
+//
+//	event := Event{
+//		Start: time.Now().Add(-1 * time.Hour),
+//		Finish: time.Now().Add(1 * time.Hour),
+//	}
+//	fmt.Println(IsActive(event)) // Output: true
 func IsActive(event Event) bool {
 	now := time.Now()
 
@@ -72,8 +78,10 @@ func IsActive(event Event) bool {
 	return event.Start.Before(now) && event.Finish.After(now)
 }
 
-// Clean the description of a CTF event, removing \r\n and limiting the length
-// of the description
+// CleanDescription takes in a string and removes any unnecessary new lines and ensures that the string is no longer than 1024 characters.
+//
+//	desc := "This is a long\ndescription\nwith\nmultiple\nlines."
+//	cleanDesc := CleanDescription(desc)
 func CleanDescription(description string) string {
 	re := regexp.MustCompile(`\r?\n`)
 	description = re.ReplaceAllString(description, "\n")
@@ -92,7 +100,17 @@ func CleanDescription(description string) string {
 	return description
 }
 
-// CleanCTFEvents will clean the CTF events, removing any events that have finished
+// CleanCTFEvents takes in a slice of Event structs and performs several clean up operations on the slice.
+// Title and Description fields of each event are trimmed and cleaned.
+// Events that have finished are removed from the slice.
+// The remaining events are sorted into two slices: active events and upcoming events.
+// Active events are sorted by finish time, and upcoming events are sorted by start time.
+// The two slices are then combined and returned, along with any error that may have occurred.
+//
+//	ctfEvents, err := CleanCTFEvents(events)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
 func CleanCTFEvents(events []Event) ([]Event, error) {
 	for i := 0; i < len(events); i++ {
 		events[i].Title = strings.TrimSpace(events[i].Title)
@@ -139,7 +157,13 @@ func CleanCTFEvents(events []Event) ([]Event, error) {
 	return ctfEvents, nil
 }
 
-// Retrieve information about all CTF events on CTFTime
+// GetCTFEvents retrieves CTF events from the ctftime API within the next 180 days.
+// The events are unmarshaled from json and cleaned before being returned.
+//
+//	events, err := GetCTFEvents()
+//	if err != nil {
+//		fmt.Println(err)
+//	}
 func GetCTFEvents() ([]Event, error) {
 	client.BaseURL, _ = url.Parse(ctftimeURL)
 	var events []Event
@@ -174,7 +198,14 @@ func GetCTFEvents() ([]Event, error) {
 	return events, nil
 }
 
-// Retrieve information about a specific CTF event on CTFTime
+// GetCTFEvent takes in an integer 'id' and returns an Event struct, along with any error that may have occurred.
+// The function uses an http client to send a GET request to the ctftime API with the provided id,
+// and parses the response body into an Event struct.
+//
+//	event, err := GetCTFEvent(1)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
 func GetCTFEvent(id int) (Event, error) {
 	client.BaseURL, _ = url.Parse(ctftimeURL)
 
@@ -194,7 +225,14 @@ func GetCTFEvent(id int) (Event, error) {
 	return event, nil
 }
 
-// Get information about a specific team on CTFTime
+// GetCTFTeam takes in an id and returns a CTFTeam struct, along with any error that may have occurred.
+// The function uses the ctftimeURL to make a GET request to the API and retrieve the team information by id.
+// The response body is then parsed into a CTFTeam struct using json.Unmarshal.
+//
+//	team, err := GetCTFTeam(1)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
 func GetCTFTeam(id int) (CTFTeam, error) {
 	client.BaseURL, _ = url.Parse(ctftimeURL)
 

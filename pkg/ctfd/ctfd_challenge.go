@@ -72,7 +72,7 @@ func Challenge(id int64) (*ChallengeData, error) {
 		Data    ChallengeData `json:"data"`
 	})
 
-	resp, err := c.GetJson(fmt.Sprintf("api/v1/challenges/%d", id))
+	resp, err := client.GetJson(fmt.Sprintf("api/v1/challenges/%d", id))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get challenge: %v", err)
 	}
@@ -107,7 +107,7 @@ func DownloadFiles(id int64, outputPath string) error {
 	}
 
 	for _, file := range files {
-		resp, err := c.GetJson(file)
+		resp, err := client.GetJson(file)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %v", err)
 		}
@@ -120,7 +120,7 @@ func DownloadFiles(id int64, outputPath string) error {
 			if resp.StatusCode == http.StatusOK {
 				break
 			}
-			resp, err = c.GetJson(file)
+			resp, err = client.GetJson(file)
 			if err != nil {
 				return fmt.Errorf("failed to get file: %v", err)
 			}
@@ -129,9 +129,9 @@ func DownloadFiles(id int64, outputPath string) error {
 			time.Sleep(time.Second * 1)
 		}
 
-		if resp.ContentLength > (c.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
+		if resp.ContentLength > (client.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
 			sizeInMegaBytes := resp.ContentLength / OneMB
-			return fmt.Errorf("file %q is too large (%d/%d MB)", fileName, sizeInMegaBytes, c.MaxFileSize)
+			return fmt.Errorf("file %q is too large (%d/%d MB)", fileName, sizeInMegaBytes, client.MaxFileSize)
 		}
 
 		file, err := os.Create(path.Join(outputPath, fileName))
@@ -189,6 +189,23 @@ func GetDescription(challenge *ChallengeData, challengePath string) error {
 		return fmt.Errorf("error writing to file: %v", err)
 	}
 
+	_, err = file.WriteString("| Key | Value |\n| --- | --- |\n")
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+	_, err = file.WriteString(fmt.Sprintf("| ID | %d |\n", challenge.ID))
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+	_, err = file.WriteString(fmt.Sprintf("| Solves | %d |\n", challenge.Solves))
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+	_, err = file.WriteString(fmt.Sprintf("| Value | %d |\n\n", challenge.Value))
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+
 	// tags (if available)
 	if len(challenge.Tags) > 0 {
 		_, err = file.WriteString("## Tags\n\n")
@@ -223,7 +240,7 @@ func GetDescription(challenge *ChallengeData, challengePath string) error {
 			return fmt.Errorf("error writing to file: %v", err)
 		}
 		for _, challengeFile := range challenge.Files {
-			fileURL, _ := c.BaseURL.Parse(challengeFile)
+			fileURL, _ := client.BaseURL.Parse(challengeFile)
 			_, err := file.WriteString(fmt.Sprintf("- [%s](%s)\n", getFileName(challengeFile), fileURL.String()))
 			if err != nil {
 				return fmt.Errorf("error writing to file: %v", err)
@@ -345,7 +362,7 @@ type Submission struct {
 }
 
 func SubmitFlag(submission Submission) error {
-	resp, err := c.GetJson("challenges")
+	resp, err := client.GetJson("challenges")
 	if err != nil {
 		return fmt.Errorf("request failed: %v", err)
 	}
@@ -353,14 +370,14 @@ func SubmitFlag(submission Submission) error {
 
 	nonce := scraper.ExtractCSRF(resp)
 
-	c.BaseURL, _ = c.BaseURL.Parse("api/v1/challenges/attempt")
+	client.BaseURL, _ = client.BaseURL.Parse("api/v1/challenges/attempt")
 
 	data, err := json.Marshal(submission)
 	if err != nil {
 		return fmt.Errorf("failed to marshal submission: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", c.BaseURL.String(), bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", client.BaseURL.String(), bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %v", err)
 	}
@@ -368,7 +385,7 @@ func SubmitFlag(submission Submission) error {
 	req.Header.Set("Csrf-Token", nonce)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err = c.Client.Do(req)
+	resp, err = client.Client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %v", err)
 	}
@@ -400,7 +417,7 @@ func SubmitFlag(submission Submission) error {
 		return fmt.Errorf("failed to submit flag: %s", response.Data.Message)
 	}
 
-	c.BaseURL.Path = ""
+	client.BaseURL.Path = ""
 
 	// check the challenge id and if we actually solved it
 	challenge, err := Challenge(int64(submission.ID))
@@ -415,8 +432,11 @@ func SubmitFlag(submission Submission) error {
 	return nil
 }
 
-// getFileName returns the file name from a URL path like
-// /files/challenge.zip?token=12345
+// getFileName takes in a URL path string, splits it by '/' and returns the last element of the split which is expected to be the file name.
+// It also handles the case where there is a query parameter by splitting the file name again by '?' and returning only the first element which is the file name.
+//
+//	fileName := getFileName("/files/challenge.zip?token=12345")
+//	fmt.Println(fileName) // Output: "challenge.zip"
 func getFileName(challengeFileURL string) string {
 	directories := strings.Split(challengeFileURL, "/")
 	challengeFile := strings.Split(directories[len(directories)-1], "?")

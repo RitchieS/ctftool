@@ -23,7 +23,7 @@ func ListChallenges() ([]ChallengesData, error) {
 		Data    []ChallengesData `json:"data"`
 	})
 
-	resp, err := c.GetJson("api/v1/challenges")
+	resp, err := client.GetJson("api/v1/challenges")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get challenges: %v", err)
 	}

@@ -40,7 +40,7 @@ func ScoreboardTop(count int64) (TopTeamData, error) {
 		Success bool        `json:"success"`
 	})
 
-	resp, err := c.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
+	resp, err := client.GetJson(fmt.Sprintf("api/v1/scoreboard/top/%d", count))
 	if err != nil {
 		return response.Data, fmt.Errorf("failed to get scoreboard: %v", err)
 	}
