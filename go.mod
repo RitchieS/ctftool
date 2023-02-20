@@ -3,7 +3,7 @@ module github.com/ritchies/ctftool
 go 1.19
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/gosimple/slug v1.13.1
