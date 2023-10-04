@@ -26,6 +26,7 @@ var ctfdSubmitCmd = &cobra.Command{
 		opts.URL = viper.GetString("url")
 		opts.Username = viper.GetString("username")
 		opts.Password = viper.GetString("password")
+		opts.SkipCTFDCheck = viper.GetBool("skip-check")
 
 		baseURL, err := url.Parse(opts.URL)
 		CheckErr(err)
@@ -63,8 +64,10 @@ var ctfdSubmitCmd = &cobra.Command{
 
 		client.Creds = &credentials
 
-		err = ctfd.Check()
-		CheckErr(err)
+		if !opts.SkipCTFDCheck {
+			err = ctfd.Check()
+			CheckErr(err)
+		}
 
 		err = ctfd.Authenticate()
 		CheckErr(err)

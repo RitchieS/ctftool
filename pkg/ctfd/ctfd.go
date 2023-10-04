@@ -24,7 +24,7 @@ func Check() error {
 	// make a request to https://demo.ctfd.io/api/v1/challenges
 	resp, err := client.GetJson(fmt.Sprintf("%s/api/v1/challenges", client.BaseURL.String()))
 	if err != nil {
-		return err
+		return fmt.Errorf("cant reach CTFd instance: %s", err)
 	}
 
 	// Check if the response is not OK
