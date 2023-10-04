@@ -36,6 +36,7 @@ var ctfdDownloadCmd = &cobra.Command{
 		opts.SkipCTFDCheck = viper.GetBool("skip-check")
 		opts.Watch = viper.GetBool("watch")
 		opts.WatchInterval = viper.GetDuration("watch-interval")
+		opts.UnsolvedOnly = viper.GetBool("unsolved")
 
 		baseURL, err := url.Parse(opts.URL)
 		CheckErr(err)
@@ -130,6 +131,12 @@ var ctfdDownloadCmd = &cobra.Command{
 						return
 					}
 
+					if opts.UnsolvedOnly && challenge.SolvedByMe {
+						log.Warnf("Skipping (%q/%q) : already solved", challenge.Name, challenge.Category)
+						wg.Done()
+						return
+					}
+
 					challengePath := path.Join(outputFolder, category, name)
 
 					if _, statErr := os.Stat(challengePath); statErr == nil {
@@ -213,6 +220,7 @@ func init() {
 	ctfdDownloadCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
 	ctfdDownloadCmd.Flags().BoolVarP(&opts.Watch, "watch", "w", false, "Watch for new challenges")
 	ctfdDownloadCmd.Flags().DurationVarP(&opts.WatchInterval, "watch-interval", "", 5*time.Minute, "Watch interval")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.UnsolvedOnly, "unsolved", "", false, "Only download unsolved challenges")
 
 	// viper
 	err := viper.BindPFlag("url", ctfdDownloadCmd.Flags().Lookup("url"))
@@ -228,5 +236,8 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("watch-interval", ctfdDownloadCmd.Flags().Lookup("watch-interval"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("unsolved", ctfdDownloadCmd.Flags().Lookup("unsolved"))
 	CheckErr(err)
 }
