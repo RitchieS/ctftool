@@ -38,12 +38,14 @@ builds:
 archives:
   - id: tgz
     format: tar.gz
-    #name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    replacements:
-      linux: Linux
-      darwin: macOS
-      windows: Windows
-      386: i386
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- if eq .Os "linux" }}Linux
+      {{- else if eq .Os "darwin" }}macOS
+      {{- else if eq .Os "windows" }}Windows
+      {{- else }}{{ .Os }}{{ end }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: "windows"
         format: "zip"
