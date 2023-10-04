@@ -30,6 +30,7 @@ func init() {
 
 	ctfdCmd.PersistentFlags().BoolVarP(&opts.Overwrite, "overwrite", "", false, "Overwrite existing files")
 	ctfdCmd.PersistentFlags().BoolVarP(&opts.SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
+	ctfdCmd.PersistentFlags().BoolVarP(&opts.SkipCTFDCheck, "skip-check", "", false, "Skip CTFd instance check")
 
 	// viper
 	err := viper.BindPFlag("url", ctfdCmd.Flags().Lookup("url"))
@@ -45,5 +46,8 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("skip-check", ctfdCmd.PersistentFlags().Lookup("skip-check"))
 	CheckErr(err)
 }

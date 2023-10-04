@@ -1,6 +1,7 @@
 package ctfd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"net/url"
 	"path"
 	"regexp"
-	"strings"
 
 	"github.com/ritchies/ctftool/pkg/scraper"
 )
@@ -21,32 +21,34 @@ func NewClient() *scraper.Client {
 
 // Check will check if the instance is a CTFd instance.
 func Check() error {
-	doc, err := client.GetDoc(client.BaseURL.String())
+	// make a request to https://demo.ctfd.io/api/v1/challenges
+	resp, err := client.GetJson(fmt.Sprintf("%s/api/v1/challenges", client.BaseURL.String()))
+	if err != nil {
+		return fmt.Errorf("cant reach CTFd instance: %s", err)
+	}
+
+	// Check if the response is not OK
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to check: %s", resp.Status)
+	}
+
+	// Read the response body
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	// Check for "<small class="text-muted">Powered by CTFd</small>"
-	footerText := doc.Find("small.text-muted").Text()
-	if !strings.Contains(footerText, "Powered by CTFd") {
-		return errors.New("not a CTFd instance")
+	// Parse the response as JSON
+	var response map[string]interface{}
+	err = json.Unmarshal(data, &response)
+	if err != nil {
+		return err
 	}
 
-	// check /login
-	/* 	doc, err = c.get(c.BaseURL.String() + "/login")
-	   	if err != nil {
-	   		return err
-	   	} */
-
-	// Check if there are captcha's on the login page
-	/* 	captchaURLs := []string{"https://www.google.com/recaptcha/api.js", "https://hcaptcha.com/1/api.js"}
-	   	for _, captchaURL := range captchaURLs {
-	   		if doc.Find("script[src]").FilterFunction(func(i int, s *goquery.Selection) bool {
-	   			return strings.Contains(s.AttrOr("src", ""), captchaURL)
-	   		}).Length() > 0 {
-	   			return fmt.Errorf("captcha detected on login page")
-	   		}
-	   	} */
+	// Check if the response contains the "success" field
+	if _, ok := response["success"]; !ok {
+		return errors.New("not a CTFd instance")
+	}
 
 	return nil
 }
@@ -54,10 +56,6 @@ func Check() error {
 // Authenticate will attempt to authenticate the client with the provided
 // username and password.
 func Authenticate() error {
-	if err := Check(); err != nil {
-		return err
-	}
-
 	setPassword := func(values url.Values) {
 		values.Set("name", client.Creds.Username)
 		values.Set("password", client.Creds.Password)

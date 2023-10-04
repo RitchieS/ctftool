@@ -30,6 +30,7 @@ var ctfdWriteupCmd = &cobra.Command{
 		opts.Password = viper.GetString("password")
 		opts.Output = viper.GetString("output")
 		opts.Overwrite = viper.GetBool("overwrite")
+		opts.SkipCTFDCheck = viper.GetBool("skip-check")
 
 		baseURL, err := url.Parse(opts.URL)
 		CheckErr(err)
@@ -58,6 +59,11 @@ var ctfdWriteupCmd = &cobra.Command{
 		}
 
 		client.Creds = &credentials
+
+		if !opts.SkipCTFDCheck {
+			err = ctfd.Check()
+			CheckErr(err)
+		}
 
 		err = ctfd.Authenticate()
 		CheckErr(err)

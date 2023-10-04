@@ -34,14 +34,15 @@ func copyTestFile(w io.Writer, filename string) error {
 }
 
 func TestCheck(t *testing.T) {
+	// test if check returns nil when the response is valid (200) ok
 	tests := []struct {
 		description string
-		html        string
+		htmlFile    string
 		expected    bool
 	}{
 		{
-			"ctfd instance",
-			`<html><body><small class="text-muted">Powered by CTFd</small></body></html>`,
+			"check",
+			"challenges.json",
 			true,
 		},
 	}
@@ -52,13 +53,12 @@ func TestCheck(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("%s mux", test.description), func(t *testing.T) {
 			mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				_, err := w.Write([]byte(test.html))
-				if err != nil {
-					t.Errorf("Write() returned error: %v", err)
+				if err := copyTestFile(w, test.htmlFile); err != nil {
+					t.Errorf("copyTestFile() returned error: %v", err)
 				}
 			})
 		})
+
 		t.Run(fmt.Sprintf("%s check", test.description), func(t *testing.T) {
 			err := Check()
 			if err != nil {
@@ -67,39 +67,6 @@ func TestCheck(t *testing.T) {
 		})
 	}
 }
-
-// test Check for error
-/* func TestCheckFail(t *testing.T) {
-	tests := []struct {
-		description  string
-		responseBody string
-		expected     bool
-	}{
-		{
-			"check fail",
-			`<html><body><small class="text-muted">Not Powered by CTFd</small></body></html>`,
-			false,
-		},
-	}
-
-	client, mux, cleanup := setup()
-	defer cleanup()
-
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("%s mux", test.description), func(t *testing.T) {
-			mux.HandleFunc("/nope", func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(test.responseBody))
-			})
-
-			err := client.Check()
-			if err == nil {
-				t.Errorf("Check() returned no error")
-			}
-
-		})
-	}
-} */
 
 // Test Check Failure
 func TestCheckFailure(t *testing.T) {

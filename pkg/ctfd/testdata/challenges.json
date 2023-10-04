@@ -1,0 +1,33 @@
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "type": "dynamic",
+            "name": "More Challenges Tomorrow!",
+            "value": 0,
+            "solves": 0,
+            "solved_by_me": false,
+            "category": "Welcome",
+            "tags": [],
+            "template": "/plugins/dynamic_challenges/assets/view.html",
+            "script": "/plugins/dynamic_challenges/assets/view.js"
+        },
+        {
+            "id": 2,
+            "type": "dynamic",
+            "name": "HumanTwo",
+            "value": 50,
+            "solves": 725,
+            "solved_by_me": false,
+            "category": "Misc",
+            "tags": [
+                {
+                    "value": "easy"
+                }
+            ],
+            "template": "/plugins/dynamic_challenges/assets/view.html",
+            "script": "/plugins/dynamic_challenges/assets/view.js"
+        }
+    ]
+}

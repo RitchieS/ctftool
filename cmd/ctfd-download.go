@@ -31,6 +31,8 @@ var ctfdDownloadCmd = &cobra.Command{
 		opts.Password = viper.GetString("password")
 		opts.Output = viper.GetString("output")
 		opts.Overwrite = viper.GetBool("overwrite")
+		opts.SaveConfig = viper.GetBool("save-config")
+		opts.SkipCTFDCheck = viper.GetBool("skip-check")
 
 		baseURL, err := url.Parse(opts.URL)
 		CheckErr(err)
@@ -60,6 +62,11 @@ var ctfdDownloadCmd = &cobra.Command{
 
 		client.Creds = &credentials
 		client.MaxFileSize = options.MaxFileSize
+
+		if !opts.SkipCTFDCheck {
+			err = ctfd.Check()
+			CheckErr(err)
+		}
 
 		err = ctfd.Authenticate()
 		CheckErr(err)
