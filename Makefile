@@ -93,6 +93,7 @@ tidy: ## go mod tidy on the source files
 
 check: fmt vet tidy
 	go test ./... -short
+	goreleaser check
 
 test: vet ## run short unit tests
 	go test -v ./... -short
