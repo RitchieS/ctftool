@@ -59,6 +59,9 @@ var ctfdWriteupCmd = &cobra.Command{
 
 		client.Creds = &credentials
 
+		err = ctfd.Check()
+		CheckErr(err)
+
 		err = ctfd.Authenticate()
 		CheckErr(err)
 

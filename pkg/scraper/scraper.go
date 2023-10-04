@@ -128,6 +128,16 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 		return nil, err
 	}
 
+	// Set headers
+	headers := map[string]string{
+		"Accept": "application/json",
+	}
+
+	// Set the request headers using the SetHeaders method.
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
 	// Perform the request using the Client's DoRequest method.
 	resp, err := c.DoRequest(req)
 	if err != nil {
