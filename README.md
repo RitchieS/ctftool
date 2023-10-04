@@ -6,27 +6,54 @@
 
 CTFTool is a robust and user-friendly command-line interface tool developed for interacting with [ctftime.org](https://ctftime.org) and downloading challenges from [CTFd](https://ctfd.io).
 
+![CTFTOOL](.github/assets/ctftool.png)
+
+## Overview
+
+CTFTool streamlines your Capture The Flag (CTF) experience by offering a powerful, yet easy-to-use, command-line interface. Designed to work with platforms like [ctftime.org](https://ctftime.org) and [CTFd](https://ctfd.io), this tool enables you to:
+
+- Fetch details of upcoming CTF competitions from ctftime.org
+- Rank the top 10 teams from both ctftime.org and CTFd platforms
+- Directly download challenges from CTFd into your local environment
+- Automatically generate writeup templates for each challenge
+
 ## Installation
+
+There are several ways to install, it is recommended to download the latest release or build it from source using `make install` or `make build`.
+
+### Downloading the latest release (recommended)
+
+Visit the [releases page](https://github.com/ritchies/ctftool/releases/latest) page and download the appropriate version for your operating system.
+
+
+### From Source (recommended)
+
+Ensure you are on a recent version of Go, and have git and make installed.
+
+1. Clone the repository:
+```bash
+git clone https://github.com/ritchies/ctftool.git
+```
+
+2. Navigate into the project directory:
+```bash
+cd ctftool
+```
+
+3. Install using make:
+```bash
+make install
+```
+
+You can also use `make build`, this will create an executable in the `bin/` directory.
+
+### From Source: Using go install
 
 Ensure you are on a recent version of Go and then run the following command:
 
 ```bash
-go install github.com/ritchies/ctftool@latest
+go install -v github.com/ritchies/ctftool@latest
 ```
-
-### Downloading the latest release
-
-Visit the [releases page](https://github.com/ritchies/ctftool/releases/latest) page and download the appropriate version for your operating system.
-
-## Overview
-
-With CTFTool, you can:
-
-- Interact with [ctftime](https://ctftime.org) and [CTFd](https://ctfd.io)
-- List upcoming CTFs
-- List the top 10 teams on ctftime and CTFd
-- Download challenges from CTFd
-- Create a writeup template for each challenge
 
 ## Commands
 
@@ -51,13 +78,13 @@ Flags:
 Show the upcoming CTF's listed on ctftime:
 
 ```bash
-$ ctftool ctftime
+ctftool ctftime
 ```
 
 Download challenges from a specific CTFd instance:
 
 ```bash
-$ ctftool ctfd --username=<user> --password=<pass> --url=<url> --output=<output>
+ctftool ctfd download --username=<user> --password=<pass> --url=<url> --output=<output>
 ```
 
 ## Current Limitations
