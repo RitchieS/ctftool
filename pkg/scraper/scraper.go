@@ -25,6 +25,7 @@ type Client struct {
 type Credentials struct {
 	Username string
 	Password string
+	Token    string
 }
 
 // NewClient returns a new instance of the Client struct with a specified transport.
@@ -159,6 +160,11 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 func (c *Client) DoRequest(req *http.Request) (*http.Response, error) {
 	// Create a new rate limiter with a limit of 1 request per second.
 	rl := ratelimit.New(1)
+
+	// Set Authorization header if token is not empty.
+	if c.Creds.Token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Token %s", c.Creds.Token))
+	}
 
 	// Perform the request and capture the response and error.
 	resp, err := c.Client.Do(req)
