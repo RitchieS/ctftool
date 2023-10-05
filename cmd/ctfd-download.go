@@ -30,6 +30,7 @@ var ctfdDownloadCmd = &cobra.Command{
 		opts.URL = viper.GetString("url")
 		opts.Username = viper.GetString("username")
 		opts.Password = viper.GetString("password")
+		opts.Token = viper.GetString("token")
 		opts.Output = viper.GetString("output")
 		opts.Overwrite = viper.GetBool("overwrite")
 		opts.SaveConfig = viper.GetBool("save-config")
@@ -54,14 +55,14 @@ var ctfdDownloadCmd = &cobra.Command{
 			opts.Password = strings.TrimSpace(password)
 		}
 
-		// opts.Username and password are required
-		if opts.Username == "" || opts.Password == "" {
-			ShowHelp(cmd, "CTFD User and Password are required")
+		if (opts.Username == "" || opts.Password == "") && opts.Token == "" {
+			ShowHelp(cmd, "Either CTFD Username and Password or a Token are required")
 		}
 
 		credentials := scraper.Credentials{
 			Username: opts.Username,
 			Password: opts.Password,
+			Token:    opts.Token,
 		}
 
 		client.Creds = &credentials
@@ -72,10 +73,12 @@ var ctfdDownloadCmd = &cobra.Command{
 			CheckErr(err)
 		}
 
-		err = ctfd.Authenticate()
-		CheckErr(err)
+		if (opts.Username != "" || opts.Password != "") && opts.Token == "" {
+			err = ctfd.Authenticate()
+			CheckErr(err)
 
-		log.Infof("Authenticated as %q", opts.Username)
+			log.Infof("Authenticated as %q", opts.Username)
+		}
 
 		cwd, err := os.Getwd()
 		CheckErr(err)
@@ -186,9 +189,10 @@ var ctfdDownloadCmd = &cobra.Command{
 		if opts.SaveConfig {
 			viper.Set("url", opts.URL)
 			viper.Set("username", opts.Username)
-			viper.Set("password", "")
+			viper.Set("password", opts.Password)
+			viper.Set("token", opts.Token)
 			viper.Set("output", outputFolder)
-			viper.Set("overwrite", true)
+			viper.Set("overwrite", opts.Overwrite)
 			err := viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
 			CheckErr(err)
 
@@ -218,6 +222,7 @@ func init() {
 	ctfdDownloadCmd.Flags().StringVarP(&opts.URL, "url", "", "", "CTFd URL")
 	ctfdDownloadCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "CTFd Username")
 	ctfdDownloadCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
+	ctfdDownloadCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "CTFd Token")
 	ctfdDownloadCmd.Flags().BoolVarP(&opts.Watch, "watch", "w", false, "Watch for new challenges")
 	ctfdDownloadCmd.Flags().DurationVarP(&opts.WatchInterval, "watch-interval", "", 5*time.Minute, "Watch interval")
 	ctfdDownloadCmd.Flags().BoolVarP(&opts.UnsolvedOnly, "unsolved", "", false, "Only download unsolved challenges")
@@ -230,6 +235,9 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("password", ctfdDownloadCmd.Flags().Lookup("password"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("token", ctfdDownloadCmd.Flags().Lookup("token"))
 	CheckErr(err)
 
 	err = viper.BindPFlag("watch", ctfdDownloadCmd.Flags().Lookup("watch"))

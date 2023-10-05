@@ -6,6 +6,7 @@ type CTFOpts struct {
 	URL           string
 	Username      string
 	Password      string
+	Token         string
 	Output        string
 	Overwrite     bool
 	SaveConfig    bool

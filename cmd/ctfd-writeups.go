@@ -28,6 +28,7 @@ var ctfdWriteupCmd = &cobra.Command{
 		opts.URL = viper.GetString("url")
 		opts.Username = viper.GetString("username")
 		opts.Password = viper.GetString("password")
+		opts.Token = viper.GetString("token")
 		opts.Output = viper.GetString("output")
 		opts.Overwrite = viper.GetBool("overwrite")
 		opts.SkipCTFDCheck = viper.GetBool("skip-check")
@@ -48,14 +49,14 @@ var ctfdWriteupCmd = &cobra.Command{
 			opts.Password = strings.TrimSpace(password)
 		}
 
-		// opts.Username and password are required
-		if opts.Username == "" || opts.Password == "" {
-			ShowHelp(cmd, "CTFD User and Password are required")
+		if (opts.Username == "" || opts.Password == "") && opts.Token == "" {
+			ShowHelp(cmd, "Either CTFD Username and Password or a Token are required")
 		}
 
 		credentials := scraper.Credentials{
 			Username: opts.Username,
 			Password: opts.Password,
+			Token:    opts.Token,
 		}
 
 		client.Creds = &credentials
@@ -65,10 +66,12 @@ var ctfdWriteupCmd = &cobra.Command{
 			CheckErr(err)
 		}
 
-		err = ctfd.Authenticate()
-		CheckErr(err)
+		if (opts.Username != "" || opts.Token != "") && opts.Password == "" {
+			err = ctfd.Authenticate()
+			CheckErr(err)
 
-		log.Infof("Authenticated as %q", opts.Username)
+			log.Infof("Authenticated as %q", opts.Username)
+		}
 
 		// List challenges
 		challenges, err := ctfd.ListChallenges()
@@ -146,9 +149,10 @@ var ctfdWriteupCmd = &cobra.Command{
 		if opts.SaveConfig {
 			viper.Set("url", opts.URL)
 			viper.Set("username", opts.Username)
-			viper.Set("password", "")
+			viper.Set("password", opts.Password)
+			viper.Set("token", opts.Token)
 			viper.Set("output", outputFolder)
-			viper.Set("overwrite", true)
+			viper.Set("overwrite", opts.Overwrite)
 			err := viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
 			CheckErr(err)
 
@@ -164,6 +168,7 @@ func init() {
 	ctfdWriteupCmd.Flags().StringVarP(&opts.URL, "url", "", "", "CTFd URL")
 	ctfdWriteupCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "CTFd Username")
 	ctfdWriteupCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "CTFd Token")
 
 	// viper
 	err := viper.BindPFlag("url", ctfdWriteupCmd.Flags().Lookup("url"))
@@ -173,5 +178,8 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("password", ctfdWriteupCmd.Flags().Lookup("password"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("token", ctfdWriteupCmd.Flags().Lookup("token"))
 	CheckErr(err)
 }
