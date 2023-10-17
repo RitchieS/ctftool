@@ -1,9 +1,14 @@
 package cmd
 
 import (
+	"fmt"
+	"net/url"
+	"os"
 	"path"
+	"strings"
 
 	"github.com/ritchies/ctftool/pkg/ctfd"
+	"github.com/ritchies/ctftool/pkg/scraper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -42,6 +47,61 @@ func init() {
 
 	err = viper.BindPFlag("save-config", ctfdCmd.PersistentFlags().Lookup("save-config"))
 	CheckErr(err)
+}
+
+func downloadOptions() {
+	opts.URL = viper.GetString("url")
+	opts.Username = viper.GetString("username")
+	opts.Password = viper.GetString("password")
+	opts.Token = viper.GetString("token")
+	opts.Output = viper.GetString("output")
+	opts.Overwrite = viper.GetBool("overwrite")
+	opts.SaveConfig = viper.GetBool("save-config")
+	opts.SkipCTFDCheck = viper.GetBool("skip-check")
+	opts.Watch = viper.GetBool("watch")
+	opts.WatchInterval = viper.GetDuration("watch-interval")
+	opts.UnsolvedOnly = viper.GetBool("unsolved")
+}
+
+func getBaseURL(cmd *cobra.Command) *url.URL {
+	baseURL, err := url.Parse(opts.URL)
+	CheckErr(err)
+
+	if baseURL.Host == "" {
+		ShowHelp(cmd, fmt.Sprintf("Invalid or empty URL provided: %q", baseURL.String()))
+	}
+
+	return baseURL
+}
+
+func getCredentials(cmd *cobra.Command) *scraper.Credentials {
+	if opts.Username != "" && opts.Password == "" {
+		fmt.Print("Enter your password: ")
+		var password string
+		fmt.Scanln(&password)
+		opts.Password = strings.TrimSpace(password)
+	}
+
+	if (opts.Username == "" || opts.Password == "") && opts.Token == "" {
+		ShowHelp(cmd, "Either CTFD Username and Password or a Token are required")
+	}
+
+	return &scraper.Credentials{
+		Username: opts.Username,
+		Password: opts.Password,
+		Token:    opts.Token,
+	}
+}
+
+func setupOutputFolder() string {
+	cwd, err := os.Getwd()
+	CheckErr(err)
+	outputFolder := cwd
+
+	if viper.ConfigFileUsed() == "" && opts.Output != "" {
+		outputFolder = path.Join(cwd, opts.Output)
+	}
+	return outputFolder
 }
 
 func saveConfig() {
