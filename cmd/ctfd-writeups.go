@@ -147,17 +147,7 @@ var ctfdWriteupCmd = &cobra.Command{
 
 		// values to config file if --save-config is set
 		if opts.SaveConfig {
-			viper.Set("url", opts.URL)
-			viper.Set("username", opts.Username)
-			viper.Set("password", opts.Password)
-			viper.Set("token", opts.Token)
-			viper.Set("output", outputFolder)
-			viper.Set("overwrite", opts.Overwrite)
-			err := viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
-			CheckErr(err)
-
-			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
-			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
+			saveConfig()
 		}
 	},
 }

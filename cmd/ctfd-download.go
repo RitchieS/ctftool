@@ -12,7 +12,6 @@ import (
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/pkg/ctfd"
 	"github.com/ritchies/ctftool/pkg/scraper"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -83,11 +82,9 @@ var ctfdDownloadCmd = &cobra.Command{
 		cwd, err := os.Getwd()
 		CheckErr(err)
 
-		outputFolder := cwd
-
 		// if using config file
 		if viper.ConfigFileUsed() == "" && opts.Output != "" {
-			outputFolder = path.Join(cwd, opts.Output)
+			opts.Output = path.Join(cwd, opts.Output)
 		}
 
 		processChallenges := func() {
@@ -98,23 +95,36 @@ var ctfdDownloadCmd = &cobra.Command{
 			challenges, err := ctfd.ListChallenges()
 			CheckErr(err)
 
-			// Warn the user that they are about to overwrite files
-			if opts.Overwrite {
-				log.Warn("This action will overwrite existing files")
-				log.Info("Writeups will be updated if they exist")
-				log.Info("Press enter to continue or ctrl+c to cancel")
-
-				// Ask the user if they want to continue (default is yes)
-				fmt.Print("Do you want to continue? [Y/n]: ")
-				var answer string
-				fmt.Scanln(&answer)
-				switch strings.ToLower(answer) {
-				case "n", "no":
-					log.Fatal("Aborting by user request")
-				}
-			}
+			// Generate Index
+			err = ctfd.GenerateIndex(challenges, opts.Output)
+			CheckErr(err)
 
 			for _, challenge := range challenges {
+				if opts.UnsolvedOnly && challenge.SolvedByMe {
+					log.Debugf("Skipping %d : already solved", challenge.ID)
+					continue
+				}
+
+				name := lib.CleanSlug(challenge.Name, false)
+
+				category := strings.Split(challenge.Category, " ")[0]
+				category = lib.CleanSlug(category, true)
+
+				// make sure name and category are more than 1 character and less than 50
+				if len(category) < 1 || len(name) < 1 {
+					log.Debugf("Skipping %d : invalid name or category", challenge.ID)
+					continue
+				}
+
+				challengePath := path.Join(opts.Output, category, name)
+
+				if _, statErr := os.Stat(challengePath); statErr == nil {
+					if !opts.Overwrite {
+						log.Debugf("Skipping %d : overwrite is false", challenge.ID)
+						continue
+					}
+				}
+
 				wg.Add(1)
 
 				if options.RateLimit > 0 {
@@ -122,60 +132,26 @@ var ctfdDownloadCmd = &cobra.Command{
 				}
 
 				go func(challenge ctfd.ChallengesData) {
-					name := lib.CleanSlug(challenge.Name, false)
 
-					category := strings.Split(challenge.Category, " ")[0]
-					category = lib.CleanSlug(category, true)
-
-					// make sure name and category are more than 1 character and less than 50
-					if len(category) < 1 || len(name) < 1 {
-						log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Name, challenge.Category)
-						wg.Done()
-						return
-					}
-
-					if opts.UnsolvedOnly && challenge.SolvedByMe {
-						log.Warnf("Skipping (%q/%q) : already solved", challenge.Name, challenge.Category)
-						wg.Done()
-						return
-					}
-
-					challengePath := path.Join(outputFolder, category, name)
-
-					if _, statErr := os.Stat(challengePath); statErr == nil {
-						if !opts.Overwrite {
-							log.Warnf("Skipping %q : overwrite is false", name)
-							wg.Done()
-							return
-						}
-					}
-
-					err := os.MkdirAll(challengePath, os.ModePerm)
-					CheckErr(err)
+					log.WithField("challenge", fmt.Sprintf("%s/%s", category, name)).Infof("Downloading challenge %d", challenge.ID)
 
 					chall, err := ctfd.Challenge(challenge.ID)
-					CheckErr(err)
-
-					// download challenge files
-					err = ctfd.DownloadFiles(chall.ID, challengePath)
 					CheckWarn(err)
+					if err != nil {
+						wg.Done()
+						return
+					}
+
+					err = os.MkdirAll(challengePath, os.ModePerm)
+					CheckErr(err)
 
 					// get description
 					err = ctfd.GetDescription(chall, challengePath)
 					CheckErr(err)
 
-					if len(chall.Files) > 0 {
-						log.WithFields(logrus.Fields{
-							"category": category,
-							"files":    len(chall.Files),
-							"solves":   chall.Solves,
-						}).Infof("Downloaded %q", name)
-					} else {
-						log.WithFields(logrus.Fields{
-							"category": category,
-							"solves":   chall.Solves,
-						}).Infof("Created %q", name)
-					}
+					// download challenge files
+					err = ctfd.DownloadFiles(chall.Files, challengePath)
+					CheckWarn(err)
 
 					wg.Done()
 				}(challenge)
@@ -187,17 +163,7 @@ var ctfdDownloadCmd = &cobra.Command{
 
 		// values to config file if --save-config is set
 		if opts.SaveConfig {
-			viper.Set("url", opts.URL)
-			viper.Set("username", opts.Username)
-			viper.Set("password", opts.Password)
-			viper.Set("token", opts.Token)
-			viper.Set("output", outputFolder)
-			viper.Set("overwrite", opts.Overwrite)
-			err := viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
-			CheckErr(err)
-
-			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
-			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
+			saveConfig()
 		}
 
 		if opts.Watch {

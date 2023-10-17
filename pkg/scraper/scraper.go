@@ -149,6 +149,37 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 	return resp, nil
 }
 
+// GetFile takes in a url string and an optional list of interfaces, formats the url and sends a GET request.
+// The response is returned, along with any error that may have occurred.
+//
+//	resp, err := client.GetFile("https://example.com/%v", "path")
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+func (c *Client) GetFile(urlStr string, a ...interface{}) (*http.Response, error) {
+	// Create a new URL by parsing the provided URL string and any additional arguments using the fmt.Sprintf function
+	// and the BaseURL field of c.
+	u, err := c.BaseURL.Parse(fmt.Sprintf(urlStr, a...))
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new GET request using the new URL.
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Perform the request using the Client's DoRequest method.
+	resp, err := c.DoRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the response.
+	return resp, nil
+}
+
 // DoRequest takes in an http request and sends it to the specified client.
 // If the response status code is not http.StatusOK, the request will be retried up to 5 times with a rate limit of 1 request per second.
 // If the final response status code is between http.StatusBadRequest and http.StatusNetworkAuthenticationRequired, an error will be returned.

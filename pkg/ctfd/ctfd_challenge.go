@@ -9,9 +9,12 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/pkg/scraper"
 	"golang.org/x/net/html"
 )
@@ -24,6 +27,9 @@ const (
 	TwentyFiveMB       = 25000000
 	OneHundredMB       = 100000000
 	TwoHhundredFiftyMB = 250000000
+
+	// Constants for max retries
+	maxRetries = 5
 )
 
 type Hint struct {
@@ -92,58 +98,82 @@ func Challenge(id int64) (*ChallengeData, error) {
 
 // DownloadFiles will download all the files of a challenge by ID and save
 // them to the given directory
-func DownloadFiles(id int64, outputPath string) error {
-	challenge, err := Challenge(id)
-	if err != nil {
-		return err
-	}
-
-	files := make([]string, len(challenge.Files))
-	copy(files, challenge.Files)
-
+func DownloadFiles(files []string, outputPath string) error {
 	// if no files, return
 	if len(files) == 0 {
 		return nil
 	}
 
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var errors []error
+
 	for _, file := range files {
-		resp, err := client.GetJson(file)
-		if err != nil {
-			return fmt.Errorf("failed to get file: %v", err)
-		}
-		defer resp.Body.Close()
+		wg.Add(1)
+		go func(file string) {
+			defer wg.Done()
 
-		fileName := getFileName(resp.Request.URL.String())
+			var err error
+			var resp *http.Response
 
-		// 5 retries to get the challenge if the status code is not http.StatusOK
-		for i := 0; i < 5; i++ {
-			if resp.StatusCode == http.StatusOK {
-				break
+			for i := 0; i < maxRetries; i++ {
+				resp, err = client.GetFile(file)
+				if err != nil {
+					continue
+				}
+
+				if resp.StatusCode == http.StatusOK {
+					break
+				}
+
+				resp.Body.Close()
+				time.Sleep(time.Second)
 			}
-			resp, err = client.GetJson(file)
+
 			if err != nil {
-				return fmt.Errorf("failed to get file: %v", err)
+				mu.Lock()
+				errors = append(errors, fmt.Errorf("failed to get file %q: %v", file, err))
+				mu.Unlock()
+				return
 			}
+
 			defer resp.Body.Close()
 
-			time.Sleep(time.Second * 1)
-		}
+			fileName := getFileName(resp.Request.URL.String())
 
-		if resp.ContentLength > (client.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
-			sizeInMegaBytes := resp.ContentLength / OneMB
-			return fmt.Errorf("file %q is too large (%d/%d MB)", fileName, sizeInMegaBytes, client.MaxFileSize)
-		}
+			if resp.ContentLength > (client.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
+				sizeInMegaBytes := resp.ContentLength / OneMB
+				mu.Lock()
+				errors = append(errors, fmt.Errorf("file %q is too large (%d/%d MB)", fileName, sizeInMegaBytes, client.MaxFileSize))
+				mu.Unlock()
+				return
+			}
 
-		file, err := os.Create(path.Join(outputPath, fileName))
-		if err != nil {
-			return fmt.Errorf("failed to create file: %v", err)
-		}
-		defer file.Close()
+			filePath := path.Join(outputPath, fileName)
+			f, err := os.Create(filePath)
+			if err != nil {
+				mu.Lock()
+				errors = append(errors, fmt.Errorf("failed to create file %q: %v", filePath, err))
+				mu.Unlock()
+				return
+			}
 
-		_, err = io.Copy(file, resp.Body)
-		if err != nil {
-			return fmt.Errorf("failed to copy file: %v", err)
-		}
+			defer f.Close()
+
+			_, err = io.Copy(f, resp.Body)
+			if err != nil {
+				mu.Lock()
+				errors = append(errors, fmt.Errorf("failed to write file %q: %v", filePath, err))
+				mu.Unlock()
+				return
+			}
+		}(file)
+	}
+
+	wg.Wait()
+
+	if len(errors) > 0 {
+		return fmt.Errorf("%d errors occurred while downloading files:\n%s", len(errors), formatErrors(errors))
 	}
 
 	return nil
@@ -356,6 +386,71 @@ func GetDescription(challenge *ChallengeData, challengePath string) error {
 	return nil
 }
 
+// GenerateIndex generates an index.md file with a list of all challenges in their respective categories
+func GenerateIndex(challenges []ChallengesData, outputPath string) error {
+	file, err := os.Create(path.Join(outputPath, "index.md"))
+	if err != nil {
+		return fmt.Errorf("error creating file: %v", err)
+	}
+	defer file.Close()
+
+	_, err = file.WriteString("# Index\n\n")
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+
+	// get all the categories
+	categories := make(map[string][]ChallengesData)
+	for _, challenge := range challenges {
+		category := strings.Split(challenge.Category, " ")[0]
+		category = lib.CleanSlug(category, true)
+
+		categories[category] = append(categories[category], challenge)
+	}
+
+	// Sort categories alphabetically
+	var sortedCategories []string
+	for category := range categories {
+		sortedCategories = append(sortedCategories, category)
+	}
+	sort.Strings(sortedCategories)
+
+	// write the categories
+	for _, category := range sortedCategories {
+		_, err = file.WriteString(fmt.Sprintf("## %s\n\n", strings.ToUpper(category)))
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
+
+		// Sort challenges within each category alphabetically
+		sort.Slice(categories[category], func(i, j int) bool {
+			return categories[category][i].Name < categories[category][j].Name
+		})
+
+		for _, challenge := range categories[category] {
+			var solved string
+			// Check if solved by me
+			if challenge.SolvedByMe {
+				solved = "✅"
+			} else {
+				solved = "❌"
+			}
+
+			_, err = file.WriteString(fmt.Sprintf("- %s [%s](%s/%s/README.md)\n", solved, challenge.Name, category, lib.CleanSlug(challenge.Name, false)))
+			if err != nil {
+				return fmt.Errorf("error writing to file: %v", err)
+			}
+		}
+
+		_, err = file.WriteString("\n")
+		if err != nil {
+			return fmt.Errorf("error writing to file: %v", err)
+		}
+	}
+
+	return nil
+}
+
 type Submission struct {
 	ID   int    `json:"challenge_id"`
 	Flag string `json:"submission"`
@@ -443,4 +538,14 @@ func getFileName(challengeFileURL string) string {
 
 	fileName := challengeFile[0]
 	return fileName
+}
+
+func formatErrors(errors []error) string {
+	var b strings.Builder
+	for _, err := range errors {
+		b.WriteString("- ")
+		b.WriteString(err.Error())
+		b.WriteString("\n")
+	}
+	return b.String()
 }
