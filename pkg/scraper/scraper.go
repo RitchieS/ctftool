@@ -131,7 +131,7 @@ func (c *Client) GetJson(urlStr string, a ...interface{}) (*http.Response, error
 
 	// Set headers
 	headers := map[string]string{
-		"Accept": "application/json",
+		"Content-Type": "application/json",
 	}
 
 	// Set the request headers using the SetHeaders method.
