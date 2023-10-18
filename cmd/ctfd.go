@@ -24,7 +24,8 @@ var ctfdCmd = &cobra.Command{
 	Short: "Query CTFd instance",
 	Long:  `Retrieve challenges and files from a CTFd instance.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Usage()
+		err := cmd.Usage()
+		CheckErr(err)
 	},
 }
 

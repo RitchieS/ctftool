@@ -3,11 +3,14 @@ package ctfd
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -139,7 +142,13 @@ func DownloadFiles(files []string, outputPath string) error {
 
 			defer resp.Body.Close()
 
-			fileName := getFileName(resp.Request.URL.String())
+			fileName, err := getFileName(resp.Request.URL.String())
+			if err != nil {
+				mu.Lock()
+				errors = append(errors, fmt.Errorf("failed to get file name: %v", err))
+				mu.Unlock()
+				return
+			}
 
 			if resp.ContentLength > (client.MaxFileSize*OneMB) || resp.ContentLength <= 0 {
 				sizeInMegaBytes := resp.ContentLength / OneMB
@@ -271,7 +280,11 @@ func GetDescription(challenge *ChallengeData, challengePath string) error {
 		}
 		for _, challengeFile := range challenge.Files {
 			fileURL, _ := client.BaseURL.Parse(challengeFile)
-			_, err := file.WriteString(fmt.Sprintf("- [%s](%s)\n", getFileName(challengeFile), fileURL.String()))
+			filename, err := getFileName(challengeFile)
+			if err != nil {
+				return fmt.Errorf("error getting file name: %v", err)
+			}
+			_, err = file.WriteString(fmt.Sprintf("- [%s](%s)\n", filename, fileURL.String()))
 			if err != nil {
 				return fmt.Errorf("error writing to file: %v", err)
 			}
@@ -306,7 +319,11 @@ func GetDescription(challenge *ChallengeData, challengePath string) error {
 
 				// img tags
 				if token.Data == "img" {
-					fileName := getFileName(token.Attr[0].Val)
+					fileName, err := getFileName(token.Attr[0].Val)
+					if err != nil {
+						return text
+					}
+
 					text += fmt.Sprintf("![%s](%s)\n", fileName, token.Attr[0].Val)
 				}
 
@@ -530,14 +547,27 @@ func SubmitFlag(submission Submission) error {
 // getFileName takes in a URL path string, splits it by '/' and returns the last element of the split which is expected to be the file name.
 // It also handles the case where there is a query parameter by splitting the file name again by '?' and returning only the first element which is the file name.
 //
-//	fileName := getFileName("/files/challenge.zip?token=12345")
+//	fileName, err := getFileName("/files/challenge.zip?token=12345")
+//	if err != nil {
+//		// handle error
+//	}
 //	fmt.Println(fileName) // Output: "challenge.zip"
-func getFileName(challengeFileURL string) string {
-	directories := strings.Split(challengeFileURL, "/")
-	challengeFile := strings.Split(directories[len(directories)-1], "?")
+func getFileName(challengeFileURL string) (string, error) {
+	u, err := url.Parse(challengeFileURL)
+	if err != nil {
+		return "", err
+	}
 
-	fileName := challengeFile[0]
-	return fileName
+	fileName := filepath.Base(u.Path)
+	if fileName == "." || fileName == "/" {
+		return "", errors.New("invalid file name")
+	}
+
+	if strings.Contains(fileName, "?") {
+		fileName = strings.Split(fileName, "?")[0]
+	}
+
+	return fileName, nil
 }
 
 func formatErrors(errors []error) string {

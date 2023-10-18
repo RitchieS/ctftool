@@ -220,8 +220,14 @@ func TestGetFileName(t *testing.T) {
 	}
 
 	for _, example := range exampleUrls {
-		if getFileName(example[0]) != example[1] {
-			t.Errorf("expected %s, got %s", example[1], getFileName(example[0]))
+		fileName, err := getFileName(example[0])
+		if err != nil {
+			t.Errorf("error getting filename: %v", err)
+			return
+		}
+
+		if fileName != example[1] {
+			t.Errorf("expected filename %s, got %s", example[1], fileName)
 			return
 		}
 	}
