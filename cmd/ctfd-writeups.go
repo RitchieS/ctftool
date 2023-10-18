@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/pkg/ctfd"
-	"github.com/ritchies/ctftool/pkg/scraper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -21,145 +19,76 @@ var ctfdWriteupCmd = &cobra.Command{
 	Aliases: []string{"w", "write"},
 	Short:   "Only create and update writeups",
 	Long:    `Create and update writeups for each challenge. Skips downloading files.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		client := ctfd.NewClient()
+	Run:     runWriteups,
+}
 
-		// check if flags are set using viper
-		opts.URL = viper.GetString("url")
-		opts.Username = viper.GetString("username")
-		opts.Password = viper.GetString("password")
-		opts.Token = viper.GetString("token")
-		opts.Output = viper.GetString("output")
-		opts.Overwrite = viper.GetBool("overwrite")
-		opts.SkipCTFDCheck = viper.GetBool("skip-check")
+func runWriteups(cmd *cobra.Command, args []string) {
+	client := ctfd.NewClient()
+	downloadOptions()
+	opts.Output = setupOutputFolder()
 
-		baseURL, err := url.Parse(opts.URL)
+	client.BaseURL = getBaseURL(cmd)
+	client.Creds = getCredentials(cmd)
+
+	if !opts.SkipCTFDCheck {
+		CheckErr(ctfd.Check())
+	}
+
+	if (opts.Username != "" || opts.Password != "") && opts.Token == "" {
+		err := ctfd.Authenticate()
 		CheckErr(err)
+		log.Infof("Authenticated as %q", opts.Username)
+	}
 
-		if baseURL.Host == "" {
-			ShowHelp(cmd, fmt.Sprintf("Invalid or empty URL provided: %q", baseURL.String()))
+	processWriteups()
+}
+
+func processWriteups() {
+	// Similar to processChallenges but specific to writeups
+	rl := GetRateLimit()
+	var wg sync.WaitGroup
+
+	// List challenges
+	challenges, err := ctfd.ListChallenges()
+	CheckErr(err)
+
+	for _, challenge := range SortChallenges(challenges) {
+		wg.Add(1)
+
+		if options.RateLimit > 0 {
+			rl.Take()
 		}
 
-		client.BaseURL = baseURL
+		go func(challenge ctfd.ChallengesData) {
+			name := lib.CleanSlug(challenge.Name, false)
+			category := strings.Split(challenge.Category, " ")[0]
+			category = lib.CleanSlug(category, true)
 
-		if opts.Username != "" && opts.Password == "" {
-			fmt.Print("Enter your password: ")
-			var password string
-			fmt.Scanln(&password)
-			opts.Password = strings.TrimSpace(password)
-		}
-
-		if (opts.Username == "" || opts.Password == "") && opts.Token == "" {
-			ShowHelp(cmd, "Either CTFD Username and Password or a Token are required")
-		}
-
-		credentials := scraper.Credentials{
-			Username: opts.Username,
-			Password: opts.Password,
-			Token:    opts.Token,
-		}
-
-		client.Creds = &credentials
-
-		if !opts.SkipCTFDCheck {
-			err = ctfd.Check()
-			CheckErr(err)
-		}
-
-		if (opts.Username != "" || opts.Token != "") && opts.Password == "" {
-			err = ctfd.Authenticate()
-			CheckErr(err)
-
-			log.Infof("Authenticated as %q", opts.Username)
-		}
-
-		// List challenges
-		challenges, err := ctfd.ListChallenges()
-		CheckErr(err)
-
-		cwd, err := os.Getwd()
-		CheckErr(err)
-
-		outputFolder := cwd
-
-		// if using config file
-		if viper.ConfigFileUsed() == "" && opts.Output != "" {
-			outputFolder = path.Join(cwd, opts.Output)
-		}
-
-		// Warn the user that they are about to overwrite files
-		log.Warn("This action will overwrite existing files")
-		log.Info("Writeups will be updated if they exist")
-		log.Info("Press enter to continue or ctrl+c to cancel")
-
-		// Ask the user if they want to continue (default is yes)
-		fmt.Print("Do you want to continue? [Y/n]: ")
-		var answer string
-		fmt.Scanln(&answer)
-		switch strings.ToLower(answer) {
-		case "n", "no":
-			log.Fatal("Aborting by user request")
-		}
-
-		rl := GetRateLimit()
-		var wg sync.WaitGroup
-
-		for _, challenge := range challenges {
-			wg.Add(1)
-
-			if options.RateLimit > 0 {
-				rl.Take()
+			if len(category) < 1 || len(name) < 1 {
+				log.Debugf("Skipping challenge %d : invalid category or name", challenge.ID)
+				wg.Done()
+				return
 			}
 
-			go func(challenge ctfd.ChallengesData) {
-				name := lib.CleanSlug(challenge.Name, false)
+			log.WithField("challenge", fmt.Sprintf("%s/%s", category, name)).Infof("Processing challenge %d", challenge.ID)
 
-				category := strings.Split(challenge.Category, " ")[0]
-				category = lib.CleanSlug(category, true)
+			challengePath := path.Join(opts.Output, category, name)
 
-				// make sure name and category are more than 1 character and less than 50
-				if len(category) < 1 || len(name) < 1 {
-					log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Name, challenge.Category)
-					wg.Done()
-					return
-				}
-
-				challengePath := path.Join(outputFolder, category, name)
-
-				err := os.MkdirAll(challengePath, os.ModePerm)
-				CheckErr(err)
-
-				chall, err := ctfd.Challenge(challenge.ID)
-				CheckErr(err)
-
-				// get description
-				err = ctfd.GetDescription(chall, challengePath)
-				CheckErr(err)
-
-				log.WithField(
-					"category", challenge.Category,
-				).Infof("Created writeup for %q", name)
-
-				wg.Done()
-			}(challenge)
-		}
-		wg.Wait()
-
-		// values to config file if --save-config is set
-		if opts.SaveConfig {
-			viper.Set("url", opts.URL)
-			viper.Set("username", opts.Username)
-			viper.Set("password", opts.Password)
-			viper.Set("token", opts.Token)
-			viper.Set("output", outputFolder)
-			viper.Set("overwrite", opts.Overwrite)
-			err := viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
+			chall, err := ctfd.Challenge(challenge.ID)
 			CheckErr(err)
 
-			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
-			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
-		}
-	},
+			err = os.MkdirAll(challengePath, os.ModePerm)
+			CheckErr(err)
+
+			// get description
+			err = ctfd.GetDescription(chall, challengePath)
+			CheckErr(err)
+
+			wg.Done()
+		}(challenge)
+	}
+
+	wg.Wait()
 }
 
 func init() {

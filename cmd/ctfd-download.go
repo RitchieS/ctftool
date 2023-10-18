@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -11,11 +10,14 @@ import (
 
 	"github.com/ritchies/ctftool/internal/lib"
 	"github.com/ritchies/ctftool/pkg/ctfd"
-	"github.com/ritchies/ctftool/pkg/scraper"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+type ChallengeNotifications struct {
+	Total      int
+	Categories map[string]int
+}
 
 // ctfdDownloadCmd represents the download command
 var ctfdDownloadCmd = &cobra.Command{
@@ -23,197 +25,143 @@ var ctfdDownloadCmd = &cobra.Command{
 	Aliases: []string{"d", "down"},
 	Short:   "Download files and create writeups",
 	Long:    `Download files and create writeups for each challenge.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		client := ctfd.NewClient()
+	Run:     runDownload,
+}
 
-		// check if flags are set using viper
-		opts.URL = viper.GetString("url")
-		opts.Username = viper.GetString("username")
-		opts.Password = viper.GetString("password")
-		opts.Token = viper.GetString("token")
-		opts.Output = viper.GetString("output")
-		opts.Overwrite = viper.GetBool("overwrite")
-		opts.SaveConfig = viper.GetBool("save-config")
-		opts.SkipCTFDCheck = viper.GetBool("skip-check")
-		opts.Watch = viper.GetBool("watch")
-		opts.WatchInterval = viper.GetDuration("watch-interval")
-		opts.UnsolvedOnly = viper.GetBool("unsolved")
+func runDownload(cmd *cobra.Command, args []string) {
+	client := ctfd.NewClient()
+	downloadOptions()
+	opts.Output = setupOutputFolder()
 
-		baseURL, err := url.Parse(opts.URL)
+	client.BaseURL = getBaseURL(cmd)
+	client.Creds = getCredentials(cmd)
+	client.MaxFileSize = options.MaxFileSize
+
+	if !opts.SkipCTFDCheck {
+		CheckErr(ctfd.Check())
+	}
+
+	if (opts.Username != "" || opts.Password != "") && opts.Token == "" {
+		err := ctfd.Authenticate()
 		CheckErr(err)
+		log.Infof("Authenticated as %q", opts.Username)
+	}
 
-		if baseURL.Host == "" {
-			ShowHelp(cmd, fmt.Sprintf("Invalid or empty URL provided: %q", baseURL.String()))
+	processChallenges()
+
+	if opts.SaveConfig {
+		saveConfig()
+	}
+
+	if opts.Watch {
+		watch(processChallenges)
+	}
+}
+
+func processChallenges() {
+	rl := GetRateLimit()
+	var wg sync.WaitGroup
+
+	// List challenges
+	challenges, err := ctfd.ListChallenges()
+	CheckErr(err)
+
+	// Setup challenge notifications
+	notifications := ChallengeNotifications{
+		Categories: make(map[string]int),
+	}
+
+	for _, challenge := range SortChallenges(challenges) {
+		if opts.UnsolvedOnly && challenge.SolvedByMe {
+			log.Debugf("Skipping %d : already solved", challenge.ID)
+			continue
 		}
 
-		client.BaseURL = baseURL
+		name := lib.CleanSlug(challenge.Name, false)
+		category := strings.Split(challenge.Category, " ")[0]
+		category = lib.CleanSlug(category, true)
 
-		if opts.Username != "" && opts.Password == "" {
-			fmt.Print("Enter your password: ")
-			var password string
-			fmt.Scanln(&password)
-			opts.Password = strings.TrimSpace(password)
+		if len(category) < 1 || len(name) < 1 {
+			log.Debugf("Skipping %d : invalid name or category", challenge.ID)
+			continue
 		}
 
-		if (opts.Username == "" || opts.Password == "") && opts.Token == "" {
-			ShowHelp(cmd, "Either CTFD Username and Password or a Token are required")
-		}
+		challengePath := path.Join(opts.Output, category, name)
 
-		credentials := scraper.Credentials{
-			Username: opts.Username,
-			Password: opts.Password,
-			Token:    opts.Token,
-		}
-
-		client.Creds = &credentials
-		client.MaxFileSize = options.MaxFileSize
-
-		if !opts.SkipCTFDCheck {
-			err = ctfd.Check()
-			CheckErr(err)
-		}
-
-		if (opts.Username != "" || opts.Password != "") && opts.Token == "" {
-			err = ctfd.Authenticate()
-			CheckErr(err)
-
-			log.Infof("Authenticated as %q", opts.Username)
-		}
-
-		cwd, err := os.Getwd()
-		CheckErr(err)
-
-		outputFolder := cwd
-
-		// if using config file
-		if viper.ConfigFileUsed() == "" && opts.Output != "" {
-			outputFolder = path.Join(cwd, opts.Output)
-		}
-
-		processChallenges := func() {
-			rl := GetRateLimit()
-			var wg sync.WaitGroup
-
-			// List challenges
-			challenges, err := ctfd.ListChallenges()
-			CheckErr(err)
-
-			// Warn the user that they are about to overwrite files
-			if opts.Overwrite {
-				log.Warn("This action will overwrite existing files")
-				log.Info("Writeups will be updated if they exist")
-				log.Info("Press enter to continue or ctrl+c to cancel")
-
-				// Ask the user if they want to continue (default is yes)
-				fmt.Print("Do you want to continue? [Y/n]: ")
-				var answer string
-				fmt.Scanln(&answer)
-				switch strings.ToLower(answer) {
-				case "n", "no":
-					log.Fatal("Aborting by user request")
-				}
-			}
-
-			for _, challenge := range challenges {
-				wg.Add(1)
-
-				if options.RateLimit > 0 {
-					rl.Take()
-				}
-
-				go func(challenge ctfd.ChallengesData) {
-					name := lib.CleanSlug(challenge.Name, false)
-
-					category := strings.Split(challenge.Category, " ")[0]
-					category = lib.CleanSlug(category, true)
-
-					// make sure name and category are more than 1 character and less than 50
-					if len(category) < 1 || len(name) < 1 {
-						log.Warnf("Skipping (%q/%q) : invalid name or category", challenge.Name, challenge.Category)
-						wg.Done()
-						return
-					}
-
-					if opts.UnsolvedOnly && challenge.SolvedByMe {
-						log.Warnf("Skipping (%q/%q) : already solved", challenge.Name, challenge.Category)
-						wg.Done()
-						return
-					}
-
-					challengePath := path.Join(outputFolder, category, name)
-
-					if _, statErr := os.Stat(challengePath); statErr == nil {
-						if !opts.Overwrite {
-							log.Warnf("Skipping %q : overwrite is false", name)
-							wg.Done()
-							return
-						}
-					}
-
-					err := os.MkdirAll(challengePath, os.ModePerm)
-					CheckErr(err)
-
-					chall, err := ctfd.Challenge(challenge.ID)
-					CheckErr(err)
-
-					// download challenge files
-					err = ctfd.DownloadFiles(chall.ID, challengePath)
-					CheckWarn(err)
-
-					// get description
-					err = ctfd.GetDescription(chall, challengePath)
-					CheckErr(err)
-
-					if len(chall.Files) > 0 {
-						log.WithFields(logrus.Fields{
-							"category": category,
-							"files":    len(chall.Files),
-							"solves":   chall.Solves,
-						}).Infof("Downloaded %q", name)
-					} else {
-						log.WithFields(logrus.Fields{
-							"category": category,
-							"solves":   chall.Solves,
-						}).Infof("Created %q", name)
-					}
-
-					wg.Done()
-				}(challenge)
-			}
-			wg.Wait()
-		}
-
-		processChallenges()
-
-		// values to config file if --save-config is set
-		if opts.SaveConfig {
-			viper.Set("url", opts.URL)
-			viper.Set("username", opts.Username)
-			viper.Set("password", opts.Password)
-			viper.Set("token", opts.Token)
-			viper.Set("output", outputFolder)
-			viper.Set("overwrite", opts.Overwrite)
-			err := viper.SafeWriteConfigAs(path.Join(outputFolder, ".ctftool.yaml"))
-			CheckErr(err)
-
-			log.WithField("file", path.Join(outputFolder, ".ctftool.yaml")).Info("Saved config file")
-			log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
-		}
-
-		if opts.Watch {
-			log.Infof("Watching for new challenges every %s", opts.WatchInterval.String())
-
-			interval, err := time.ParseDuration(opts.WatchInterval.String())
-			CheckErr(err)
-
-			ticker := time.NewTicker(interval)
-			defer ticker.Stop()
-
-			for range ticker.C {
-				processChallenges()
+		if _, statErr := os.Stat(challengePath); statErr == nil {
+			if !opts.Overwrite {
+				log.Debugf("Skipping %d : overwrite is false", challenge.ID)
+				continue
 			}
 		}
-	},
+
+		wg.Add(1)
+
+		if options.RateLimit > 0 {
+			rl.Take()
+		}
+
+		go func(challenge ctfd.ChallengesData) {
+			log.WithField("challenge", fmt.Sprintf("%s/%s", category, name)).Infof("Downloading challenge %d", challenge.ID)
+
+			chall, err := ctfd.Challenge(challenge.ID)
+			CheckWarn(err)
+			if err != nil {
+				wg.Done()
+				return
+			}
+
+			err = os.MkdirAll(challengePath, os.ModePerm)
+			CheckErr(err)
+
+			// get description
+			err = ctfd.GetDescription(chall, challengePath)
+			CheckErr(err)
+
+			// download challenge files
+			err = ctfd.DownloadFiles(chall.Files, challengePath)
+			CheckWarn(err)
+
+			// Add challenge to notifications, probably should make sure to lock?
+			notifications.Total++
+			notifications.Categories[category]++
+
+			wg.Done()
+		}(challenge)
+	}
+
+	wg.Wait()
+
+	// Generate Index
+	err = ctfd.GenerateIndex(challenges, opts.Output)
+	CheckErr(err)
+
+	if opts.Notify && notifications.Total > 0 {
+		builder := strings.Builder{}
+		builder.WriteString(fmt.Sprintf("Downloaded %d challenges\n", notifications.Total))
+
+		for category, count := range notifications.Categories {
+			builder.WriteString(fmt.Sprintf("\n%s: %d", category, count))
+		}
+
+		err := lib.SendNotification("CTFTool", builder.String())
+		CheckWarn(err)
+	}
+}
+
+func watch(processFunc func()) {
+	interval, err := time.ParseDuration(opts.WatchInterval.String())
+	CheckErr(err)
+
+	log.Infof("Watching for new challenges every %s", interval.String())
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		log.Debugf("Checking for new challenges")
+		processFunc()
+	}
 }
 
 func init() {
@@ -226,6 +174,7 @@ func init() {
 	ctfdDownloadCmd.Flags().BoolVarP(&opts.Watch, "watch", "w", false, "Watch for new challenges")
 	ctfdDownloadCmd.Flags().DurationVarP(&opts.WatchInterval, "watch-interval", "", 5*time.Minute, "Watch interval")
 	ctfdDownloadCmd.Flags().BoolVarP(&opts.UnsolvedOnly, "unsolved", "", false, "Only download unsolved challenges")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.Notify, "notify", "", false, "Send desktop notifications")
 
 	// viper
 	err := viper.BindPFlag("url", ctfdDownloadCmd.Flags().Lookup("url"))
@@ -247,5 +196,8 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("unsolved", ctfdDownloadCmd.Flags().Lookup("unsolved"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("notify", ctfdDownloadCmd.Flags().Lookup("notify"))
 	CheckErr(err)
 }

@@ -48,7 +48,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().IntVarP(&options.RateLimit, "rate-limit", "", 3, "Rate limit (per second)")
+	rootCmd.PersistentFlags().IntVarP(&options.RateLimit, "rate-limit", "", 10, "Rate limit per second")
 	rootCmd.PersistentFlags().Int64VarP(&options.MaxFileSize, "max-file-size", "", 25, "Max file size in mb")
 
 	rootCmd.PersistentFlags().StringVar(&options.ConfigFile, "config", "", "Config file (default is .ctftool.yaml)")
