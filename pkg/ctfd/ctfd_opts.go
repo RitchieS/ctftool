@@ -12,6 +12,7 @@ type CTFOpts struct {
 	SaveConfig    bool
 	SkipCTFDCheck bool
 	UnsolvedOnly  bool
+	Notify        bool
 	Watch         bool
 	WatchInterval time.Duration
 }

@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/ritchies/ctftool/pkg/ctfd"
@@ -121,4 +122,58 @@ func saveConfig() {
 
 	log.WithField("file", path.Join(opts.Output, ".ctftool.yaml")).Info("Saved config file")
 	log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
+}
+
+// sort challenges modifies the order of the challenges slice
+func SortChallenges(challenges []ctfd.ChallengesData) []ctfd.ChallengesData {
+	// sort priority:
+	// - challenges with zero solves (and that reward points)
+	// - challenges with solves, not solved by me
+	// - challenges with solves, not solved by me, sorted by solves (lowest first)
+	// - challenges with solves, solved by me, sorted by solves (lowest first)
+
+	sortFunc := func(i, j int) bool {
+		// Challenges with zero solves come first
+		if challenges[i].Solves == 0 && challenges[j].Solves == 0 {
+			return challenges[i].ID < challenges[j].ID
+		}
+
+		// If one has zero solves and the other doesn't, the one with zero solves comes first
+		if challenges[i].Solves == 0 && challenges[j].Solves > 0 {
+			return true
+		}
+
+		if challenges[i].Solves > 0 && challenges[j].Solves == 0 {
+			return false
+		}
+
+		// Both have more than zero solves
+		if challenges[i].Solves > 0 && challenges[j].Solves > 0 {
+			// Both are solved by me, sort by number of solves (lowest first)
+			if challenges[i].SolvedByMe && challenges[j].SolvedByMe {
+				return challenges[i].Solves < challenges[j].Solves
+			}
+
+			// Neither are solved by me, sort by number of solves (lowest first)
+			if !challenges[i].SolvedByMe && !challenges[j].SolvedByMe {
+				return challenges[i].Solves < challenges[j].Solves
+			}
+
+			// One is solved by me and the other is not, the one not solved by me comes first
+			if challenges[i].SolvedByMe && !challenges[j].SolvedByMe {
+				return false
+			}
+
+			if !challenges[i].SolvedByMe && challenges[j].SolvedByMe {
+				return true
+			}
+		}
+
+		// Fallback to sorting by ID
+		return challenges[i].ID < challenges[j].ID
+	}
+
+	sort.Slice(challenges, sortFunc)
+
+	return challenges
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"sort"
 	"strings"
 	"sync"
 
@@ -53,22 +52,7 @@ func processWriteups() {
 	challenges, err := ctfd.ListChallenges()
 	CheckErr(err)
 
-	// sort challenges so unsolved are first, otherwise sort by category
-	sortFunc := func(i, j int) bool {
-		if challenges[i].SolvedByMe != challenges[j].SolvedByMe {
-			return !challenges[i].SolvedByMe
-		}
-
-		if challenges[i].Category != challenges[j].Category {
-			return challenges[i].Category < challenges[j].Category
-		}
-
-		return challenges[i].Name < challenges[j].Name
-	}
-
-	sort.Slice(challenges, sortFunc)
-
-	for _, challenge := range challenges {
+	for _, challenge := range SortChallenges(challenges) {
 		wg.Add(1)
 
 		if options.RateLimit > 0 {

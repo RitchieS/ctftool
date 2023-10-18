@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +13,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+type ChallengeNotifications struct {
+	Total      int
+	Categories map[string]int
+}
 
 // ctfdDownloadCmd represents the download command
 var ctfdDownloadCmd = &cobra.Command{
@@ -62,26 +66,12 @@ func processChallenges() {
 	challenges, err := ctfd.ListChallenges()
 	CheckErr(err)
 
-	// Generate Index
-	err = ctfd.GenerateIndex(challenges, opts.Output)
-	CheckErr(err)
-
-	// sort challenges so unsolved are first, otherwise sort by category
-	sortFunc := func(i, j int) bool {
-		if challenges[i].SolvedByMe != challenges[j].SolvedByMe {
-			return !challenges[i].SolvedByMe
-		}
-
-		if challenges[i].Category != challenges[j].Category {
-			return challenges[i].Category < challenges[j].Category
-		}
-
-		return challenges[i].Name < challenges[j].Name
+	// Setup challenge notifications
+	notifications := ChallengeNotifications{
+		Categories: make(map[string]int),
 	}
 
-	sort.Slice(challenges, sortFunc)
-
-	for _, challenge := range challenges {
+	for _, challenge := range SortChallenges(challenges) {
 		if opts.UnsolvedOnly && challenge.SolvedByMe {
 			log.Debugf("Skipping %d : already solved", challenge.ID)
 			continue
@@ -132,21 +122,44 @@ func processChallenges() {
 			err = ctfd.DownloadFiles(chall.Files, challengePath)
 			CheckWarn(err)
 
+			// Add challenge to notifications, probably should make sure to lock?
+			notifications.Total++
+			notifications.Categories[category]++
+
 			wg.Done()
 		}(challenge)
 	}
 
 	wg.Wait()
+
+	// Generate Index
+	err = ctfd.GenerateIndex(challenges, opts.Output)
+	CheckErr(err)
+
+	if opts.Notify && notifications.Total > 0 {
+		builder := strings.Builder{}
+		builder.WriteString(fmt.Sprintf("Downloaded %d challenges\n", notifications.Total))
+
+		for category, count := range notifications.Categories {
+			builder.WriteString(fmt.Sprintf("\n%s: %d", category, count))
+		}
+
+		err := lib.SendNotification("CTFTool", builder.String())
+		CheckWarn(err)
+	}
 }
 
 func watch(processFunc func()) {
 	interval, err := time.ParseDuration(opts.WatchInterval.String())
 	CheckErr(err)
 
+	log.Infof("Watching for new challenges every %s", interval.String())
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for range ticker.C {
+		log.Debugf("Checking for new challenges")
 		processFunc()
 	}
 }
@@ -161,6 +174,7 @@ func init() {
 	ctfdDownloadCmd.Flags().BoolVarP(&opts.Watch, "watch", "w", false, "Watch for new challenges")
 	ctfdDownloadCmd.Flags().DurationVarP(&opts.WatchInterval, "watch-interval", "", 5*time.Minute, "Watch interval")
 	ctfdDownloadCmd.Flags().BoolVarP(&opts.UnsolvedOnly, "unsolved", "", false, "Only download unsolved challenges")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.Notify, "notify", "", false, "Send desktop notifications")
 
 	// viper
 	err := viper.BindPFlag("url", ctfdDownloadCmd.Flags().Lookup("url"))
@@ -182,5 +196,8 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("unsolved", ctfdDownloadCmd.Flags().Lookup("unsolved"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("notify", ctfdDownloadCmd.Flags().Lookup("notify"))
 	CheckErr(err)
 }
