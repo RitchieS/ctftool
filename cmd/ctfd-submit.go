@@ -16,9 +16,10 @@ var CTFDSubmissionID int
 
 // ctfdSubmitCmd represents the download command
 var ctfdSubmitCmd = &cobra.Command{
-	Use:   "submit",
-	Short: "Submit a flag",
-	Long:  `Submit a flag for a challenge.`,
+	Use:     "submit",
+	Short:   "Submit a flag",
+	Long:    `Submit a flag for a challenge.`,
+	Example: `  ctftool ctfd submit --url https://demo.ctfd.io --token abcdef12356 --challenge-id 1 --submission 'flag{abc123}'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctfd.NewClient()
 
@@ -66,8 +67,7 @@ var ctfdSubmitCmd = &cobra.Command{
 		client.Creds = &credentials
 
 		if !opts.SkipCTFDCheck {
-			err = ctfd.Check()
-			CheckErr(err)
+			CheckErr(ctfd.Check())
 		}
 
 		if (opts.Username != "" || opts.Token != "") && opts.Password == "" {
@@ -92,12 +92,13 @@ var ctfdSubmitCmd = &cobra.Command{
 func init() {
 	ctfdCmd.AddCommand(ctfdSubmitCmd)
 
-	ctfdSubmitCmd.Flags().StringVarP(&opts.URL, "url", "", "", "CTFd URL")
-	ctfdSubmitCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "CTFd Username")
-	ctfdSubmitCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
-	ctfdSubmitCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "CTFd Token")
+	ctfdSubmitCmd.Flags().StringVarP(&opts.URL, "url", "", "", "URL of the CTFd instance")
+	ctfdSubmitCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "Username for CTFd authentication")
+	ctfdSubmitCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "Password for CTFd authentication")
+	ctfdSubmitCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "Authentication token for CTFd")
+	ctfdSubmitCmd.Flags().BoolVarP(&opts.SkipCTFDCheck, "skip-check", "", false, "Skip checking if CTFd is running")
 
-	ctfdSubmitCmd.Flags().IntVarP(&CTFDSubmissionID, "id", "i", 0, "CTFd Submission ID")
+	ctfdSubmitCmd.Flags().IntVarP(&CTFDSubmissionID, "challenge-id", "i", 0, "Unique identifier for the CTFd challenge")
 	ctfdSubmitCmd.Flags().StringVarP(&CTFDSubmission, "submission", "s", "", "Submission")
 
 	// viper
@@ -111,5 +112,8 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("token", ctfdSubmitCmd.Flags().Lookup("token"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("skip-check", ctfdSubmitCmd.Flags().Lookup("skip-check"))
 	CheckErr(err)
 }

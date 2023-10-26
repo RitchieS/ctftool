@@ -11,9 +11,10 @@ import (
 
 // ctfdTopCmd represents the top command
 var ctfdTopCmd = &cobra.Command{
-	Use:   "top",
-	Short: "Displays top 10 teams",
-	Long:  `Display the top 10 teams from CTFd`,
+	Use:     "top",
+	Short:   "Displays top 10 teams",
+	Long:    `Display the top 10 teams from CTFd`,
+	Example: `  ctftool ctfd top --url https://demo.ctfd.io`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := ctfd.NewClient()
 		uri := viper.GetString("url")
@@ -54,7 +55,7 @@ var ctfdTopCmd = &cobra.Command{
 func init() {
 	ctfdCmd.AddCommand(ctfdTopCmd)
 
-	ctfdTopCmd.Flags().StringVarP(&opts.URL, "url", "u", "", "CTFD instance URL")
+	ctfdTopCmd.Flags().StringVarP(&opts.URL, "url", "u", "", "URL of the CTFd instance")
 
 	err := viper.BindPFlag("url", ctfdTopCmd.Flags().Lookup("url"))
 	CheckErr(err)

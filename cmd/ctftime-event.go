@@ -72,10 +72,11 @@ var (
 
 // ctftimeEventCmd represents the event command
 var ctftimeEventCmd = &cobra.Command{
-	Use:   "event",
-	Short: "Get information about a CTF event by ID",
-	Long:  `Display information about a CTF event by ID.`,
-	Args:  cobra.RangeArgs(0, 1),
+	Use:     "event",
+	Short:   "Get information about a CTF event by ID",
+	Long:    `Display information about a CTF event by ID.`,
+	Example: `  ctftool ctftime event --event-id 12345`,
+	Args:    cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) { // if args is not an integer, exit
 		if len(args) > 0 {
 			if _, err := fmt.Sscanf(args[0], "%d", &EventID); err != nil {
@@ -157,5 +158,5 @@ var ctftimeEventCmd = &cobra.Command{
 func init() {
 	ctftimeCmd.AddCommand(ctftimeEventCmd)
 
-	ctftimeEventCmd.Flags().IntVar(&EventID, "id", 0, "Event ID")
+	ctftimeEventCmd.Flags().IntVar(&EventID, "event-id", 0, "Unique identifier of the event")
 }

@@ -15,6 +15,7 @@ type CTFOpts struct {
 	Notify        bool
 	Watch         bool
 	WatchInterval time.Duration
+	MaxFileSize   int64
 }
 
 // NewOptions returns a new Options struct

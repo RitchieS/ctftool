@@ -24,6 +24,7 @@ Legend:
  ONSITE = CTF requires team to be in person
  AD = Attack Defend
  HQ = Hack Quest`,
+	Example: `  ctftool ctftime events --limit 10`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var events []ctftime.Event
 
@@ -112,7 +113,7 @@ func init() {
 	ctftimeCmd.AddCommand(ctftimeEventsCmd)
 
 	// limit
-	ctftimeEventsCmd.Flags().IntVarP(&limit, "limit", "l", 10, "Limit the number of events to display")
+	ctftimeEventsCmd.Flags().IntVarP(&limit, "limit", "l", 10, "Maximum number of events to display")
 }
 
 func cleanTitle(str string) string {
