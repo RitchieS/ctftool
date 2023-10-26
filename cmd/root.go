@@ -243,6 +243,9 @@ Flags:
 			CombinedFlagUsages: combinedFlagUsages,
 		})
 	})
+
+	err := viper.BindPFlags(rootCmd.PersistentFlags())
+	CheckErr(err)
 }
 
 // initConfig reads in config file and ENV variables if set.

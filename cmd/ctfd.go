@@ -53,6 +53,7 @@ func ctfdOptions() {
 	opts.UnsolvedOnly = viper.GetBool("unsolved")
 	opts.Notify = viper.GetBool("notify")
 	opts.MaxFileSize = viper.GetInt64("max-file-size")
+	options.RateLimit = viper.GetInt("rate-limit")
 }
 
 func getBaseURL(cmd *cobra.Command) *url.URL {
@@ -98,21 +99,49 @@ func setupOutputFolder() string {
 
 func saveConfig() {
 	viper.Reset()
-	viper.Set("url", opts.URL)
-	viper.Set("username", opts.Username)
-	viper.Set("password", opts.Password)
-	viper.Set("token", opts.Token)
-	viper.Set("output", opts.Output)
-	viper.Set("overwrite", opts.Overwrite)
-	viper.Set("skip-check", opts.SkipCTFDCheck)
-	viper.Set("unsolved", opts.UnsolvedOnly)
-	viper.Set("watch", opts.Watch)
-	viper.Set("watch-interval", opts.WatchInterval)
-	err := viper.SafeWriteConfigAs(path.Join(opts.Output, ".ctftool.yaml"))
+
+	if opts.URL != "" {
+		viper.Set("url", opts.URL)
+	}
+	if opts.Username != "" {
+		viper.Set("username", opts.Username)
+	}
+	if opts.Password != "" {
+		viper.Set("password", opts.Password)
+	}
+	if opts.Token != "" {
+		viper.Set("token", opts.Token)
+	}
+	if opts.Output != "" {
+		viper.Set("output", opts.Output)
+	}
+	if opts.Overwrite {
+		viper.Set("overwrite", opts.Overwrite)
+	}
+	if opts.SkipCTFDCheck {
+		viper.Set("skip-check", opts.SkipCTFDCheck)
+	}
+	if opts.UnsolvedOnly {
+		viper.Set("unsolved", opts.UnsolvedOnly)
+	}
+	if opts.Watch {
+		viper.Set("watch", opts.Watch)
+	}
+	if opts.WatchInterval != 0 {
+		viper.Set("watch-interval", opts.WatchInterval)
+	}
+	if opts.MaxFileSize != 0 {
+		viper.Set("max-file-size", opts.MaxFileSize)
+	}
+	if options.RateLimit != 0 {
+		viper.Set("rate-limit", options.RateLimit)
+	}
+
+	err := viper.WriteConfigAs(path.Join(opts.Output, ".ctftool.yaml"))
 	CheckErr(err)
 
 	log.WithField("file", path.Join(opts.Output, ".ctftool.yaml")).Info("Saved config file")
-	log.Info("You can now run `ctftool` from the same directory without specifying the --url, --username and --password in that directory")
+	log.Info("You can now run ctftool without any arguments")
 }
 
 // sort challenges modifies the order of the challenges slice
