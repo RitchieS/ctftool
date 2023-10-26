@@ -1,128 +1,132 @@
+# -----------------------------------------------------------------------------
+# Variables
+# -----------------------------------------------------------------------------
 SHELL := /bin/bash
 
-# The name of the executable
-TARGET 		?= $(shell basename `go list`)
+# Application Info
+TARGET  ?= $(shell basename `go list`)
+VERSION ?= $(shell git describe --tags --always)
+BUILD   ?= $(shell git rev-parse --short HEAD)
+CURDATE ?= $(shell date +%Y/%m/%d_%H:%M:%S)
 
-# These will be provided to the target
-VERSION 	?= $(shell git describe --tags --always)
-BUILD 		?= $(shell git rev-parse --short HEAD)
-CURDATE 	?= $(shell date +%Y/%m/%d_%H:%M:%S)
+# Source files
+SRC ?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-# Source files, ignore vendor directory
-SRC 		?= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+# Linker Flags
+LDFLAGS = -ldflags "-X=main.version=$(VERSION) -X=main.commit=$(BUILD) -X=main.date=$(CURDATE) -s -w"
 
-# Use linker flags to provide version/build settings to the target
-LDFLAGS=-ldflags "-X=main.version=$(VERSION) -X=main.commit=$(BUILD) -X=main.date=$(CURDATE) -s -w"
+# -----------------------------------------------------------------------------
+# Targets
+# -----------------------------------------------------------------------------
+.DEFAULT_GOAL := help
 
-.DEFAULT_GOAL: $(TARGET)
-.PHONY: help build build-all release install uninstall clean fmt vet lint tidy check test test-it test-bench test-race test-cover test-all run doc all
-
-default: help
-
-help: ## show this help
-	@echo 'usage: make [target] ...'
+.PHONY: help
+help:  ## Display help
+	@echo 'Usage: make [target] ...'
 	@echo ''
-	@echo 'targets:'
+	@echo 'Targets:'
 	@egrep '^(.+)\:\ .*##\ (.+)' ${MAKEFILE_LIST} | sed 's/:.*##/#/' | column -t -c 2 -s '#'
 
 $(TARGET): $(SRC)
 	@go build $(LDFLAGS) -o bin/$(TARGET)
-	@echo "Built $(TARGET) version $(VERSION) commit $(BUILD)"
 	@echo "Built $(TARGET) version $(VERSION) commit $(BUILD)" > bin/$(TARGET).version
 	@echo "You can run the program by typing './bin/$(TARGET)'"
 
+.PHONY: all
 all: clean fmt test build ## clean, format, unit test and build
 
 build: $(TARGET) ## Go: build executable
 	@true
 
-build-single: ## GoReleaser: build executable
+.PHONY: build-single
+build-single:  ## Build a single target using GoReleaser
 	@goreleaser build --rm-dist --single-target
 
-build-all: ## GoReleaser: build for all platforms
+.PHONY: build-all
+build-all:  ## Build for all platforms using GoReleaser
 	@goreleaser build --rm-dist 
 
-build-tools: ## fetch and install all required tools
+.PHONY: build-tools
+build-tools:  ## Install required tools
 	go install -v github.com/goreleaser/goreleaser@latest
 	go install -v golang.org/x/tools/cmd/godoc@latest
 	go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
 	go install -v github.com/caarlos0/svu@latest
 
-release:
+.PHONY: release
+release:  ## Create a release using GoReleaser
 	@goreleaser release --rm-dist
 
-major:
-	git tag $$(svu major)
-.PHONY: major
+.PHONY: major minor patch
+major minor patch:
+	git tag $$(svu $@)
 
-minor:
-	git tag $$(svu minor)
-.PHONY: minor
-
-patch:
-	git tag $$(svu patch)
-.PHONY: patch
-
-install: ## install the executable to $GOPATH/bin	
+.PHONY: install
+install:  ## Install the executable
 	@go install -v $(LDFLAGS) ./...
 	@echo "Installed $(TARGET) version $(VERSION) commit $(BUILD)"
 	@echo "You can run the program by typing '$(TARGET)'"
 
-uninstall: clean ## uninstall the executable from $GOPATH/bin
+.PHONY: uninstall
+uninstall: clean  ## Uninstall the executable
 	go clean -i ./...
 	@rm -vf `which $(TARGET)`
 
-clean: ## remove all generated files
+.PHONY: clean
+clean:  ## Clean up generated files
 	go clean
-	@rm -vf `which $(TARGET)`
-	@rm -vf bin/$(TARGET) bin/$(TARGET).version
-	@rm -vf tests/coverage.out tests/coverage.html
-	@rm -vrf bin dist tests output
+	@rm -rf bin/ dist/ tests/ output `which $(TARGET)`
 
-fmt: ## format the source files
+.PHONY: fmt
+fmt:  ## Format the source code
 	gofmt -s -w $(SRC)
 
-vet: ## run go vet on the source files
+.PHONY: vet
+vet:  ## Run go vet on the source code
 	go vet ./...
 
-lint: ## run golangci-lint on the source files
+.PHONY: lint
+lint:  ## Run golangci-lint on the source code
 	golangci-lint run --exclude-use-default ./...
 
-tidy: ## go mod tidy on the source files
+.PHONY: tidy
+tidy:  ## Clean up Go modules
 	go mod tidy
 
-check: fmt vet tidy
+.PHONY: check
+check: fmt vet tidy  ## Run code checks and short tests
 	go test ./... -short
 	goreleaser check
 
-test: vet ## run short unit tests
+.PHONY: test test-it test-bench test-race test-cover test-all
+test: vet  ## Run short unit tests
 	go test -v ./... -short
 
-test-it: ## run the integration tests
+test-it:  ## Run integration tests
 	go test -v ./...
 
-test-bench: ## run the benchmark tests
+test-bench:  ## Run benchmarks
 	go test -bench ./...
 
-test-race: ## run the race condition tests
+test-race:  ## Run race condition tests
 	go test -race ./...
 
-test-cover: ## generate test coverage report
-	@rm -vrf tests
+test-cover:  ## Generate test coverage report
 	@mkdir -p tests
 	@go test -coverprofile=tests/coverage.out ./...
 	@go tool cover -func=tests/coverage.out
 	@go tool cover -html=tests/coverage.out -o tests/coverage.html
-
 	@echo "Coverage file:"
 	@echo " - $(PWD)/tests/coverage.html"
 	@rm -f tests/coverage.out
 
-test-all: test test-it test-bench test-race test-cover ## run all tests
+test-all: test test-it test-bench test-race test-cover  ## Run all tests
 
-run: install ## install and run the binary
+.PHONY: run
+run: install  ## Install and run the executable
 	@$(TARGET)
 
-doc: ## generate docs
+.PHONY: doc
+doc:  ## Generate documentation
 	@echo "NOTE: Visit http://localhost:6060/pkg/github.com/ritchies/ctftool to see the documentation"
 	godoc -http=:6060 -index
