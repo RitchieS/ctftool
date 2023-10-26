@@ -573,7 +573,7 @@ func getFileName(challengeFileURL string) (string, error) {
 func formatErrors(errors []error) string {
 	var b strings.Builder
 	for _, err := range errors {
-		b.WriteString("- ")
+		b.WriteString(" - ")
 		b.WriteString(err.Error())
 		b.WriteString("\n")
 	}

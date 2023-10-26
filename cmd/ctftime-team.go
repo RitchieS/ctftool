@@ -12,10 +12,11 @@ var TeamID int // TeamID is the ID of the team
 
 // ctftimeTeamCmd represents the team command
 var ctftimeTeamCmd = &cobra.Command{
-	Use:   "team",
-	Short: "Get information about a team",
-	Long:  `Get information about a team on CTFTime.`,
-	Args:  cobra.RangeArgs(0, 1),
+	Use:     "team",
+	Short:   "Get information about a team",
+	Long:    `Get information about a team on CTFTime.`,
+	Example: `  ctftool ctftime team --team-id 12345`,
+	Args:    cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// if args is not an integer, exit
 		if len(args) > 0 {
@@ -39,5 +40,5 @@ var ctftimeTeamCmd = &cobra.Command{
 func init() {
 	ctftimeCmd.AddCommand(ctftimeTeamCmd)
 
-	ctftimeTeamCmd.Flags().IntVar(&TeamID, "id", 0, "The ID of the team")
+	ctftimeTeamCmd.Flags().IntVar(&TeamID, "team-id", 0, "Team's unique identifier")
 }

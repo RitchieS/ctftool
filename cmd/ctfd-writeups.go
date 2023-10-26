@@ -19,12 +19,14 @@ var ctfdWriteupCmd = &cobra.Command{
 	Aliases: []string{"w", "write"},
 	Short:   "Only create and update writeups",
 	Long:    `Create and update writeups for each challenge. Skips downloading files.`,
-	Run:     runWriteups,
+	Example: `  ctftool ctfd writeups --url https://demo.ctfd.io --username user --password password
+  ctftool ctfd writeups --url https://demo.ctfd.io --token abcdef12356`,
+	Run: runWriteups,
 }
 
 func runWriteups(cmd *cobra.Command, args []string) {
 	client := ctfd.NewClient()
-	downloadOptions()
+	ctfdOptions()
 	opts.Output = setupOutputFolder()
 
 	client.BaseURL = getBaseURL(cmd)
@@ -94,10 +96,12 @@ func processWriteups() {
 func init() {
 	ctfdCmd.AddCommand(ctfdWriteupCmd)
 
-	ctfdWriteupCmd.Flags().StringVarP(&opts.URL, "url", "", "", "CTFd URL")
-	ctfdWriteupCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "CTFd Username")
-	ctfdWriteupCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
-	ctfdWriteupCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "CTFd Token")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.URL, "url", "", "", "URL of the CTFd instance")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "Username for CTFd authentication")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "Password for CTFd authentication")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "Authentication token for CTFd")
+	ctfdWriteupCmd.Flags().StringVarP(&opts.Output, "output", "o", "", "Directory for CTFd output (defaults to current directory)")
+	ctfdWriteupCmd.Flags().BoolVarP(&opts.SkipCTFDCheck, "skip-check", "", false, "Skip CTFd connectivity check")
 
 	// viper
 	err := viper.BindPFlag("url", ctfdWriteupCmd.Flags().Lookup("url"))
@@ -110,5 +114,11 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("token", ctfdWriteupCmd.Flags().Lookup("token"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("output", ctfdWriteupCmd.Flags().Lookup("output"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("skip-check", ctfdWriteupCmd.Flags().Lookup("skip-check"))
 	CheckErr(err)
 }

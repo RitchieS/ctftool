@@ -25,17 +25,19 @@ var ctfdDownloadCmd = &cobra.Command{
 	Aliases: []string{"d", "down"},
 	Short:   "Download files and create writeups",
 	Long:    `Download files and create writeups for each challenge.`,
-	Run:     runDownload,
+	Example: `  ctftool ctfd download --url https://demo.ctfd.io --username user --password password
+  ctftool ctfd download --url https://demo.ctfd.io --token abcdef12356`,
+	Run: runDownload,
 }
 
 func runDownload(cmd *cobra.Command, args []string) {
 	client := ctfd.NewClient()
-	downloadOptions()
+	ctfdOptions()
 	opts.Output = setupOutputFolder()
 
 	client.BaseURL = getBaseURL(cmd)
 	client.Creds = getCredentials(cmd)
-	client.MaxFileSize = options.MaxFileSize
+	client.MaxFileSize = opts.MaxFileSize
 
 	if !opts.SkipCTFDCheck {
 		CheckErr(ctfd.Check())
@@ -114,13 +116,21 @@ func processChallenges() {
 			err = os.MkdirAll(challengePath, os.ModePerm)
 			CheckErr(err)
 
-			// get description
-			err = ctfd.GetDescription(chall, challengePath)
-			CheckErr(err)
-
 			// download challenge files
 			err = ctfd.DownloadFiles(chall.Files, challengePath)
 			CheckWarn(err)
+
+			if len(chall.Files) > 0 && err != nil {
+				log.Debugf("Skipping challenge %d : error downloading files", challenge.ID)
+				err = os.RemoveAll(challengePath)
+				CheckWarn(err)
+				wg.Done()
+				return
+			}
+
+			// get description
+			err = ctfd.GetDescription(chall, challengePath)
+			CheckErr(err)
 
 			// Add challenge to notifications, probably should make sure to lock?
 			notifications.Total++
@@ -167,14 +177,18 @@ func watch(processFunc func()) {
 func init() {
 	ctfdCmd.AddCommand(ctfdDownloadCmd)
 
-	ctfdDownloadCmd.Flags().StringVarP(&opts.URL, "url", "", "", "CTFd URL")
-	ctfdDownloadCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "CTFd Username")
-	ctfdDownloadCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "CTFd Password")
-	ctfdDownloadCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "CTFd Token")
-	ctfdDownloadCmd.Flags().BoolVarP(&opts.Watch, "watch", "w", false, "Watch for new challenges")
-	ctfdDownloadCmd.Flags().DurationVarP(&opts.WatchInterval, "watch-interval", "", 5*time.Minute, "Watch interval")
-	ctfdDownloadCmd.Flags().BoolVarP(&opts.UnsolvedOnly, "unsolved", "", false, "Only download unsolved challenges")
-	ctfdDownloadCmd.Flags().BoolVarP(&opts.Notify, "notify", "", false, "Send desktop notifications")
+	ctfdDownloadCmd.Flags().StringVarP(&opts.URL, "url", "", "", "URL of the CTFd instance")
+	ctfdDownloadCmd.Flags().StringVarP(&opts.Username, "username", "u", "", "Username for CTFd authentication")
+	ctfdDownloadCmd.Flags().StringVarP(&opts.Password, "password", "p", "", "Password for CTFd authentication")
+	ctfdDownloadCmd.Flags().StringVarP(&opts.Token, "token", "t", "", "Authentication token for CTFd")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.Watch, "watch", "w", false, "Monitor for newly released challenges")
+	ctfdDownloadCmd.Flags().DurationVarP(&opts.WatchInterval, "watch-interval", "", 5*time.Minute, "Interval for monitoring new challenges")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.UnsolvedOnly, "unsolved", "", false, "Only download challenges that haven't been solved yet")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.Notify, "notify", "", false, "Enable desktop notifications")
+	ctfdDownloadCmd.Flags().StringVarP(&opts.Output, "output", "o", "", "Directory for CTFd output (defaults to current directory)")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.Overwrite, "overwrite", "", false, "Overwrite existing files")
+	ctfdDownloadCmd.Flags().Int64VarP(&opts.MaxFileSize, "max-file-size", "", 25, "Maximum allowable file size in MB")
+	ctfdDownloadCmd.Flags().BoolVarP(&opts.SkipCTFDCheck, "skip-check", "", false, "Skip CTFd instance check")
 
 	// viper
 	err := viper.BindPFlag("url", ctfdDownloadCmd.Flags().Lookup("url"))
@@ -199,5 +213,17 @@ func init() {
 	CheckErr(err)
 
 	err = viper.BindPFlag("notify", ctfdDownloadCmd.Flags().Lookup("notify"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("output", ctfdDownloadCmd.Flags().Lookup("output"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("overwrite", ctfdDownloadCmd.Flags().Lookup("overwrite"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("max-file-size", ctfdDownloadCmd.Flags().Lookup("max-file-size"))
+	CheckErr(err)
+
+	err = viper.BindPFlag("skip-check", ctfdDownloadCmd.Flags().Lookup("skip-check"))
 	CheckErr(err)
 }

@@ -24,7 +24,7 @@ var ctfdCmd = &cobra.Command{
 	Short: "Query CTFd instance",
 	Long:  `Retrieve challenges and files from a CTFd instance.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := cmd.Usage()
+		err := cmd.Help()
 		CheckErr(err)
 	},
 }
@@ -32,26 +32,14 @@ var ctfdCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(ctfdCmd)
 
-	ctfdCmd.PersistentFlags().StringVarP(&opts.Output, "output", "o", "", "CTFd Output Folder (defaults to current directory)")
-	ctfdCmd.PersistentFlags().BoolVarP(&opts.Overwrite, "overwrite", "", false, "Overwrite existing files")
 	ctfdCmd.PersistentFlags().BoolVarP(&opts.SaveConfig, "save-config", "", false, "Save config to (default is $OUTDIR/.ctftool.yaml)")
-	ctfdCmd.PersistentFlags().BoolVarP(&opts.SkipCTFDCheck, "skip-check", "", false, "Skip CTFd instance check")
 
 	// viper
-	err := viper.BindPFlag("output", ctfdCmd.PersistentFlags().Lookup("output"))
-	CheckErr(err)
-
-	err = viper.BindPFlag("overwrite", ctfdCmd.PersistentFlags().Lookup("overwrite"))
-	CheckErr(err)
-
-	err = viper.BindPFlag("skip-check", ctfdCmd.PersistentFlags().Lookup("skip-check"))
-	CheckErr(err)
-
-	err = viper.BindPFlag("save-config", ctfdCmd.PersistentFlags().Lookup("save-config"))
+	err := viper.BindPFlag("save-config", ctfdCmd.PersistentFlags().Lookup("save-config"))
 	CheckErr(err)
 }
 
-func downloadOptions() {
+func ctfdOptions() {
 	opts.URL = viper.GetString("url")
 	opts.Username = viper.GetString("username")
 	opts.Password = viper.GetString("password")
@@ -63,6 +51,8 @@ func downloadOptions() {
 	opts.Watch = viper.GetBool("watch")
 	opts.WatchInterval = viper.GetDuration("watch-interval")
 	opts.UnsolvedOnly = viper.GetBool("unsolved")
+	opts.Notify = viper.GetBool("notify")
+	opts.MaxFileSize = viper.GetInt64("max-file-size")
 }
 
 func getBaseURL(cmd *cobra.Command) *url.URL {
